@@ -1,0 +1,173 @@
+.editorconfig
+  s_a3585a5832f3e4::t_361ccb2409cf64 1-16
+.env.example
+  s_a3585a5832f3e4::t_67adc588e2f140 1-8
+.gitattributes
+  s_a3585a5832f3e4::t_1cc469d9f097e3 1-9
+.github/workflows/ci.yml
+  s_a3585a5832f3e4::t_d71ea3540257b8 1-46
+.gitignore
+  s_a3585a5832f3e4::t_d532f494f5baea 1-36
+README.md
+  s_a3585a5832f3e4::t_539d3fde41ccac 1-97
+apps/admin/eslint.config.mjs
+  s_a3585a5832f3e4::t_4dd0535a9c3d4c 1-4
+apps/admin/index.html
+  s_a3585a5832f3e4::t_62d7823f3cc5f9 1-14
+apps/admin/package.json
+  s_a3585a5832f3e4::t_29d572903d022a 1-38
+apps/admin/src/app/App.tsx
+  s_a3585a5832f3e4::t_74203a8ca70a60 1-35
+apps/admin/src/app/FoundationPage.tsx
+  s_a3585a5832f3e4::t_f9d25676db0465 1-16
+apps/admin/src/app/router.tsx
+  s_a3585a5832f3e4::t_b0725aa2a57af0 1-10
+apps/admin/src/main.tsx
+  s_a3585a5832f3e4::t_3692fa8432630d 1-20
+apps/admin/src/styles.scss
+  s_a3585a5832f3e4::t_3e9258a64e30d3 1-51
+apps/admin/tsconfig.json
+  s_a3585a5832f3e4::t_7e391bb8c6e5fd 1-12
+apps/admin/vite.config.ts
+  s_a3585a5832f3e4::t_f59837a28a9b2c 1-17
+apps/miniapp/babel.config.cjs
+  s_a3585a5832f3e4::t_1ba2e0e343929d 1-6
+apps/miniapp/config/index.ts
+  s_a3585a5832f3e4::t_0494bd90f2b6eb 1-36
+apps/miniapp/eslint.config.mjs
+  s_a3585a5832f3e4::t_7e4b41b7b93dee 1-15
+apps/miniapp/package.json
+  s_a3585a5832f3e4::t_bc4fd3d4b2bc6c 1-51
+apps/miniapp/project.config.json
+  s_a3585a5832f3e4::t_8d2243b94e86f1 1-12
+apps/miniapp/project.tt.json
+  s_a3585a5832f3e4::t_4068cfd3ed6f06 1-11
+apps/miniapp/src/app.config.ts
+  s_a3585a5832f3e4::t_45d4658048d879 1-10
+apps/miniapp/src/app.scss
+  s_a3585a5832f3e4::t_46a04ef0bd0067 1-7
+apps/miniapp/src/app.ts
+  s_a3585a5832f3e4::t_c78f6abc2f870b 1-8
+apps/miniapp/src/pages/index/index.config.ts
+  s_a3585a5832f3e4::t_58b3da9063b0dc 1-4
+apps/miniapp/src/pages/index/index.scss
+  s_a3585a5832f3e4::t_8ab00a04e65a57 1-14
+apps/miniapp/src/pages/index/index.tsx
+  s_a3585a5832f3e4::t_f03a69857e7092 1-12
+apps/miniapp/src/platform/create-unimplemented-adapter.ts
+  s_a3585a5832f3e4::t_deee20ea60c847 1-22
+apps/miniapp/src/platform/index.ts
+  s_a3585a5832f3e4::t_548adf6826c94f 1-21
+apps/miniapp/src/platform/tt.ts
+  s_a3585a5832f3e4::t_b1016a1f5afd71 1-4
+apps/miniapp/src/platform/types.ts
+  s_a3585a5832f3e4::t_2f065b46fef6d1 1-17
+apps/miniapp/src/platform/weapp.ts
+  s_a3585a5832f3e4::t_bb7cd7034d42bd 1-4
+apps/miniapp/tsconfig.json
+  s_a3585a5832f3e4::t_a82f2cc0a7abcd 1-16
+deploy/compose.yaml
+  s_a3585a5832f3e4::t_b5b6b73463cccb 1-57
+deploy/nginx/default.conf
+  s_a3585a5832f3e4::t_5c15b3f106f3e3 1-27
+docs/architecture.md
+  s_a3585a5832f3e4::t_c0986c032aaa57 1-14
+package.json
+  s_a3585a5832f3e4::t_ab266bf8b1a78b 1-23
+packages/api-client/eslint.config.mjs
+  s_a3585a5832f3e4::t_223cfd538d33d2 1-4
+packages/api-client/package.json
+  s_a3585a5832f3e4::t_60bef17e8e7c57 1-24
+packages/api-client/src/generated/.gitkeep
+  s_a3585a5832f3e4::t_3b9ddd2403f398 1
+packages/api-client/src/index.ts
+  s_a3585a5832f3e4::t_2e9cd987659bb2 1-3
+packages/api-client/tsconfig.json
+  s_a3585a5832f3e4::t_28cae332652aaa 1-10
+packages/eslint-config/index.mjs
+  s_a3585a5832f3e4::t_09bfc8ced51727 1-45
+packages/eslint-config/package.json
+  s_a3585a5832f3e4::t_33dba522936c1a 1-18
+packages/shared/eslint.config.mjs
+  s_a3585a5832f3e4::t_e9e942edb4238c 1-4
+packages/shared/package.json
+  s_a3585a5832f3e4::t_3706b40818c754 1-24
+packages/shared/src/index.ts
+  s_a3585a5832f3e4::t_1786449f3d2736 1-3
+packages/shared/tsconfig.json
+  s_a3585a5832f3e4::t_5112a670eadb8d 1-10
+pnpm-lock.yaml
+  s_a3585a5832f3e4::t_493bdffb1f76e8 1-14073
+pnpm-workspace.yaml
+  s_a3585a5832f3e4::t_7aad4a77fb6038 1-24
+services/api/Dockerfile
+  s_a3585a5832f3e4::t_e398d873014ca6 1-21
+services/api/README.md
+  s_a3585a5832f3e4::t_905aa58988f70e 1-4
+services/api/alembic.ini
+  s_a3585a5832f3e4::t_752ae3b68f38ef 1-39
+services/api/app/__init__.py
+  s_a3585a5832f3e4::t_c6713fdb83b756 1
+services/api/app/api/__init__.py
+  s_a3585a5832f3e4::t_a46b5f2c7eeb74 1
+services/api/app/api/health.py
+  s_a3585a5832f3e4::t_51d89b9b662264 1-15
+services/api/app/api/v1/__init__.py
+  s_a3585a5832f3e4::t_f17f979f9b62a5 1
+services/api/app/api/v1/router.py
+  s_a3585a5832f3e4::t_c7b78cd32ec2bc 1-5
+services/api/app/core/__init__.py
+  s_a3585a5832f3e4::t_8bd021b1587fea 1
+services/api/app/core/config.py
+  s_a3585a5832f3e4::t_95176e0655f15e 1-22
+services/api/app/core/database.py
+  s_a3585a5832f3e4::t_f6bdbcde7cd0a1 1-5
+services/api/app/core/logging.py
+  s_a3585a5832f3e4::t_e5e7c1f7696d3b 1-18
+services/api/app/main.py
+  s_a3585a5832f3e4::t_ef1ee48b8ca4b7 1-20
+services/api/app/models/__init__.py
+  s_a3585a5832f3e4::t_2549af021e8959 1-5
+services/api/app/providers/__init__.py
+  s_a3585a5832f3e4::t_00641c6ac512ff 1
+services/api/app/repositories/__init__.py
+  s_a3585a5832f3e4::t_3beb87588ad35c 1
+services/api/app/schemas/__init__.py
+  s_a3585a5832f3e4::t_d64df03be89f77 1
+services/api/app/services/__init__.py
+  s_a3585a5832f3e4::t_504d1d680fab69 1
+services/api/migrations/env.py
+  s_a3585a5832f3e4::t_df89f222bc9cb4 1-73
+services/api/migrations/script.py.mako
+  s_a3585a5832f3e4::t_f6d00c41ceb056 1-26
+services/api/migrations/versions/.gitkeep
+  s_a3585a5832f3e4::t_0d95fb23df5f5c 1
+services/api/pyproject.toml
+  s_a3585a5832f3e4::t_de02b405db9f14 1-48
+services/api/scripts/export_openapi.py
+  s_a3585a5832f3e4::t_e5b6647776d6b8 1-19
+services/api/tests/test_health.py
+  s_a3585a5832f3e4::t_e24f38f8eedeaa 1-17
+services/api/uv.lock
+  s_a3585a5832f3e4::t_5b5f2874d26b07 1-1232
+tsconfig.base.json
+  s_a3585a5832f3e4::t_04b78d7a6839c0 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6dbdf8f929fb7550958031fe90478526418b880d",
+  "prompts": {},
+  "sessions": {
+    "s_a3585a5832f3e4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc38a-6621-7ed1-9e4d-6eadf24dc82c",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
