@@ -13,6 +13,11 @@ const config: UserConfigExport = {
   outputRoot: `dist/${process.env.TARO_ENV ?? 'weapp'}`,
   framework: 'react',
   compiler: 'webpack5',
+  defineConstants: {
+    MUYIMUSIC_API_BASE_URL: JSON.stringify(
+      process.env.TARO_APP_API_BASE_URL ?? 'http://127.0.0.1:8001',
+    ),
+  },
   cache: {
     enable: true,
   },
@@ -33,4 +38,3 @@ const config: UserConfigExport = {
 }
 
 export default defineConfig(config)
-

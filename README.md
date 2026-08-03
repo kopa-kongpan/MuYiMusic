@@ -1,8 +1,10 @@
 # MuYiMusic
 
-MuYiMusic 是一个前后端分离的 monorepo，包含微信/抖音小程序、Web 运营管理后台和一套 FastAPI 后端服务。当前仓库只提供工程基座，不包含登录、商品、订单、支付等业务实现。
+MuYiMusic 是一个前后端分离的 monorepo，包含微信/抖音小程序、Web 运营管理后台和一套 FastAPI 后端服务。当前已完成 v0.1 门店闭环，包括管理员登录、门店后台和小程序门店选择。
 
-开发前请先阅读 [PROJECT_TECH_SPEC.md](./PROJECT_TECH_SPEC.md)。
+开发前请先阅读 [项目技术规范](./docs/项目技术规范.md) 和
+[第一阶段需求规格](./docs/第一阶段需求规格.md)。
+当前版本运行方式见 [第一版门店闭环说明](./docs/第一版门店闭环说明.md)。
 
 ## 目录
 
@@ -48,10 +50,10 @@ pnpm dev:h5
 ```bash
 cd services/api
 uv sync --dev
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload --port 8001
 ```
 
-API 默认监听 `http://localhost:8000`，健康检查为 `GET /health`，OpenAPI 文档为 `http://localhost:8000/docs`。
+本地 API 默认监听 `http://localhost:8001`，健康检查为 `GET /health`，OpenAPI 文档为 `http://localhost:8001/docs`。
 
 数据库迁移命令：
 
@@ -88,10 +90,9 @@ OpenAPI 是接口契约的唯一来源。后端可运行后按以下方式导出
 
 ```bash
 cd services/api
-uv run python scripts/export_openapi.py
+uv run python -m scripts.export_openapi
 cd ../..
 pnpm --filter @muyimusic/api-client generate
 ```
 
 `packages/api-client/src/generated` 下的文件由工具生成，不应手工维护 DTO。
-
