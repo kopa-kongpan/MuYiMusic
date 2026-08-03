@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["@tarojs/taro", "node"]
+  },
+  "include": ["config", "src"]
+}
+

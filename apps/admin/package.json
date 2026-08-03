@@ -1,0 +1,38 @@
+{
+  "name": "@muyimusic/admin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@ant-design/pro-components": "^2.8.0",
+    "@muyimusic/api-client": "workspace:*",
+    "@muyimusic/shared": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "antd": "^5.0.0",
+    "echarts": "^6.0.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "^7.0.0",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@muyimusic/eslint-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^7.0.0",
+    "vitest": "catalog:"
+  }
+}
+

@@ -1,0 +1,36 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.turbo/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+services/api/.venv/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# IDE and operating system
+.DS_Store
+.idea/
+.vscode/
+
+# Taro
+apps/miniapp/.temp/
+apps/miniapp/.rn_temp/
+apps/miniapp/.swc/
+
+# Generated API contract
+services/api/openapi.json

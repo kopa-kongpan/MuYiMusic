@@ -1,0 +1,1 @@
+"""MuYiMusic API application package."""

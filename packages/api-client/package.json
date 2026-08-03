@@ -1,0 +1,24 @@
+{
+  "name": "@muyimusic/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../services/api/openapi.json -o src/generated/schema.ts",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@muyimusic/eslint-config": "workspace:*",
+    "eslint": "catalog:",
+    "openapi-typescript": "^7.0.0",
+    "typescript": "catalog:"
+  }
+}
+

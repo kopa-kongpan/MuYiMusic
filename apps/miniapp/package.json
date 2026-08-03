@@ -1,0 +1,51 @@
+{
+  "name": "@muyimusic/miniapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "dev:tt": "taro build --type tt --watch",
+    "dev:h5": "taro build --type h5 --watch",
+    "build:weapp": "taro build --type weapp",
+    "build:tt": "taro build --type tt",
+    "build:h5": "taro build --type h5",
+    "lint": "eslint src config",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@muyimusic/api-client": "workspace:*",
+    "@muyimusic/shared": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@tarojs/components": "4.2.1",
+    "@tarojs/helper": "4.2.1",
+    "@tarojs/plugin-framework-react": "4.2.1",
+    "@tarojs/plugin-platform-h5": "4.2.1",
+    "@tarojs/plugin-platform-tt": "4.2.1",
+    "@tarojs/plugin-platform-weapp": "4.2.1",
+    "@tarojs/react": "4.2.1",
+    "@tarojs/runtime": "4.2.1",
+    "@tarojs/shared": "4.2.1",
+    "@tarojs/taro": "4.2.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-react": "^7.28.0",
+    "@muyimusic/eslint-config": "workspace:*",
+    "@tarojs/cli": "4.2.1",
+    "@tarojs/taro-loader": "4.2.1",
+    "@tarojs/webpack5-runner": "4.2.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "babel-preset-taro": "4.2.1",
+    "eslint": "catalog:",
+    "react-refresh": "^0.14.0",
+    "sass": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

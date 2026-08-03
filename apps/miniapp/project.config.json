@@ -1,0 +1,12 @@
+{
+  "miniprogramRoot": "dist/weapp/",
+  "projectname": "MuYiMusic",
+  "description": "MuYiMusic 微信小程序",
+  "appid": "touristappid",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "postcss": true
+  }
+}
+

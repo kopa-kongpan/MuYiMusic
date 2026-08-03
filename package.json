@@ -1,0 +1,23 @@
+{
+  "name": "muyimusic",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev:admin": "pnpm --filter @muyimusic/admin dev",
+    "dev:weapp": "pnpm --filter @muyimusic/miniapp dev:weapp",
+    "dev:tt": "pnpm --filter @muyimusic/miniapp dev:tt",
+    "dev:h5": "pnpm --filter @muyimusic/miniapp dev:h5",
+    "build": "pnpm --recursive --if-present run build",
+    "build:admin": "pnpm --filter @muyimusic/admin build",
+    "build:weapp": "pnpm --filter @muyimusic/miniapp build:weapp",
+    "build:tt": "pnpm --filter @muyimusic/miniapp build:tt",
+    "lint": "pnpm --recursive --if-present run lint",
+    "typecheck": "pnpm --recursive --if-present run typecheck",
+    "test": "pnpm --recursive --if-present run test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  }
+}

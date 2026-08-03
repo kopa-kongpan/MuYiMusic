@@ -1,0 +1,11 @@
+{
+  "miniprogramRoot": "dist/tt/",
+  "projectname": "MuYiMusic",
+  "description": "MuYiMusic 抖音小程序",
+  "appid": "",
+  "setting": {
+    "es6": true,
+    "minified": true
+  }
+}
+
