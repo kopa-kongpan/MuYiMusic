@@ -101,10 +101,11 @@ export default function StoreSelectionPage() {
     }
   }
 
-  function selectStore(store: StorePublicRead) {
+  async function selectStore(store: StorePublicRead) {
     saveCurrentStore(store)
     setCurrentStore(store)
-    void Taro.showToast({ title: '门店已选择', icon: 'success' })
+    await Taro.showToast({ title: '门店已选择', icon: 'success' })
+    await Taro.switchTab({ url: '/pages/home/index' })
   }
 
   function callStore(store: StorePublicRead) {
@@ -163,7 +164,16 @@ export default function StoreSelectionPage() {
             <Text className="band-label">当前门店</Text>
             <Text className="band-store-name">{currentStore.name}</Text>
           </View>
-          <Text className="band-city">{currentStore.city}</Text>
+          <View className="band-actions">
+            <Text className="band-city">{currentStore.city}</Text>
+            <Button
+              className="band-enter-button"
+              size="mini"
+              onClick={() => void Taro.switchTab({ url: '/pages/home/index' })}
+            >
+              进入首页
+            </Button>
+          </View>
         </View>
       ) : null}
 
@@ -234,12 +244,11 @@ export default function StoreSelectionPage() {
                     联系门店
                   </Button>
                   <Button
-                    className={isCurrent ? 'select-button select-button--current' : 'select-button'}
+                    className="select-button"
                     size="mini"
-                    disabled={isCurrent}
-                    onClick={() => selectStore(store)}
+                    onClick={() => void selectStore(store)}
                   >
-                    {isCurrent ? '当前门店' : '选择门店'}
+                    {isCurrent ? '进入门店' : '选择门店'}
                   </Button>
                 </View>
               </View>

@@ -1,0 +1,71 @@
+.section-page {
+  min-height: 100vh;
+  padding: 38rpx 28rpx 64rpx;
+  color: #202522;
+  background: #f3f5f4;
+}
+
+.section-page-header {
+  margin-bottom: 26rpx;
+}
+
+.section-page-title,
+.section-page-store,
+.section-state-title,
+.section-state-copy {
+  display: block;
+}
+
+.section-page-title {
+  font-size: 36rpx;
+  font-weight: 650;
+}
+
+.section-page-store {
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: #6f7873;
+  font-size: 23rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420rpx;
+  padding: 40rpx;
+  color: #737c77;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+  flex-direction: column;
+  text-align: center;
+}
+
+.section-state-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76rpx;
+  height: 76rpx;
+  margin-bottom: 22rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 8rpx;
+  font-size: 29rpx;
+  font-weight: 650;
+}
+
+.section-state-title {
+  color: #303733;
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.section-state-copy {
+  margin-top: 12rpx;
+  color: #7a827d;
+  font-size: 23rpx;
+}

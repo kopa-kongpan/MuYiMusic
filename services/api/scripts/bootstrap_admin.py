@@ -9,27 +9,29 @@ from app.core.database import get_session_factory
 from app.core.security import hash_password
 from app.models.admin import AdminUser, Permission, Role
 
-STORE_PERMISSION_CODE = "stores:manage"
+PERMISSIONS = {
+    "stores:manage": "管理门店",
+    "store_content:manage": "管理门店首页内容",
+}
 PLATFORM_ADMIN_ROLE_CODE = "platform_admin"
 
 
 async def bootstrap_admin(username: str, password: str) -> bool:
     async with get_session_factory()() as session:
         existing_user = await session.scalar(
-            select(AdminUser).where(AdminUser.username == username)
+            select(AdminUser)
+            .where(AdminUser.username == username)
+            .options(selectinload(AdminUser.roles))
         )
-        if existing_user is not None:
-            return False
-
-        permission = await session.scalar(
-            select(Permission).where(Permission.code == STORE_PERMISSION_CODE)
-        )
-        if permission is None:
-            permission = Permission(
-                code=STORE_PERMISSION_CODE,
-                name="管理门店",
+        permissions: list[Permission] = []
+        for code, name in PERMISSIONS.items():
+            permission = await session.scalar(
+                select(Permission).where(Permission.code == code)
             )
-            session.add(permission)
+            if permission is None:
+                permission = Permission(code=code, name=name)
+                session.add(permission)
+            permissions.append(permission)
 
         role = await session.scalar(
             select(Role)
@@ -42,8 +44,15 @@ async def bootstrap_admin(username: str, password: str) -> bool:
                 name="平台管理员",
             )
             session.add(role)
-        if permission not in role.permissions:
-            role.permissions.append(permission)
+        for permission in permissions:
+            if permission not in role.permissions:
+                role.permissions.append(permission)
+
+        if existing_user is not None:
+            if role not in existing_user.roles:
+                existing_user.roles.append(role)
+            await session.commit()
+            return False
 
         admin_user = AdminUser(
             username=username,

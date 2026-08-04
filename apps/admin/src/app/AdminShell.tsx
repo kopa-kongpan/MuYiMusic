@@ -1,5 +1,5 @@
 import { Button, Layout, Menu, Tooltip } from 'antd'
-import { LogOut, Music2, Store } from 'lucide-react'
+import { LayoutDashboard, LogOut, Music2, Store } from 'lucide-react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { clearAdminSession, getAdminSession } from './session'
@@ -20,6 +20,26 @@ export function AdminShell() {
     navigate('/login', { replace: true })
   }
 
+  const selectedMenuKey = location.pathname.startsWith('/store-content')
+    ? 'store-content'
+    : 'stores'
+  const menuItems = [
+    {
+      key: 'stores',
+      icon: <Store size={17} aria-hidden="true" />,
+      label: '门店管理',
+    },
+    ...(session.admin.permissions.includes('store_content:manage')
+      ? [
+          {
+            key: 'store-content',
+            icon: <LayoutDashboard size={17} aria-hidden="true" />,
+            label: '首页内容',
+          },
+        ]
+      : []),
+  ]
+
   return (
     <Layout className="admin-shell">
       <Sider className="admin-sider" width={216}>
@@ -32,14 +52,8 @@ export function AdminShell() {
         <Menu
           className="admin-menu"
           mode="inline"
-          selectedKeys={['stores']}
-          items={[
-            {
-              key: 'stores',
-              icon: <Store size={17} aria-hidden="true" />,
-              label: '门店管理',
-            },
-          ]}
+          selectedKeys={[selectedMenuKey]}
+          items={menuItems}
           onClick={({ key }) => navigate(`/${key}`)}
         />
       </Sider>

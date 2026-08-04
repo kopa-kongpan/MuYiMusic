@@ -26,7 +26,7 @@ StoreManager = Annotated[
 @router.get("", response_model=StoreAdminListResponse)
 async def list_stores(
     session: Annotated[AsyncSession, Depends(get_session)],
-    _: Annotated[AdminUser, Depends(get_current_admin)],
+    current_admin: Annotated[AdminUser, Depends(get_current_admin)],
     keyword: Annotated[str | None, Query(max_length=128)] = None,
     store_status: Annotated[
         StoreStatus | None,
@@ -36,6 +36,7 @@ async def list_stores(
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> StoreAdminListResponse:
     return await StoreService(session).list_admin(
+        admin_user=current_admin,
         keyword=keyword,
         status=store_status,
         page=page,
@@ -49,7 +50,7 @@ async def create_store(
     session: Annotated[AsyncSession, Depends(get_session)],
     current_admin: StoreManager,
 ) -> StoreRead:
-    return await StoreService(session).create(payload, current_admin.id)
+    return await StoreService(session).create(payload, current_admin)
 
 
 @router.patch("/{store_id}", response_model=StoreRead)
@@ -63,7 +64,7 @@ async def update_store(
         return await StoreService(session).update(
             store_id,
             payload,
-            current_admin.id,
+            current_admin,
         )
     except StoreNotFoundError as error:
         raise HTTPException(

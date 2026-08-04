@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.models.store import Store, StoreStatus
 
@@ -20,8 +21,11 @@ class StoreRepository:
         status: StoreStatus | None,
         page: int,
         page_size: int,
+        allowed_store_ids: set[UUID] | None,
     ) -> tuple[list[Store], int]:
-        filters = []
+        filters: list[ColumnElement[bool]] = []
+        if allowed_store_ids is not None:
+            filters.append(Store.id.in_(allowed_store_ids))
         if keyword:
             pattern = f"%{keyword}%"
             filters.append(

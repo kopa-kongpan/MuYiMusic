@@ -187,6 +187,29 @@
   font-size: 22rpx;
 }
 
+.band-actions {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: 10rpx;
+}
+
+.band-enter-button {
+  height: 50rpx;
+  margin: 0;
+  padding: 0 18rpx;
+  color: #202522;
+  background: #ffffff;
+  border-radius: 6rpx;
+  font-size: 21rpx;
+  line-height: 50rpx;
+}
+
+.band-enter-button::after {
+  border: 0;
+}
+
 .store-list-heading {
   display: flex;
   align-items: center;

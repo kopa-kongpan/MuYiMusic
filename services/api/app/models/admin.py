@@ -1,10 +1,14 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Table, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.store import Store
 
 admin_user_roles = Table(
     "admin_user_roles",
@@ -36,6 +40,21 @@ role_permissions = Table(
     ),
 )
 
+admin_user_stores = Table(
+    "admin_user_stores",
+    Base.metadata,
+    Column(
+        "admin_user_id",
+        ForeignKey("admin_users.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "store_id",
+        ForeignKey("stores.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
 
 class AdminUser(Base):
     __tablename__ = "admin_users"
@@ -60,6 +79,11 @@ class AdminUser(Base):
     roles: Mapped[list["Role"]] = relationship(
         secondary=admin_user_roles,
         back_populates="admin_users",
+        lazy="selectin",
+    )
+    stores: Mapped[list["Store"]] = relationship(
+        secondary=admin_user_stores,
+        back_populates="authorized_admins",
         lazy="selectin",
     )
 

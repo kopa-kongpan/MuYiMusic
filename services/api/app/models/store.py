@@ -1,12 +1,16 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, Enum, Integer, Numeric, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.admin import AdminUser
 
 
 class StoreStatus(StrEnum):
@@ -48,4 +52,8 @@ class Store(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
+    )
+    authorized_admins: Mapped[list["AdminUser"]] = relationship(
+        secondary="admin_user_stores",
+        back_populates="stores",
     )

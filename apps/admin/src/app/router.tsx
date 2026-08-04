@@ -2,6 +2,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom'
 
 import { AdminShell } from './AdminShell'
 import { LoginPage } from './LoginPage'
+import { StoreContentPage } from './StoreContentPage'
 import { StoresPage } from './StoresPage'
 
 export const router = createBrowserRouter([
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/stores" replace /> },
       { path: 'stores', element: <StoresPage /> },
+      { path: 'store-content', element: <StoreContentPage /> },
     ],
   },
   {

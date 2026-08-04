@@ -7,3 +7,8 @@ page {
     "Segoe UI", sans-serif;
   letter-spacing: 0;
 }
+
+// Taro H5 会为未配置图标的文本型 tabBar 输出空图片节点。
+.weui-tabbar__icon:not([src]) {
+  display: none;
+}

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.admin import AdminUser
 from app.models.store import Store, StoreStatus
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.store_repository import StoreRepository
@@ -16,10 +17,22 @@ from app.schemas.store import (
     StoreRead,
     StoreUpdate,
 )
+from app.services.auth_service import has_platform_scope
 
 
 class StoreNotFoundError(Exception):
     pass
+
+
+def authorized_store_ids(admin_user: AdminUser) -> set[UUID] | None:
+    if has_platform_scope(admin_user):
+        return None
+    return {store.id for store in admin_user.stores}
+
+
+def can_access_store(admin_user: AdminUser, store_id: UUID) -> bool:
+    allowed_store_ids = authorized_store_ids(admin_user)
+    return allowed_store_ids is None or store_id in allowed_store_ids
 
 
 def distance_km(
@@ -70,6 +83,7 @@ class StoreService:
     async def list_admin(
         self,
         *,
+        admin_user: AdminUser,
         keyword: str | None,
         status: StoreStatus | None,
         page: int,
@@ -80,6 +94,7 @@ class StoreService:
             status=status,
             page=page,
             page_size=page_size,
+            allowed_store_ids=authorized_store_ids(admin_user),
         )
         return StoreAdminListResponse(
             items=[StoreRead.model_validate(store) for store in stores],
@@ -118,7 +133,7 @@ class StoreService:
     async def create(
         self,
         payload: StoreCreate,
-        admin_user_id: UUID,
+        admin_user: AdminUser,
     ) -> StoreRead:
         store = Store(
             name=payload.name,
@@ -131,11 +146,13 @@ class StoreService:
             status=payload.status,
             sort_order=payload.sort_order,
         )
+        if not has_platform_scope(admin_user):
+            store.authorized_admins.append(admin_user)
         try:
             self.repository.add(store)
             await self.session.flush()
             self.audit_repository.add(
-                admin_user_id=admin_user_id,
+                admin_user_id=admin_user.id,
                 action="store.create",
                 resource_type="store",
                 resource_id=str(store.id),
@@ -152,8 +169,10 @@ class StoreService:
         self,
         store_id: UUID,
         payload: StoreUpdate,
-        admin_user_id: UUID,
+        admin_user: AdminUser,
     ) -> StoreRead:
+        if not can_access_store(admin_user, store_id):
+            raise StoreNotFoundError
         store = await self.repository.get(store_id)
         if store is None:
             raise StoreNotFoundError
@@ -168,7 +187,7 @@ class StoreService:
         try:
             await self.session.flush()
             self.audit_repository.add(
-                admin_user_id=admin_user_id,
+                admin_user_id=admin_user.id,
                 action="store.update",
                 resource_type="store",
                 resource_id=str(store.id),

@@ -15,7 +15,10 @@ class AdminRepository:
         statement = (
             select(AdminUser)
             .where(AdminUser.username == username)
-            .options(selectinload(AdminUser.roles).selectinload(Role.permissions))
+            .options(
+                selectinload(AdminUser.roles).selectinload(Role.permissions),
+                selectinload(AdminUser.stores),
+            )
         )
         return (await self.session.scalars(statement)).one_or_none()
 
@@ -23,6 +26,9 @@ class AdminRepository:
         statement = (
             select(AdminUser)
             .where(AdminUser.id == admin_user_id)
-            .options(selectinload(AdminUser.roles).selectinload(Role.permissions))
+            .options(
+                selectinload(AdminUser.roles).selectinload(Role.permissions),
+                selectinload(AdminUser.stores),
+            )
         )
         return (await self.session.scalars(statement)).one_or_none()

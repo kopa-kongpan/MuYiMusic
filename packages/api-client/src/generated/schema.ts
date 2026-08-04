@@ -38,6 +38,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/media/upload-tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Upload Ticket */
+        post: operations["create_upload_ticket_api_v1_admin_media_upload_tickets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/home-content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Content */
+        get: operations["list_content_api_v1_admin_stores__store_id__home_content_get"];
+        put?: never;
+        /** Create Content */
+        post: operations["create_content_api_v1_admin_stores__store_id__home_content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/home-content/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder Content */
+        put: operations["reorder_content_api_v1_admin_stores__store_id__home_content_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/home-content/{content_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Content */
+        patch: operations["update_content_api_v1_admin_stores__store_id__home_content__content_id__patch"];
+        trace?: never;
+    };
     "/api/v1/admin/stores": {
         parameters: {
             query?: never;
@@ -71,6 +140,23 @@ export interface paths {
         head?: never;
         /** Update Store */
         patch: operations["update_store_api_v1_admin_stores__store_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/app/stores/{store_id}/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Store Home */
+        get: operations["get_store_home_api_v1_app_stores__store_id__home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/app/stores": {
@@ -127,6 +213,146 @@ export interface components {
             expires_in: number;
             admin: components["schemas"]["AdminProfile"];
         };
+        /** ContentBlockAdminListResponse */
+        ContentBlockAdminListResponse: {
+            /** Items */
+            items: components["schemas"]["ContentBlockRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** ContentBlockCreate */
+        ContentBlockCreate: {
+            block_type: components["schemas"]["ContentBlockType"];
+            /** Title */
+            title: string;
+            /** Media Object Key */
+            media_object_key?: string | null;
+            /** @default none */
+            jump_type: components["schemas"]["ContentJumpType"];
+            /** Jump Target */
+            jump_target?: string | null;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+            /** @default enabled */
+            status: components["schemas"]["ContentBlockStatus"];
+            /** Starts At */
+            starts_at?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+        };
+        /** ContentBlockPublicRead */
+        ContentBlockPublicRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            block_type: components["schemas"]["ContentBlockType"];
+            /** Title */
+            title: string;
+            /** Media Url */
+            media_url: string | null;
+            jump_type: components["schemas"]["ContentJumpType"];
+            /** Jump Target */
+            jump_target: string | null;
+            /** Sort Order */
+            sort_order: number;
+        };
+        /** ContentBlockRead */
+        ContentBlockRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            block_type: components["schemas"]["ContentBlockType"];
+            /** Title */
+            title: string;
+            /** Media Object Key */
+            media_object_key: string | null;
+            /** Media Url */
+            media_url?: string | null;
+            jump_type: components["schemas"]["ContentJumpType"];
+            /** Jump Target */
+            jump_target: string | null;
+            /** Sort Order */
+            sort_order: number;
+            status: components["schemas"]["ContentBlockStatus"];
+            /** Starts At */
+            starts_at: string | null;
+            /** Ends At */
+            ends_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * ContentBlockStatus
+         * @enum {string}
+         */
+        ContentBlockStatus: "enabled" | "disabled";
+        /**
+         * ContentBlockType
+         * @enum {string}
+         */
+        ContentBlockType: "image" | "video" | "shortcut";
+        /** ContentBlockUpdate */
+        ContentBlockUpdate: {
+            block_type?: components["schemas"]["ContentBlockType"] | null;
+            /** Title */
+            title?: string | null;
+            /** Media Object Key */
+            media_object_key?: string | null;
+            jump_type?: components["schemas"]["ContentJumpType"] | null;
+            /** Jump Target */
+            jump_target?: string | null;
+            /** Sort Order */
+            sort_order?: number | null;
+            status?: components["schemas"]["ContentBlockStatus"] | null;
+            /** Starts At */
+            starts_at?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+        };
+        /**
+         * ContentJumpType
+         * @enum {string}
+         */
+        ContentJumpType: "none" | "internal" | "web_url";
+        /** ContentOrderItem */
+        ContentOrderItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Sort Order */
+            sort_order: number;
+        };
+        /** ContentOrderUpdate */
+        ContentOrderUpdate: {
+            /** Items */
+            items: components["schemas"]["ContentOrderItem"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -177,6 +403,12 @@ export interface components {
              * @default 0
              */
             sort_order: number;
+        };
+        /** StoreHomeResponse */
+        StoreHomeResponse: {
+            store: components["schemas"]["StorePublicRead"];
+            /** Content Blocks */
+            content_blocks: components["schemas"]["ContentBlockPublicRead"][];
         };
         /** StorePublicListResponse */
         StorePublicListResponse: {
@@ -280,6 +512,45 @@ export interface components {
             /** Sort Order */
             sort_order?: number | null;
         };
+        /** UploadTicketRequest */
+        UploadTicketRequest: {
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /** File Size */
+            file_size: number;
+        };
+        /** UploadTicketResponse */
+        UploadTicketResponse: {
+            /** Object Key */
+            object_key: string;
+            /** Upload Url */
+            upload_url: string;
+            /**
+             * Method
+             * @default PUT
+             */
+            method: string;
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
+            /** Public Url */
+            public_url: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Max Size Bytes */
+            max_size_bytes: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -342,6 +613,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_upload_ticket_api_v1_admin_media_upload_tickets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadTicketRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadTicketResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_content_api_v1_admin_stores__store_id__home_content_get: {
+        parameters: {
+            query?: {
+                block_type?: components["schemas"]["ContentBlockType"] | null;
+                status?: components["schemas"]["ContentBlockStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentBlockAdminListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_content_api_v1_admin_stores__store_id__home_content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentBlockCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentBlockRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reorder_content_api_v1_admin_stores__store_id__home_content_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentOrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentBlockRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_content_api_v1_admin_stores__store_id__home_content__content_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentBlockUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentBlockRead"];
                 };
             };
             /** @description Validation Error */
@@ -444,6 +890,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoreRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_store_home_api_v1_app_stores__store_id__home_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreHomeResponse"];
                 };
             };
             /** @description Validation Error */

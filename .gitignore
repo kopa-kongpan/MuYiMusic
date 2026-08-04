@@ -14,6 +14,7 @@ __pycache__/
 .ruff_cache/
 .venv/
 services/api/.venv/
+services/api/.uv-cache/
 
 # Local configuration and secrets
 .env

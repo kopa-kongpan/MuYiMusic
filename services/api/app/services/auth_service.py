@@ -12,10 +12,17 @@ class InvalidCredentialsError(Exception):
     pass
 
 
+PLATFORM_ADMIN_ROLE_CODE = "platform_admin"
+
+
 def permission_codes(admin_user: AdminUser) -> set[str]:
     return {
         permission.code for role in admin_user.roles for permission in role.permissions
     }
+
+
+def has_platform_scope(admin_user: AdminUser) -> bool:
+    return any(role.code == PLATFORM_ADMIN_ROLE_CODE for role in admin_user.roles)
 
 
 class AuthService:
