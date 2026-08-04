@@ -1,8 +1,39 @@
 name: muyimusic
 
+x-api-environment: &api-environment
+  APP_ENV: ${APP_ENV:-local}
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  REDIS_URL: redis://redis:6379/0
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:10086}
+  JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+  JWT_ACCESS_TOKEN_MINUTES: ${JWT_ACCESS_TOKEN_MINUTES:-480}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+  OBJECT_STORAGE_PROVIDER: ${OBJECT_STORAGE_PROVIDER:-}
+  OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:-}
+  OBJECT_STORAGE_REGION: ${OBJECT_STORAGE_REGION:-}
+  OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-}
+  OBJECT_STORAGE_ACCESS_KEY_ID: ${OBJECT_STORAGE_ACCESS_KEY_ID:-}
+  OBJECT_STORAGE_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_SECRET_ACCESS_KEY:-}
+  OBJECT_STORAGE_SESSION_TOKEN: ${OBJECT_STORAGE_SESSION_TOKEN:-}
+  OBJECT_STORAGE_PUBLIC_BASE_URL: ${OBJECT_STORAGE_PUBLIC_BASE_URL:-}
+  OBJECT_STORAGE_PATH_PREFIX: ${OBJECT_STORAGE_PATH_PREFIX:-muyimusic}
+  OBJECT_STORAGE_ADDRESSING_STYLE: ${OBJECT_STORAGE_ADDRESSING_STYLE:-virtual}
+  OBJECT_STORAGE_UPLOAD_EXPIRES_SECONDS: ${OBJECT_STORAGE_UPLOAD_EXPIRES_SECONDS:-900}
+  OBJECT_STORAGE_DOWNLOAD_EXPIRES_SECONDS: ${OBJECT_STORAGE_DOWNLOAD_EXPIRES_SECONDS:-3600}
+  OBJECT_STORAGE_MAX_IMAGE_BYTES: ${OBJECT_STORAGE_MAX_IMAGE_BYTES:-10485760}
+  OBJECT_STORAGE_MAX_VIDEO_BYTES: ${OBJECT_STORAGE_MAX_VIDEO_BYTES:-209715200}
+
+x-static-healthcheck: &static-healthcheck
+  test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+  interval: 10s
+  timeout: 5s
+  retries: 6
+  start_period: 5s
+
 services:
   postgres:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
@@ -13,12 +44,13 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${DOCKER_POSTGRES_PORT:-15432}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-local-data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -26,38 +58,111 @@ services:
       timeout: 3s
       retries: 10
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${DOCKER_REDIS_PORT:-16379}:6379"
     volumes:
-      - redis-data:/data
+      - redis-local-data:/data
 
-  api:
+  migrate:
     build:
       context: ../services/api
-    environment:
-      APP_ENV: ${APP_ENV:-local}
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      REDIS_URL: redis://redis:6379/0
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      JWT_ACCESS_TOKEN_MINUTES: ${JWT_ACCESS_TOKEN_MINUTES:-480}
-      SENTRY_DSN: ${SENTRY_DSN:-}
+    environment: *api-environment
+    command: ["alembic", "upgrade", "head"]
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: "no"
+
+  bootstrap:
+    build:
+      context: ../services/api
+    environment:
+      <<: *api-environment
+      ADMIN_INITIAL_USERNAME: ${ADMIN_INITIAL_USERNAME:-admin}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD is required}
+    command: ["python", "-m", "scripts.bootstrap_admin"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  api:
+    build:
+      context: ../services/api
+    environment: *api-environment
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
     expose:
       - "8000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
   nginx:
     image: nginx:1.27-alpine
+    restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1/health",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+  admin:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      target: admin-runtime
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck: *static-healthcheck
+
+  h5:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      target: h5-runtime
+      args:
+        TARO_APP_API_BASE_URL: ""
+    ports:
+      - "10086:80"
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck: *static-healthcheck
 
 volumes:
-  postgres-data:
-  redis-data:
+  postgres-local-data:
+  redis-local-data:

@@ -1,10 +1,10 @@
 # MuYiMusic
 
-MuYiMusic 是一个前后端分离的 monorepo，包含微信/抖音小程序、Web 运营管理后台和一套 FastAPI 后端服务。当前已完成 v0.1 门店闭环，包括管理员登录、门店后台和小程序门店选择。
+MuYiMusic 是一个前后端分离的 monorepo，包含微信/抖音小程序、Web 运营管理后台和一套 FastAPI 后端服务。当前已完成 v0.2 首页内容闭环，包括门店管理、首页内容后台、媒体直传和小程序门店首页。
 
 开发前请先阅读 [项目技术规范](./docs/项目技术规范.md) 和
 [第一阶段需求规格](./docs/第一阶段需求规格.md)。
-当前版本运行方式见 [第一版门店闭环说明](./docs/第一版门店闭环说明.md)。
+当前版本运行方式见 [第二版首页内容闭环说明](./docs/第二版首页内容闭环说明.md)，完整容器部署见 [本地容器部署说明](./docs/本地容器部署说明.md)。
 
 ## 目录
 
@@ -66,11 +66,12 @@ uv run alembic revision --autogenerate -m "describe change"
 ## 本地基础设施
 
 ```bash
-cp .env.example .env
-docker compose -f deploy/compose.yaml up --build
+Copy-Item .env.example .env
+pnpm deploy:local
+pnpm deploy:status
 ```
 
-Nginx 默认监听 `http://localhost:8080`，并将 `/api/` 与 `/health` 转发至 FastAPI。
+部署会启动项目独立的 PostgreSQL、Redis、API、管理后台和 H5，并自动执行 migration 与管理员初始化。API 网关为 `http://localhost:8080`，管理后台为 `http://localhost:5173`，H5 为 `http://localhost:10086`。
 
 ## 质量检查
 
