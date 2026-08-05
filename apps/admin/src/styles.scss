@@ -299,6 +299,104 @@ select {
   gap: 2px;
 }
 
+.schedule-toolbar {
+  flex-wrap: wrap;
+}
+
+.schedule-date-input {
+  width: 170px;
+}
+
+.schedule-time-cell,
+.schedule-course-cell,
+.schedule-capacity-cell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.schedule-time-cell strong,
+.schedule-capacity-cell strong {
+  color: #202522;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-course-cell strong {
+  overflow: hidden;
+  color: #202522;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-time-cell span,
+.schedule-course-cell span,
+.schedule-capacity-cell span {
+  color: #78807b;
+  font-size: 12px;
+}
+
+.schedule-guide-alert {
+  margin-bottom: 16px;
+}
+
+.teacher-editor {
+  padding: 16px;
+  background: #f7f9f8;
+  border: 1px solid #e2e6e4;
+  border-radius: 7px;
+}
+
+.teacher-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 100px 70px;
+  gap: 12px;
+}
+
+.teacher-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.teacher-list {
+  display: flex;
+  max-height: 360px;
+  margin-top: 18px;
+  overflow-y: auto;
+  border-top: 1px solid #e2e6e4;
+  flex-direction: column;
+}
+
+.teacher-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 48px 40px;
+  align-items: center;
+  min-height: 64px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #e2e6e4;
+  gap: 10px;
+}
+
+.teacher-row > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.teacher-row strong,
+.teacher-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-row span {
+  color: #78807b;
+  font-size: 12px;
+}
+
 .order-actions {
   display: grid;
   grid-template-columns: 30px 30px 1fr;
@@ -967,6 +1065,16 @@ select {
     grid-template-columns: 1fr;
     gap: 0;
   }
+
+  .schedule-date-input,
+  .schedule-toolbar .status-filter {
+    flex: 1 1 140px;
+    width: auto;
+  }
+
+  .teacher-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 420px) {
@@ -990,5 +1098,17 @@ select {
 
   .admin-user-name {
     max-width: 110px;
+  }
+
+  .teacher-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-row {
+    grid-template-columns: minmax(0, 1fr) 48px 40px;
+  }
+
+  .teacher-row > span {
+    display: none;
   }
 }

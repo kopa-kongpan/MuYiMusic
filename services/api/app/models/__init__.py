@@ -10,6 +10,7 @@ from app.models.product import (
     ProductSku,
     ProductStatus,
 )
+from app.models.schedule import ClassSchedule, ScheduleStatus, Teacher
 from app.models.store import Store, StoreStatus
 from app.models.store_content import (
     ContentBlockStatus,
@@ -39,6 +40,7 @@ __all__ = [
     "AuditLog",
     "Base",
     "Category",
+    "ClassSchedule",
     "Permission",
     "IdentityProvider",
     "Order",
@@ -50,9 +52,11 @@ __all__ = [
     "ProductStatus",
     "ProviderAccount",
     "Role",
+    "ScheduleStatus",
     "Store",
     "StoreStatus",
     "StoreContentBlock",
+    "Teacher",
     "User",
     "UserStatus",
     "admin_user_stores",

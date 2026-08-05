@@ -3,6 +3,16 @@ import type { components } from './generated/schema'
 export type AdminLoginRequest = components['schemas']['AdminLoginRequest']
 export type AdminProfile = components['schemas']['AdminProfile']
 export type AdminTokenResponse = components['schemas']['AdminTokenResponse']
+export type ScheduleCreate = components['schemas']['ScheduleCreate']
+export type ScheduleListResponse = components['schemas']['ScheduleListResponse']
+export type SchedulePublicListResponse =
+  components['schemas']['SchedulePublicListResponse']
+export type SchedulePublicRead = components['schemas']['SchedulePublicRead']
+export type ScheduleRead = components['schemas']['ScheduleRead']
+export type ScheduleStatus = components['schemas']['ScheduleStatus']
+export type ScheduleStatusUpdate =
+  components['schemas']['ScheduleStatusUpdate']
+export type ScheduleUpdate = components['schemas']['ScheduleUpdate']
 export type CourseEntitlementListResponse =
   components['schemas']['CourseEntitlementListResponse']
 export type CourseEntitlementRead =
@@ -56,6 +66,10 @@ export type StoreRead = components['schemas']['StoreRead']
 export type StoreStatus = components['schemas']['StoreStatus']
 export type StoreHomeResponse = components['schemas']['StoreHomeResponse']
 export type StoreUpdate = components['schemas']['StoreUpdate']
+export type TeacherCreate = components['schemas']['TeacherCreate']
+export type TeacherListResponse = components['schemas']['TeacherListResponse']
+export type TeacherRead = components['schemas']['TeacherRead']
+export type TeacherUpdate = components['schemas']['TeacherUpdate']
 export type UploadTicketRequest = components['schemas']['UploadTicketRequest']
 export type UploadTicketResponse = components['schemas']['UploadTicketResponse']
 export type UserAdminListResponse =
@@ -144,6 +158,25 @@ export interface UserEntitlementQuery {
 
 export interface AdminUserQuery {
   keyword?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface AdminTeacherQuery {
+  keyword?: string
+  isActive?: boolean
+  page?: number
+  pageSize?: number
+}
+
+export interface ScheduleQueryWindow {
+  startsFrom: string
+  startsBefore: string
+}
+
+export interface AdminScheduleQuery extends ScheduleQueryWindow {
+  teacherId?: string
+  status?: ScheduleStatus
   page?: number
   pageSize?: number
 }
@@ -341,6 +374,71 @@ export function createApiClient(options: ApiClientOptions = {}) {
         }),
       )
     },
+    listAdminTeachers(storeId: string, query: AdminTeacherQuery = {}) {
+      return request<TeacherListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/teachers`, {
+          keyword: query.keyword,
+          is_active:
+            query.isActive === undefined ? undefined : String(query.isActive),
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    createTeacher(storeId: string, payload: TeacherCreate) {
+      return request<TeacherRead>(
+        `/api/v1/admin/stores/${storeId}/teachers`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      )
+    },
+    updateTeacher(
+      storeId: string,
+      teacherId: string,
+      payload: TeacherUpdate,
+    ) {
+      return request<TeacherRead>(
+        `/api/v1/admin/stores/${storeId}/teachers/${teacherId}`,
+        { method: 'PATCH', body: JSON.stringify(payload) },
+      )
+    },
+    listAdminSchedules(storeId: string, query: AdminScheduleQuery) {
+      return request<ScheduleListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/schedules`, {
+          starts_from: query.startsFrom,
+          starts_before: query.startsBefore,
+          teacher_id: query.teacherId,
+          status: query.status,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    createSchedule(storeId: string, payload: ScheduleCreate) {
+      return request<ScheduleRead>(
+        `/api/v1/admin/stores/${storeId}/schedules`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      )
+    },
+    updateSchedule(
+      storeId: string,
+      scheduleId: string,
+      payload: ScheduleUpdate,
+    ) {
+      return request<ScheduleRead>(
+        `/api/v1/admin/stores/${storeId}/schedules/${scheduleId}`,
+        { method: 'PATCH', body: JSON.stringify(payload) },
+      )
+    },
+    changeScheduleStatus(
+      storeId: string,
+      scheduleId: string,
+      payload: ScheduleStatusUpdate,
+    ) {
+      return request<ScheduleRead>(
+        `/api/v1/admin/stores/${storeId}/schedules/${scheduleId}/status`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      )
+    },
     listAdminUsers(storeId: string, query: AdminUserQuery = {}) {
       return request<UserAdminListResponse>(
         appendQuery(`/api/v1/admin/stores/${storeId}/users`, {
@@ -449,6 +547,14 @@ export function createApiClient(options: ApiClientOptions = {}) {
     getPublicProduct(storeId: string, productId: string) {
       return request<ProductPublicRead>(
         `/api/v1/app/stores/${storeId}/products/${productId}`,
+      )
+    },
+    listPublicSchedules(storeId: string, query: ScheduleQueryWindow) {
+      return request<SchedulePublicListResponse>(
+        appendQuery(`/api/v1/app/stores/${storeId}/schedules`, {
+          starts_from: query.startsFrom,
+          starts_before: query.startsBefore,
+        }),
       )
     },
     validatePurchase(

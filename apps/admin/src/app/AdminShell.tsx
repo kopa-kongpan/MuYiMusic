@@ -1,6 +1,7 @@
 import { Button, Layout, Menu, Tooltip } from 'antd'
 import {
   BookOpen,
+  CalendarDays,
   LayoutDashboard,
   LogOut,
   Music2,
@@ -31,9 +32,11 @@ export function AdminShell() {
     ? 'store-content'
     : location.pathname.startsWith('/products')
       ? 'products'
+      : location.pathname.startsWith('/schedules')
+        ? 'schedules'
       : location.pathname.startsWith('/users')
-        ? 'users'
-        : 'stores'
+          ? 'users'
+          : 'stores'
   const menuItems = [
     {
       key: 'stores',
@@ -64,6 +67,15 @@ export function AdminShell() {
             key: 'users',
             icon: <UsersRound size={17} aria-hidden="true" />,
             label: '用户与权益',
+          },
+        ]
+      : []),
+    ...(session.admin.permissions.includes('schedules:manage')
+      ? [
+          {
+            key: 'schedules',
+            icon: <CalendarDays size={17} aria-hidden="true" />,
+            label: '排课管理',
           },
         ]
       : []),
