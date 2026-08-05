@@ -1,4 +1,5 @@
 import { Button, Layout, Menu, Tooltip } from 'antd'
+import type { MenuProps } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   BookOpen,
@@ -15,6 +16,15 @@ import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { clearAdminSession, getAdminSession } from './session'
 
 const { Content, Header, Sider } = Layout
+
+const pageNames: Record<string, string> = {
+  appointments: '预约与消课',
+  products: '课程商品',
+  schedules: '排课管理',
+  'store-content': '首页内容',
+  stores: '门店管理',
+  users: '用户与权益',
+}
 
 export function AdminShell() {
   const location = useLocation()
@@ -43,75 +53,100 @@ export function AdminShell() {
           : location.pathname.startsWith('/users')
           ? 'users'
           : 'stores'
-  const menuItems = [
+  const hasPermission = (permission: string) =>
+    session.admin.permissions.includes(permission)
+  const storeItems: MenuProps['items'] = [
     {
       key: 'stores',
-      icon: <Store size={17} aria-hidden="true" />,
+      icon: <Store size={18} aria-hidden="true" />,
       label: '门店管理',
     },
-    ...(session.admin.permissions.includes('store_content:manage')
+    ...(hasPermission('store_content:manage')
       ? [
           {
             key: 'store-content',
-            icon: <LayoutDashboard size={17} aria-hidden="true" />,
+            icon: <LayoutDashboard size={18} aria-hidden="true" />,
             label: '首页内容',
           },
         ]
       : []),
-    ...(session.admin.permissions.includes('products:manage')
+    ...(hasPermission('products:manage')
       ? [
           {
             key: 'products',
-            icon: <BookOpen size={17} aria-hidden="true" />,
+            icon: <BookOpen size={18} aria-hidden="true" />,
             label: '课程商品',
           },
         ]
       : []),
-    ...(session.admin.permissions.includes('users:read')
-      ? [
-          {
-            key: 'users',
-            icon: <UsersRound size={17} aria-hidden="true" />,
-            label: '用户与权益',
-          },
-        ]
-      : []),
-    ...(session.admin.permissions.includes('schedules:manage')
+  ]
+  const teachingItems: MenuProps['items'] = [
+    ...(hasPermission('schedules:manage')
       ? [
           {
             key: 'schedules',
-            icon: <CalendarDays size={17} aria-hidden="true" />,
+            icon: <CalendarDays size={18} aria-hidden="true" />,
             label: '排课管理',
           },
         ]
       : []),
-    ...(session.admin.permissions.includes('appointments:manage')
+    ...(hasPermission('appointments:manage')
       ? [
           {
             key: 'appointments',
-            icon: <ClipboardCheck size={17} aria-hidden="true" />,
+            icon: <ClipboardCheck size={18} aria-hidden="true" />,
             label: '预约与消课',
           },
         ]
       : []),
   ]
+  const customerItems: MenuProps['items'] = hasPermission('users:read')
+    ? [
+        {
+          key: 'users',
+          icon: <UsersRound size={18} aria-hidden="true" />,
+          label: '用户与权益',
+        },
+      ]
+    : []
+  const menuItems: MenuProps['items'] = [
+    { type: 'group', label: '门店经营', children: storeItems },
+    ...(teachingItems.length
+      ? [{ type: 'group' as const, label: '教学运营', children: teachingItems }]
+      : []),
+    ...(customerItems.length
+      ? [{ type: 'group' as const, label: '客户中心', children: customerItems }]
+      : []),
+  ]
+  const currentPageName = pageNames[selectedMenuKey]
 
   return (
     <Layout className="admin-shell">
-      <Sider className="admin-sider" width={216}>
+      <Sider className="admin-sider" width={248}>
         <div className="admin-brand">
           <span className="brand-mark brand-mark--small" aria-hidden="true">
             <Music2 size={21} strokeWidth={2.2} />
           </span>
-          <span>MuYiMusic</span>
+          <span className="admin-brand-copy">
+            <strong>MuYiMusic</strong>
+            <small>音乐门店运营中心</small>
+          </span>
         </div>
         <Menu
           className="admin-menu"
           mode="inline"
+          theme="dark"
           selectedKeys={[selectedMenuKey]}
           items={menuItems}
           onClick={({ key }) => navigate(`/${key}`)}
         />
+        <div className="admin-sider-footer">
+          <span className="admin-status-dot" aria-hidden="true" />
+          <span>
+            <strong>门店运营系统</strong>
+            <small>服务连接正常</small>
+          </span>
+        </div>
       </Sider>
       <Layout className="admin-main">
         <Header className="admin-header">
@@ -119,8 +154,18 @@ export function AdminShell() {
             <Music2 size={20} aria-hidden="true" />
             <span>MuYiMusic</span>
           </div>
+          <div className="admin-page-context">
+            <span>运营工作台</span>
+            <strong>{currentPageName}</strong>
+          </div>
           <div className="admin-user">
-            <span className="admin-user-name">{session.admin.username}</span>
+            <span className="admin-user-avatar" aria-hidden="true">
+              {session.admin.username.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="admin-user-copy">
+              <strong className="admin-user-name">{session.admin.username}</strong>
+              <small>后台账号</small>
+            </span>
             <Tooltip title="退出登录">
               <Button
                 type="text"
