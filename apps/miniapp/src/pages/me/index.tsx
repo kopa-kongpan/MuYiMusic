@@ -3,6 +3,7 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
 import { loginCurrentUser } from '../../services/user'
+import { consumeLoginReturn } from '../../store/login-return'
 import { readCurrentStore } from '../../store/current-store'
 import {
   clearUserSession,
@@ -33,6 +34,10 @@ export default function MePage() {
       const nextSession = await loginCurrentUser()
       setSession(nextSession)
       await Taro.showToast({ title: '登录成功', icon: 'success' })
+      const returnUrl = consumeLoginReturn()
+      if (returnUrl) {
+        await Taro.navigateTo({ url: returnUrl })
+      }
     } catch (error) {
       await Taro.showToast({
         title: error instanceof Error ? error.message : '登录失败',
@@ -103,7 +108,7 @@ export default function MePage() {
           </View>
 
           <View className="me-readonly-note">
-            当前仅展示订单与课程权益，不提供在线支付、退款或课时调整。
+            预约成功后会锁定一节可用课时，课程结束并确认到课或缺席后扣减。
           </View>
         </>
       ) : (

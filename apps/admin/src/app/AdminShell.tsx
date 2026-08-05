@@ -1,7 +1,9 @@
 import { Button, Layout, Menu, Tooltip } from 'antd'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   BookOpen,
   CalendarDays,
+  ClipboardCheck,
   LayoutDashboard,
   LogOut,
   Music2,
@@ -17,6 +19,7 @@ const { Content, Header, Sider } = Layout
 export function AdminShell() {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const session = getAdminSession()
 
   if (!session) {
@@ -25,6 +28,7 @@ export function AdminShell() {
 
   function logout() {
     clearAdminSession()
+    queryClient.clear()
     navigate('/login', { replace: true })
   }
 
@@ -34,7 +38,9 @@ export function AdminShell() {
       ? 'products'
       : location.pathname.startsWith('/schedules')
         ? 'schedules'
-      : location.pathname.startsWith('/users')
+        : location.pathname.startsWith('/appointments')
+          ? 'appointments'
+          : location.pathname.startsWith('/users')
           ? 'users'
           : 'stores'
   const menuItems = [
@@ -76,6 +82,15 @@ export function AdminShell() {
             key: 'schedules',
             icon: <CalendarDays size={17} aria-hidden="true" />,
             label: '排课管理',
+          },
+        ]
+      : []),
+    ...(session.admin.permissions.includes('appointments:manage')
+      ? [
+          {
+            key: 'appointments',
+            icon: <ClipboardCheck size={17} aria-hidden="true" />,
+            label: '预约与消课',
           },
         ]
       : []),

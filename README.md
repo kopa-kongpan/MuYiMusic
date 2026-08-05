@@ -1,10 +1,10 @@
 # MuYiMusic
 
-MuYiMusic 是一个前后端分离的 monorepo，包含微信/抖音小程序、Web 运营管理后台和一套 FastAPI 后端服务。当前已完成 v0.2 首页内容闭环，包括门店管理、首页内容后台、媒体直传和小程序门店首页。
+MuYiMusic 是一个前后端分离的 monorepo，包含微信/抖音小程序、Web 运营管理后台和一套 FastAPI 后端服务。当前已完成 v0.6 预约与消课闭环，包括教师排课、在线预约、取消、正常消课、缺席扣课和撤销。
 
 开发前请先阅读 [项目技术规范](./docs/项目技术规范.md) 和
 [第一阶段需求规格](./docs/第一阶段需求规格.md)。
-当前版本运行方式见 [第二版首页内容闭环说明](./docs/第二版首页内容闭环说明.md)，完整容器部署见 [本地容器部署说明](./docs/本地容器部署说明.md)。
+当前版本说明见 [第六版预约与消课闭环说明](./docs/第六版预约与消课闭环说明.md)，完整容器部署见 [本地容器部署说明](./docs/本地容器部署说明.md)。
 
 ## 目录
 
@@ -23,8 +23,7 @@ docs                项目文档
 
 - Node.js 20.19+
 - pnpm 11
-- Python 3.12+
-- uv
+- Python 3.12+ 与 Conda 环境 `muyimusic`
 - Docker 与 Docker Compose
 
 仓库声明了固定 pnpm 版本，可通过 Corepack 启用：
@@ -48,9 +47,7 @@ pnpm dev:h5
 ## 后端开发
 
 ```bash
-cd services/api
-uv sync --dev
-uv run uvicorn app.main:app --reload --port 8001
+conda run --no-capture-output -n muyimusic python -m uvicorn app.main:app --reload --port 8001
 ```
 
 本地 API 默认监听 `http://localhost:8001`，健康检查为 `GET /health`，OpenAPI 文档为 `http://localhost:8001/docs`。
@@ -58,9 +55,8 @@ uv run uvicorn app.main:app --reload --port 8001
 数据库迁移命令：
 
 ```bash
-cd services/api
-uv run alembic upgrade head
-uv run alembic revision --autogenerate -m "describe change"
+conda run --no-capture-output -n muyimusic alembic upgrade head
+conda run --no-capture-output -n muyimusic alembic revision --autogenerate -m "describe change"
 ```
 
 ## 本地基础设施
@@ -79,10 +75,10 @@ pnpm deploy:status
 pnpm check
 
 cd services/api
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy app
-uv run pytest
+conda run --no-capture-output -n muyimusic ruff check .
+conda run --no-capture-output -n muyimusic ruff format --check .
+conda run --no-capture-output -n muyimusic mypy app
+conda run --no-capture-output -n muyimusic pytest
 ```
 
 ## API 客户端生成
@@ -91,7 +87,7 @@ OpenAPI 是接口契约的唯一来源。后端可运行后按以下方式导出
 
 ```bash
 cd services/api
-uv run python -m scripts.export_openapi
+conda run --no-capture-output -n muyimusic python -m scripts.export_openapi
 cd ../..
 pnpm --filter @muyimusic/api-client generate
 ```

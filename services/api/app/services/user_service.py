@@ -163,8 +163,7 @@ class UserService:
         )
         return OrderListResponse(
             items=[
-                self._to_order_read(order, store_name)
-                for order, store_name in rows
+                self._to_order_read(order, store_name) for order, store_name in rows
             ],
             total=total,
             page=page,
@@ -332,6 +331,10 @@ class UserService:
             course_name=entitlement.course_name,
             total_lessons=entitlement.total_lessons,
             remaining_lessons=entitlement.remaining_lessons,
+            reserved_lessons=entitlement.reserved_lessons,
+            available_lessons=(
+                entitlement.remaining_lessons - entitlement.reserved_lessons
+            ),
             valid_from=entitlement.valid_from,
             expires_at=entitlement.expires_at,
             status=entitlement.status,

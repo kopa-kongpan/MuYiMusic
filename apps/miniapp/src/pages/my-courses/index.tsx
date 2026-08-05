@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { listMyCourseEntitlements } from '../../services/user'
 import { readCurrentStore } from '../../store/current-store'
+import { setLoginReturn } from '../../store/login-return'
 import { readUserSession } from '../../store/user-session'
 import '../shared/user-records.scss'
 
@@ -57,7 +58,10 @@ export default function MyCoursesPage() {
         <Button
           className="record-state-button"
           size="mini"
-          onClick={() => void Taro.switchTab({ url: '/pages/me/index' })}
+          onClick={() => {
+            setLoginReturn('/pages/my-courses/index')
+            void Taro.switchTab({ url: '/pages/me/index' })
+          }}
         >
           去登录
         </Button>
@@ -92,9 +96,10 @@ export default function MyCoursesPage() {
             </View>
             <Text className="record-card-meta">{course.store_name}</Text>
             <View className="record-course-progress">
-              <Text>剩余 / 总课时</Text>
+              <Text>可用 / 锁定 / 总剩余</Text>
               <Text>
-                {course.remaining_lessons} / {course.total_lessons}
+                {course.available_lessons} / {course.reserved_lessons} /{' '}
+                {course.remaining_lessons}
               </Text>
             </View>
             <Text className="record-card-meta">

@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     jwt_secret: str | None = None
     jwt_access_token_minutes: int = 480
     user_access_token_minutes: int = 10080
+    booking_cutoff_minutes: int = 120
+    cancellation_cutoff_minutes: int = 120
     admin_initial_username: str = "admin"
     admin_initial_password: str | None = None
     wechat_app_id: str | None = None

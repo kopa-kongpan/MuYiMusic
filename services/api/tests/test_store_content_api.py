@@ -123,6 +123,19 @@ async def test_store_home_content_lifecycle_and_store_isolation() -> None:
                 assert image_response.status_code == 201
                 image_id = image_response.json()["id"]
 
+                mixed_timezone_response = await client.patch(
+                    (
+                        f"/api/v1/admin/stores/{allowed_store.id}/home-content/"
+                        f"{image_id}"
+                    ),
+                    headers=headers,
+                    json={
+                        "starts_at": datetime.now(UTC).isoformat(),
+                        "ends_at": (datetime.now() + timedelta(days=1)).isoformat(),
+                    },
+                )
+                assert mixed_timezone_response.status_code == 422
+
                 future_response = await client.post(
                     f"/api/v1/admin/stores/{allowed_store.id}/home-content",
                     headers=headers,

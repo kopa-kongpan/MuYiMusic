@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom'
 
 import { AdminShell } from './AdminShell'
+import { AppointmentsPage } from './AppointmentsPage'
 import { LoginPage } from './LoginPage'
 import { ProductsPage } from './ProductsPage'
 import { SchedulesPage } from './SchedulesPage'
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: 'store-content', element: <StoreContentPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'schedules', element: <SchedulesPage /> },
+      { path: 'appointments', element: <AppointmentsPage /> },
       { path: 'users', element: <UsersPage /> },
     ],
   },

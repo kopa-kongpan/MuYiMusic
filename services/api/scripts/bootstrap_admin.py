@@ -15,6 +15,9 @@ PERMISSIONS = {
     "products:manage": "管理课程商品",
     "users:read": "查询用户订单与课程权益",
     "schedules:manage": "管理教师与排课",
+    "appointments:manage": "管理预约",
+    "consumptions:manage": "执行消课与缺席",
+    "consumptions:reverse": "撤销消课",
 }
 PLATFORM_ADMIN_ROLE_CODE = "platform_admin"
 

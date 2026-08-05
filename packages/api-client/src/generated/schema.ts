@@ -38,6 +38,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Appointments */
+        get: operations["list_appointments_api_v1_admin_stores__store_id__appointments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/appointments/{appointment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Appointment */
+        post: operations["cancel_appointment_api_v1_admin_stores__store_id__appointments__appointment_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/appointments/{appointment_id}/consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Consume Appointment */
+        post: operations["consume_appointment_api_v1_admin_stores__store_id__appointments__appointment_id__consume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/appointments/{appointment_id}/no-show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark No Show */
+        post: operations["mark_no_show_api_v1_admin_stores__store_id__appointments__appointment_id__no_show_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/consumptions/{consumption_id}/reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reverse Consumption */
+        post: operations["reverse_consumption_api_v1_admin_stores__store_id__consumptions__consumption_id__reverse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/media/upload-tickets": {
         parameters: {
             query?: never;
@@ -402,6 +487,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/schedules/{schedule_id}/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Appointment */
+        post: operations["create_appointment_api_v1_app_schedules__schedule_id__appointments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Appointments */
+        get: operations["list_my_appointments_api_v1_app_me_appointments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/appointments/{appointment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel My Appointment */
+        post: operations["cancel_my_appointment_api_v1_app_me_appointments__appointment_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/me": {
         parameters: {
             query?: never;
@@ -610,6 +746,139 @@ export interface components {
             expires_in: number;
             admin: components["schemas"]["AdminProfile"];
         };
+        /** AppointmentAdminCancelRequest */
+        AppointmentAdminCancelRequest: {
+            /** Reason */
+            reason: string;
+        };
+        /** AppointmentCancelRequest */
+        AppointmentCancelRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
+         * AppointmentCancelledBy
+         * @enum {string}
+         */
+        AppointmentCancelledBy: "user" | "admin";
+        /** AppointmentCreate */
+        AppointmentCreate: {
+            /** Entitlement Id */
+            entitlement_id?: string | null;
+        };
+        /** AppointmentListResponse */
+        AppointmentListResponse: {
+            /** Items */
+            items: components["schemas"]["AppointmentRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** AppointmentRead */
+        AppointmentRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Appointment No */
+            appointment_no: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** User Nickname */
+            user_nickname: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /**
+             * Schedule Id
+             * Format: uuid
+             */
+            schedule_id: string;
+            /**
+             * Entitlement Id
+             * Format: uuid
+             */
+            entitlement_id: string;
+            /** Entitlement Course Name */
+            entitlement_course_name: string;
+            /** Entitlement Remaining Lessons */
+            entitlement_remaining_lessons: number;
+            /** Entitlement Reserved Lessons */
+            entitlement_reserved_lessons: number;
+            /** Entitlement Available Lessons */
+            entitlement_available_lessons: number;
+            /**
+             * Teacher Id
+             * Format: uuid
+             */
+            teacher_id: string;
+            /** Teacher Name */
+            teacher_name: string;
+            /** Product Id */
+            product_id: string | null;
+            /** Course Name */
+            course_name: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            status: components["schemas"]["AppointmentStatus"];
+            cancelled_by: components["schemas"]["AppointmentCancelledBy"] | null;
+            /** Cancellation Reason */
+            cancellation_reason: string | null;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /** Completed At */
+            completed_at: string | null;
+            /** No Show At */
+            no_show_at: string | null;
+            /** Active Consumption Id */
+            active_consumption_id: string | null;
+            /**
+             * Booking Closes At
+             * Format: date-time
+             */
+            booking_closes_at: string;
+            /**
+             * Cancellation Closes At
+             * Format: date-time
+             */
+            cancellation_closes_at: string;
+            /** Can User Cancel */
+            can_user_cancel: boolean;
+            /** Can Admin Settle */
+            can_admin_settle: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * AppointmentStatus
+         * @enum {string}
+         */
+        AppointmentStatus: "reserved" | "cancelled" | "completed" | "no_show";
         /** CategoryCreate */
         CategoryCreate: {
             /** Name */
@@ -689,6 +958,19 @@ export interface components {
             sort_order?: number | null;
             /** Is Enabled */
             is_enabled?: boolean | null;
+        };
+        /** ConsumptionCreateRequest */
+        ConsumptionCreateRequest: {
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+        };
+        /** ConsumptionReverseRequest */
+        ConsumptionReverseRequest: {
+            /** Reason */
+            reason: string;
         };
         /** ContentBlockAdminListResponse */
         ContentBlockAdminListResponse: {
@@ -872,6 +1154,10 @@ export interface components {
             total_lessons: number;
             /** Remaining Lessons */
             remaining_lessons: number;
+            /** Reserved Lessons */
+            reserved_lessons: number;
+            /** Available Lessons */
+            available_lessons: number;
             /**
              * Valid From
              * Format: date-time
@@ -1374,6 +1660,10 @@ export interface components {
             items: components["schemas"]["SchedulePublicRead"][];
             /** Total */
             total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
         };
         /** SchedulePublicRead */
         SchedulePublicRead: {
@@ -1414,6 +1704,13 @@ export interface components {
             reserved_count: number;
             /** Available Slots */
             available_slots: number;
+            /**
+             * Booking Closes At
+             * Format: date-time
+             */
+            booking_closes_at: string;
+            /** Is Booking Open */
+            is_booking_open: boolean;
         };
         /** ScheduleRead */
         ScheduleRead: {
@@ -1917,6 +2214,196 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_appointments_api_v1_admin_stores__store_id__appointments_get: {
+        parameters: {
+            query: {
+                starts_from: string;
+                starts_before: string;
+                status?: components["schemas"]["AppointmentStatus"] | null;
+                keyword?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_appointment_api_v1_admin_stores__store_id__appointments__appointment_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                store_id: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentAdminCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consume_appointment_api_v1_admin_stores__store_id__appointments__appointment_id__consume_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                store_id: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsumptionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_no_show_api_v1_admin_stores__store_id__appointments__appointment_id__no_show_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                store_id: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsumptionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reverse_consumption_api_v1_admin_stores__store_id__consumptions__consumption_id__reverse_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                store_id: string;
+                consumption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsumptionReverseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
                 };
             };
             /** @description Validation Error */
@@ -2912,6 +3399,114 @@ export interface operations {
             };
         };
     };
+    create_appointment_api_v1_app_schedules__schedule_id__appointments_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                schedule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_appointments_api_v1_app_me_appointments_get: {
+        parameters: {
+            query?: {
+                store_id?: string | null;
+                status?: components["schemas"]["AppointmentStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_my_appointment_api_v1_app_me_appointments__appointment_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_profile_api_v1_app_me_get: {
         parameters: {
             query?: never;
@@ -3205,6 +3800,8 @@ export interface operations {
             query: {
                 starts_from: string;
                 starts_before: string;
+                page?: number;
+                page_size?: number;
             };
             header?: never;
             path: {

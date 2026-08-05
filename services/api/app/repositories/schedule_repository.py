@@ -71,12 +71,19 @@ class ScheduleRepository:
     def add_teacher(self, teacher: Teacher) -> None:
         self.session.add(teacher)
 
-    async def get_schedule(self, schedule_id: UUID) -> ClassSchedule | None:
+    async def get_schedule(
+        self,
+        schedule_id: UUID,
+        *,
+        for_update: bool = False,
+    ) -> ClassSchedule | None:
         statement = (
             select(ClassSchedule)
             .where(ClassSchedule.id == schedule_id)
             .options(selectinload(ClassSchedule.teacher))
         )
+        if for_update:
+            statement = statement.with_for_update()
         return cast(ClassSchedule | None, await self.session.scalar(statement))
 
     async def has_teacher_conflict(

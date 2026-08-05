@@ -61,8 +61,7 @@ class UserRepository:
         if status is not None:
             filters.append(Order.status == status)
         total = int(
-            await self.session.scalar(select(func.count(Order.id)).where(*filters))
-            or 0
+            await self.session.scalar(select(func.count(Order.id)).where(*filters)) or 0
         )
         statement = (
             select(Order, Store.name)
@@ -128,12 +127,9 @@ class UserRepository:
         filters = [store_relation]
         if keyword:
             pattern = f"%{keyword}%"
-            filters.append(
-                or_(User.nickname.ilike(pattern), User.phone.ilike(pattern))
-            )
+            filters.append(or_(User.nickname.ilike(pattern), User.phone.ilike(pattern)))
         total = int(
-            await self.session.scalar(select(func.count(User.id)).where(*filters))
-            or 0
+            await self.session.scalar(select(func.count(User.id)).where(*filters)) or 0
         )
         statement = (
             select(User)

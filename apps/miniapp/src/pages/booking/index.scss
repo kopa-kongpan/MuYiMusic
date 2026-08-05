@@ -41,7 +41,7 @@
 .booking-store-button,
 .booking-retry-button,
 .booking-select-store-button,
-.booking-disabled-button {
+.booking-action-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,7 +53,7 @@
 .booking-store-button::after,
 .booking-retry-button::after,
 .booking-select-store-button::after,
-.booking-disabled-button::after {
+.booking-action-button::after {
   border: 0;
 }
 
@@ -196,11 +196,17 @@
   font-size: 20rpx;
 }
 
-.booking-disabled-button {
-  flex: 0 0 112rpx;
+.booking-action-button {
+  flex: 0 0 126rpx;
   height: 54rpx;
+  color: #ffffff;
+  background: #176b57;
+}
+
+.booking-action-button[disabled] {
   color: #7b847f !important;
   background: #edf0ee !important;
+  opacity: 1;
 }
 
 .booking-state {

@@ -202,6 +202,10 @@ class CourseEntitlement(Base):
             "expires_at IS NULL OR expires_at > valid_from",
             name="ck_entitlements_valid_window",
         ),
+        CheckConstraint(
+            "reserved_lessons >= 0 AND reserved_lessons <= remaining_lessons",
+            name="ck_entitlements_reserved_lessons",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -228,6 +232,11 @@ class CourseEntitlement(Base):
     course_name: Mapped[str] = mapped_column(String(128))
     total_lessons: Mapped[int] = mapped_column(Integer)
     remaining_lessons: Mapped[int] = mapped_column(Integer)
+    reserved_lessons: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+    )
     valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[EntitlementStatus] = mapped_column(

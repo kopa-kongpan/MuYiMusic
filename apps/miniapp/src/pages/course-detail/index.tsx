@@ -4,8 +4,9 @@ import Taro, { useLoad, useRouter, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 
 import { getCourseProduct, validateCoursePurchase } from '../../services/courses'
+import { listPublicStores } from '../../services/stores'
 import { addCartItem, cartQuantity } from '../../store/cart'
-import { readCurrentStore } from '../../store/current-store'
+import { readCurrentStore, saveCurrentStore } from '../../store/current-store'
 import './index.scss'
 
 function formatMoney(priceCents: number): string {
@@ -24,16 +25,20 @@ export default function CourseDetailPage() {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   async function loadProduct() {
-    const store = readCurrentStore()
+    let store = readCurrentStore()
+    const sharedStoreId = router.params.storeId
     const productId = router.params.id
-    if (!store || !productId) {
-      setErrorMessage(!store ? '请先选择门店' : '课程参数无效')
-      setIsLoading(false)
-      return
-    }
     setIsLoading(true)
     setErrorMessage(null)
     try {
+      if (sharedStoreId && store?.id !== sharedStoreId) {
+        const stores = await listPublicStores({})
+        store = stores.items.find((item) => item.id === sharedStoreId) ?? null
+        if (store) saveCurrentStore(store)
+      }
+      if (!store || !productId) {
+        throw new Error(!store ? '分享门店不存在或已停用' : '课程参数无效')
+      }
       const response = await getCourseProduct(store.id, productId)
       setProduct(response)
       setSelectedSkuId(response.skus[0]?.id)
@@ -52,7 +57,7 @@ export default function CourseDetailPage() {
 
   useShareAppMessage(() => ({
     title: product?.name ?? '慕义音乐课程',
-    path: `/pages/course-detail/index?id=${router.params.id ?? ''}`,
+    path: `/pages/course-detail/index?id=${router.params.id ?? ''}&storeId=${router.params.storeId ?? readCurrentStore()?.id ?? ''}`,
   }))
 
   async function addToCart(openCart: boolean) {
@@ -132,7 +137,7 @@ export default function CourseDetailPage() {
     }
     try {
       await Taro.setClipboardData({
-        data: `${currentProduct.name}\n/pages/course-detail/index?id=${currentProduct.id}`,
+        data: `${currentProduct.name}\n/pages/course-detail/index?id=${currentProduct.id}&storeId=${router.params.storeId ?? readCurrentStore()?.id ?? ''}`,
       })
       await Taro.showToast({ title: '课程信息已复制', icon: 'success' })
     } catch {

@@ -259,8 +259,7 @@ async def test_user_login_read_model_and_store_isolation() -> None:
                 assert own_orders.status_code == 200
                 assert own_orders.json()["total"] == 2
                 assert all(
-                    item["user_id"] == user_id
-                    for item in own_orders.json()["items"]
+                    item["user_id"] == user_id for item in own_orders.json()["items"]
                 )
                 store_orders = await client.get(
                     "/api/v1/app/me/orders",
@@ -334,10 +333,7 @@ async def test_user_login_read_model_and_store_isolation() -> None:
                 assert user_summary["entitlement_count"] == 1
 
                 admin_orders = await client.get(
-                    (
-                        f"/api/v1/admin/stores/{allowed_store.id}/users/"
-                        f"{user_id}/orders"
-                    ),
+                    (f"/api/v1/admin/stores/{allowed_store.id}/users/{user_id}/orders"),
                     headers=reader_headers,
                 )
                 assert admin_orders.status_code == 200
@@ -378,9 +374,7 @@ async def test_user_login_read_model_and_store_isolation() -> None:
 
 
 async def test_h5_local_identity_is_rejected_outside_local_environment() -> None:
-    provider = MiniAppIdentityProvider(
-        Settings(_env_file=None, app_env="production")
-    )
+    provider = MiniAppIdentityProvider(Settings(_env_file=None, app_env="production"))
     with pytest.raises(IdentityProviderNotConfiguredError):
         await provider.exchange(
             IdentityProvider.H5,

@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.models.admin import AdminUser
 from app.models.product import Product, ProductStatus
 from app.models.schedule import ClassSchedule, ScheduleStatus, Teacher
@@ -75,6 +76,7 @@ class ScheduleService:
         self.store_repository = StoreRepository(session)
         self.product_repository = ProductRepository(session)
         self.audit_repository = AuditRepository(session)
+        self.settings = get_settings()
 
     async def list_teachers_admin(
         self,
@@ -214,11 +216,14 @@ class ScheduleService:
         store_id: UUID,
         starts_from: datetime,
         starts_before: datetime,
+        page: int,
+        page_size: int,
     ) -> SchedulePublicListResponse:
         store = await self.store_repository.get(store_id)
         if store is None or store.status != StoreStatus.ACTIVE:
             raise ScheduleResourceNotFoundError
         self._validate_query_window(starts_from, starts_before)
+        now = datetime.now(UTC)
         schedules, total = await self.repository.list_schedules(
             store_id=store_id,
             starts_from=starts_from,
@@ -226,13 +231,15 @@ class ScheduleService:
             teacher_id=None,
             status=None,
             public_only=True,
-            now=datetime.now(UTC),
-            page=1,
-            page_size=200,
+            now=now,
+            page=page,
+            page_size=page_size,
         )
         return SchedulePublicListResponse(
-            items=[self._schedule_public_read(item) for item in schedules],
+            items=[self._schedule_public_read(item, now) for item in schedules],
             total=total,
+            page=page,
+            page_size=page_size,
         )
 
     async def create_schedule(
@@ -296,7 +303,7 @@ class ScheduleService:
         admin_user: AdminUser,
     ) -> ScheduleRead:
         await self._require_store_access(store_id, admin_user)
-        schedule = await self.repository.get_schedule(schedule_id)
+        schedule = await self.repository.get_schedule(schedule_id, for_update=True)
         if schedule is None or schedule.store_id != store_id:
             raise ScheduleResourceNotFoundError
         if schedule.status == ScheduleStatus.CANCELLED:
@@ -304,6 +311,15 @@ class ScheduleService:
         changes = payload.model_dump(exclude_unset=True)
         if not changes:
             return self._schedule_read(schedule)
+        protected_fields = {
+            "teacher_id",
+            "product_id",
+            "starts_at",
+            "ends_at",
+            "capacity",
+        }
+        if schedule.reserved_count > 0 and protected_fields.intersection(changes):
+            raise ScheduleConflictError("已有预约时只能修改课程名称和到课说明")
         teacher_id = payload.teacher_id or schedule.teacher_id
         teacher = await self._require_teacher(
             store_id,
@@ -332,9 +348,7 @@ class ScheduleService:
             require_published="product_id" in changes,
         )
         course_name = (
-            product.name
-            if product
-            else payload.course_name or schedule.course_name
+            product.name if product else payload.course_name or schedule.course_name
         )
         before = schedule_snapshot(schedule)
         schedule.teacher_id = teacher.id
@@ -371,7 +385,7 @@ class ScheduleService:
         admin_user: AdminUser,
     ) -> ScheduleRead:
         await self._require_store_access(store_id, admin_user)
-        schedule = await self.repository.get_schedule(schedule_id)
+        schedule = await self.repository.get_schedule(schedule_id, for_update=True)
         if schedule is None or schedule.store_id != store_id:
             raise ScheduleResourceNotFoundError
         if payload.status == schedule.status:
@@ -383,10 +397,7 @@ class ScheduleService:
         }
         if payload.status not in allowed[schedule.status]:
             raise ScheduleConflictError("不允许执行该排课状态变更")
-        if (
-            payload.status == ScheduleStatus.CANCELLED
-            and schedule.reserved_count > 0
-        ):
+        if payload.status == ScheduleStatus.CANCELLED and schedule.reserved_count > 0:
             raise ScheduleConflictError("已有预约的排课需先处理受影响用户")
         before = schedule_snapshot(schedule)
         schedule.status = payload.status
@@ -490,8 +501,14 @@ class ScheduleService:
             updated_at=schedule.updated_at,
         )
 
-    @staticmethod
-    def _schedule_public_read(schedule: ClassSchedule) -> SchedulePublicRead:
+    def _schedule_public_read(
+        self,
+        schedule: ClassSchedule,
+        now: datetime,
+    ) -> SchedulePublicRead:
+        booking_closes_at = schedule.starts_at - timedelta(
+            minutes=self.settings.booking_cutoff_minutes
+        )
         return SchedulePublicRead(
             id=schedule.id,
             store_id=schedule.store_id,
@@ -504,4 +521,10 @@ class ScheduleService:
             capacity=schedule.capacity,
             reserved_count=schedule.reserved_count,
             available_slots=schedule.capacity - schedule.reserved_count,
+            booking_closes_at=booking_closes_at,
+            is_booking_open=(
+                schedule.product_id is not None
+                and schedule.reserved_count < schedule.capacity
+                and now <= booking_closes_at
+            ),
         )

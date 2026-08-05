@@ -112,6 +112,8 @@ class SchedulePublicRead(BaseModel):
     capacity: int
     reserved_count: int
     available_slots: int
+    booking_closes_at: datetime
+    is_booking_open: bool
 
 
 class ScheduleListResponse(BaseModel):
@@ -124,6 +126,8 @@ class ScheduleListResponse(BaseModel):
 class SchedulePublicListResponse(BaseModel):
     items: list[SchedulePublicRead]
     total: int
+    page: int
+    page_size: int
 
 
 def validate_aware_window(starts_at: datetime, ends_at: datetime) -> None:

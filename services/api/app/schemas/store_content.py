@@ -32,6 +32,9 @@ def validate_display_window(
     starts_at: datetime | None,
     ends_at: datetime | None,
 ) -> None:
+    for value in (starts_at, ends_at):
+        if value is not None and value.tzinfo is None:
+            raise ValueError("展示时间必须包含时区")
     if starts_at is not None and ends_at is not None and starts_at >= ends_at:
         raise ValueError("展示结束时间必须晚于开始时间")
 

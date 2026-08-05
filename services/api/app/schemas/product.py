@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.product import ProductStatus
 
@@ -11,6 +11,9 @@ def validate_sale_window(
     sale_starts_at: datetime | None,
     sale_ends_at: datetime | None,
 ) -> None:
+    for value in (sale_starts_at, sale_ends_at):
+        if value is not None and value.tzinfo is None:
+            raise ValueError("销售时间必须包含时区")
     if (
         sale_starts_at is not None
         and sale_ends_at is not None
@@ -139,6 +142,23 @@ class ProductUpdate(BaseModel):
         max_length=100,
     )
     images: list[ProductImageWrite] | None = Field(default=None, max_length=20)
+
+    @field_validator(
+        "category_id",
+        "name",
+        "summary",
+        "details",
+        "cover_object_key",
+        "sort_order",
+        "skus",
+        "images",
+        mode="before",
+    )
+    @classmethod
+    def reject_explicit_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("商品必填字段不能设置为 null")
+        return value
 
     @model_validator(mode="after")
     def validate_unique_resources(self) -> "ProductUpdate":

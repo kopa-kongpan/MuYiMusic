@@ -189,3 +189,63 @@
   font-size: 27rpx;
   font-weight: 650;
 }
+
+.record-card-notice {
+  display: block;
+  margin-top: 16rpx;
+  padding: 14rpx 16rpx;
+  color: #6f7873;
+  background: #f1f3f2;
+  border-radius: 5rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+}
+
+.record-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+}
+
+.record-secondary-button {
+  height: 56rpx;
+  margin: 0;
+  padding: 0 20rpx;
+  border-radius: 6rpx;
+  font-size: 21rpx;
+  line-height: 56rpx;
+}
+
+.record-secondary-button::after {
+  border: 0;
+}
+
+.record-secondary-button--danger {
+  color: #a33d31;
+  background: #f8ecea;
+}
+
+.record-schedule-card {
+  padding-top: 0;
+  overflow: hidden;
+}
+
+.record-schedule-date {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -26rpx 22rpx;
+  padding: 17rpx 26rpx;
+  color: #3f4944;
+  background: #e9eeeb;
+  gap: 20rpx;
+}
+
+.record-schedule-date text:first-child {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.record-schedule-date text:last-child {
+  font-size: 21rpx;
+}

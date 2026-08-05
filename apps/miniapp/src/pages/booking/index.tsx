@@ -1,10 +1,13 @@
 import type { SchedulePublicRead } from '@muyimusic/api-client'
 import { Button, ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
+import { createAppointment } from '../../services/appointments'
 import { listPublicSchedules } from '../../services/schedules'
+import { loginCurrentUser } from '../../services/user'
 import { readCurrentStore } from '../../store/current-store'
+import { readUserSession } from '../../store/user-session'
 import './index.scss'
 
 interface DateOption {
@@ -56,8 +59,11 @@ export default function BookingPage() {
   const [schedules, setSchedules] = useState<SchedulePublicRead[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [bookingScheduleId, setBookingScheduleId] = useState<string | null>(null)
+  const requestSequence = useRef(0)
 
   async function loadSchedules(date = selectedDate) {
+    const sequence = ++requestSequence.current
     const currentStore = readCurrentStore()
     if (!currentStore) {
       setSchedules([])
@@ -69,12 +75,33 @@ export default function BookingPage() {
     setErrorMessage(null)
     try {
       const response = await listPublicSchedules(currentStore.id, dayWindow(date))
+      if (sequence !== requestSequence.current) return
       setSchedules(response.items)
     } catch (error) {
+      if (sequence !== requestSequence.current) return
       setSchedules([])
       setErrorMessage(error instanceof Error ? error.message : '排课加载失败')
     } finally {
-      setIsLoading(false)
+      if (sequence === requestSequence.current) setIsLoading(false)
+    }
+  }
+
+  async function book(schedule: SchedulePublicRead) {
+    setBookingScheduleId(schedule.id)
+    try {
+      if (!readUserSession()) {
+        await loginCurrentUser()
+      }
+      await createAppointment(schedule.id)
+      await Taro.showToast({ title: '预约成功', icon: 'success' })
+      await loadSchedules()
+    } catch (error) {
+      await Taro.showToast({
+        title: error instanceof Error ? error.message : '预约失败',
+        icon: 'none',
+      })
+    } finally {
+      setBookingScheduleId(null)
     }
   }
 
@@ -189,12 +216,26 @@ export default function BookingPage() {
                   剩余 {schedule.available_slots} / {schedule.capacity} 个名额
                 </Text>
               </View>
-              <Button className="booking-disabled-button" size="mini" disabled>
-                即将开放
+              <Button
+                className="booking-action-button"
+                size="mini"
+                disabled={!schedule.is_booking_open || bookingScheduleId !== null}
+                loading={bookingScheduleId === schedule.id}
+                onClick={() => void book(schedule)}
+              >
+                {schedule.available_slots === 0
+                  ? '已满员'
+                  : schedule.is_booking_open
+                    ? readUserSession()
+                      ? '预约'
+                      : '登录预约'
+                    : '已截止'}
               </Button>
             </View>
           ))}
-          <Text className="booking-footnote">预约规则确认后开放在线预约</Text>
+          <Text className="booking-footnote">
+            开课前 2 小时停止预约；预约后锁定 1 节课时，取消后自动释放
+          </Text>
         </View>
       ) : null}
     </View>

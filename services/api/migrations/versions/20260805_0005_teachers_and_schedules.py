@@ -200,9 +200,7 @@ def downgrade() -> None:
             """
         )
     )
-    op.execute(
-        sa.text("DELETE FROM permissions WHERE code = 'schedules:manage'")
-    )
+    op.execute(sa.text("DELETE FROM permissions WHERE code = 'schedules:manage'"))
     op.drop_index("ix_schedules_teacher_time", table_name="class_schedules")
     op.drop_index("ix_schedules_store_start_status", table_name="class_schedules")
     op.drop_index(

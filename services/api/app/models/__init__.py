@@ -2,6 +2,14 @@
 
 from app.core.database import Base
 from app.models.admin import AdminUser, Permission, Role, admin_user_stores
+from app.models.appointment import (
+    Appointment,
+    AppointmentCancelledBy,
+    AppointmentStatus,
+    ConsumptionKind,
+    ConsumptionStatus,
+    LessonConsumption,
+)
 from app.models.audit import AuditLog
 from app.models.product import (
     Category,
@@ -32,10 +40,15 @@ from app.models.user import (
 
 __all__ = [
     "AdminUser",
+    "Appointment",
+    "AppointmentCancelledBy",
+    "AppointmentStatus",
     "ContentBlockStatus",
     "ContentBlockType",
     "ContentJumpType",
     "CourseEntitlement",
+    "ConsumptionKind",
+    "ConsumptionStatus",
     "EntitlementStatus",
     "AuditLog",
     "Base",
@@ -43,6 +56,7 @@ __all__ = [
     "ClassSchedule",
     "Permission",
     "IdentityProvider",
+    "LessonConsumption",
     "Order",
     "OrderItem",
     "OrderStatus",

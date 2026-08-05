@@ -1,7 +1,7 @@
 import type { ContentBlockPublicRead, StoreHomeResponse } from '@muyimusic/api-client'
 import { Button, Image, Text, Video, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { getStoreHome } from '../../services/store-home'
 import { readCurrentStore, saveCurrentStore } from '../../store/current-store'
@@ -19,8 +19,10 @@ export default function StoreHomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [failedMediaIds, setFailedMediaIds] = useState<Set<string>>(new Set())
+  const requestSequence = useRef(0)
 
   async function loadHome() {
+    const sequence = ++requestSequence.current
     const currentStore = readCurrentStore()
     if (!currentStore) {
       setHome(null)
@@ -32,13 +34,15 @@ export default function StoreHomePage() {
     setErrorMessage(null)
     try {
       const response = await getStoreHome(currentStore.id)
+      if (sequence !== requestSequence.current) return
       saveCurrentStore(response.store)
       setHome(response)
       setFailedMediaIds(new Set())
     } catch (error) {
+      if (sequence !== requestSequence.current) return
       setErrorMessage(error instanceof Error ? error.message : '门店首页加载失败')
     } finally {
-      setIsLoading(false)
+      if (sequence === requestSequence.current) setIsLoading(false)
     }
   }
 

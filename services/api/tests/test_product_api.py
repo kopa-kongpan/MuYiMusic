@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -116,9 +117,7 @@ async def test_course_product_lifecycle_and_public_purchase_validation() -> None
                 )
                 assert invalid_product.status_code == 422
 
-                product_prefix = (
-                    f"muyimusic/stores/{allowed_store.id}/products/"
-                )
+                product_prefix = f"muyimusic/stores/{allowed_store.id}/products/"
                 product_response = await client.post(
                     f"/api/v1/admin/stores/{allowed_store.id}/products",
                     headers=headers,
@@ -215,6 +214,25 @@ async def test_course_product_lifecycle_and_public_purchase_validation() -> None
                     },
                 )
                 assert update_response.status_code == 200
+
+                null_name_response = await client.patch(
+                    f"/api/v1/admin/stores/{allowed_store.id}/products/{product_id}",
+                    headers=headers,
+                    json={"name": None},
+                )
+                assert null_name_response.status_code == 422
+
+                mixed_timezone_response = await client.patch(
+                    f"/api/v1/admin/stores/{allowed_store.id}/products/{product_id}",
+                    headers=headers,
+                    json={
+                        "sale_starts_at": datetime.now(UTC).isoformat(),
+                        "sale_ends_at": (
+                            datetime.now() + timedelta(days=1)
+                        ).isoformat(),
+                    },
+                )
+                assert mixed_timezone_response.status_code == 422
 
                 current_price_response = await client.post(
                     (

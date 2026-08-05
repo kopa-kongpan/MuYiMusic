@@ -87,6 +87,8 @@ class CourseEntitlementRead(BaseModel):
     course_name: str
     total_lessons: int
     remaining_lessons: int
+    reserved_lessons: int
+    available_lessons: int
     valid_from: datetime
     expires_at: datetime | None
     status: EntitlementStatus

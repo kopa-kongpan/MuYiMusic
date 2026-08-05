@@ -355,7 +355,10 @@ class ProductService:
             category = await self._require_category(store_id, payload.category_id)
         starts_at = changes.get("sale_starts_at", product.sale_starts_at)
         ends_at = changes.get("sale_ends_at", product.sale_ends_at)
-        validate_sale_window(starts_at, ends_at)
+        try:
+            validate_sale_window(starts_at, ends_at)
+        except ValueError as error:
+            raise InvalidProductError(str(error)) from error
         cover_key = str(changes.get("cover_object_key", product.cover_object_key))
         image_keys = (
             [image.object_key for image in payload.images]
@@ -578,7 +581,10 @@ class ProductService:
                     setattr(target, field, value)
 
     def _validate_publishable(self, product: Product) -> None:
-        validate_sale_window(product.sale_starts_at, product.sale_ends_at)
+        try:
+            validate_sale_window(product.sale_starts_at, product.sale_ends_at)
+        except ValueError as error:
+            raise InvalidProductError(str(error)) from error
         if not product.category.is_enabled:
             raise InvalidProductError("启用商品分类后才能发布")
         if not any(sku.is_active for sku in product.skus):

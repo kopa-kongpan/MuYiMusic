@@ -215,10 +215,7 @@ async def test_teacher_schedule_lifecycle_and_public_visibility() -> None:
                 assert reopen_response.status_code == 200
 
                 await client.patch(
-                    (
-                        f"/api/v1/admin/stores/{allowed_store.id}/teachers/"
-                        f"{teacher_id}"
-                    ),
+                    (f"/api/v1/admin/stores/{allowed_store.id}/teachers/{teacher_id}"),
                     headers=headers,
                     json={"is_active": False},
                 )
@@ -229,10 +226,7 @@ async def test_teacher_schedule_lifecycle_and_public_visibility() -> None:
                 assert hidden_for_inactive_teacher.json()["items"] == []
 
                 await client.patch(
-                    (
-                        f"/api/v1/admin/stores/{allowed_store.id}/teachers/"
-                        f"{teacher_id}"
-                    ),
+                    (f"/api/v1/admin/stores/{allowed_store.id}/teachers/{teacher_id}"),
                     headers=headers,
                     json={"is_active": True},
                 )
@@ -278,7 +272,14 @@ async def test_teacher_schedule_lifecycle_and_public_visibility() -> None:
 
             audit_count = await session.scalar(
                 select(func.count(AuditLog.id)).where(
-                    AuditLog.resource_type.in_(("teacher", "class_schedule"))
+                    (
+                        (AuditLog.resource_type == "teacher")
+                        & (AuditLog.resource_id == teacher_id)
+                    )
+                    | (
+                        (AuditLog.resource_type == "class_schedule")
+                        & (AuditLog.resource_id == schedule_id)
+                    )
                 )
             )
             assert audit_count == 8

@@ -3,6 +3,19 @@ import type { components } from './generated/schema'
 export type AdminLoginRequest = components['schemas']['AdminLoginRequest']
 export type AdminProfile = components['schemas']['AdminProfile']
 export type AdminTokenResponse = components['schemas']['AdminTokenResponse']
+export type AppointmentAdminCancelRequest =
+  components['schemas']['AppointmentAdminCancelRequest']
+export type AppointmentCancelRequest =
+  components['schemas']['AppointmentCancelRequest']
+export type AppointmentCreate = components['schemas']['AppointmentCreate']
+export type AppointmentListResponse =
+  components['schemas']['AppointmentListResponse']
+export type AppointmentRead = components['schemas']['AppointmentRead']
+export type AppointmentStatus = components['schemas']['AppointmentStatus']
+export type ConsumptionCreateRequest =
+  components['schemas']['ConsumptionCreateRequest']
+export type ConsumptionReverseRequest =
+  components['schemas']['ConsumptionReverseRequest']
 export type ScheduleCreate = components['schemas']['ScheduleCreate']
 export type ScheduleListResponse = components['schemas']['ScheduleListResponse']
 export type SchedulePublicListResponse =
@@ -181,6 +194,20 @@ export interface AdminScheduleQuery extends ScheduleQueryWindow {
   pageSize?: number
 }
 
+export interface UserAppointmentQuery {
+  storeId?: string
+  status?: AppointmentStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface AdminAppointmentQuery extends ScheduleQueryWindow {
+  status?: AppointmentStatus
+  keyword?: string
+  page?: number
+  pageSize?: number
+}
+
 function appendQuery(
   path: string,
   query: Record<string, string | number | undefined>,
@@ -256,6 +283,44 @@ export function createApiClient(options: ApiClientOptions = {}) {
           page: query.page,
           page_size: query.pageSize,
         }),
+      )
+    },
+    createAppointment(
+      scheduleId: string,
+      payload: AppointmentCreate,
+      idempotencyKey: string,
+    ) {
+      return request<AppointmentRead>(
+        `/api/v1/app/schedules/${scheduleId}/appointments`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    listMyAppointments(query: UserAppointmentQuery = {}) {
+      return request<AppointmentListResponse>(
+        appendQuery('/api/v1/app/me/appointments', {
+          store_id: query.storeId,
+          status: query.status,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    cancelMyAppointment(
+      appointmentId: string,
+      payload: AppointmentCancelRequest,
+      idempotencyKey: string,
+    ) {
+      return request<AppointmentRead>(
+        `/api/v1/app/me/appointments/${appointmentId}/cancel`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(payload),
+        },
       )
     },
     listAdminStores(query: AdminStoreQuery = {}) {
@@ -411,6 +476,78 @@ export function createApiClient(options: ApiClientOptions = {}) {
           page: query.page,
           page_size: query.pageSize,
         }),
+      )
+    },
+    listAdminAppointments(storeId: string, query: AdminAppointmentQuery) {
+      return request<AppointmentListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/appointments`, {
+          starts_from: query.startsFrom,
+          starts_before: query.startsBefore,
+          status: query.status,
+          keyword: query.keyword,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    cancelAdminAppointment(
+      storeId: string,
+      appointmentId: string,
+      payload: AppointmentAdminCancelRequest,
+      idempotencyKey: string,
+    ) {
+      return request<AppointmentRead>(
+        `/api/v1/admin/stores/${storeId}/appointments/${appointmentId}/cancel`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    consumeAppointment(
+      storeId: string,
+      appointmentId: string,
+      payload: ConsumptionCreateRequest,
+      idempotencyKey: string,
+    ) {
+      return request<AppointmentRead>(
+        `/api/v1/admin/stores/${storeId}/appointments/${appointmentId}/consume`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    markAppointmentNoShow(
+      storeId: string,
+      appointmentId: string,
+      payload: ConsumptionCreateRequest,
+      idempotencyKey: string,
+    ) {
+      return request<AppointmentRead>(
+        `/api/v1/admin/stores/${storeId}/appointments/${appointmentId}/no-show`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    reverseConsumption(
+      storeId: string,
+      consumptionId: string,
+      payload: ConsumptionReverseRequest,
+      idempotencyKey: string,
+    ) {
+      return request<AppointmentRead>(
+        `/api/v1/admin/stores/${storeId}/consumptions/${consumptionId}/reverse`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(payload),
+        },
       )
     },
     createSchedule(storeId: string, payload: ScheduleCreate) {

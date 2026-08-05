@@ -307,6 +307,30 @@ select {
   width: 170px;
 }
 
+.appointment-toolbar {
+  align-items: center;
+}
+
+.appointment-keyword {
+  width: min(320px, 100%);
+}
+
+.appointment-primary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.appointment-primary-cell > span,
+.appointment-action-summary {
+  color: #747c77;
+  font-size: 13px;
+}
+
+.appointment-action-summary {
+  margin: 0 0 14px;
+}
+
 .schedule-time-cell,
 .schedule-course-cell,
 .schedule-capacity-cell {

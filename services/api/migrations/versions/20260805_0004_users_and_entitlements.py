@@ -50,12 +50,8 @@ def upgrade() -> None:
     for enum in (
         postgresql.ENUM("active", "disabled", name="user_status"),
         postgresql.ENUM("weapp", "tt", "h5", name="identity_provider"),
-        postgresql.ENUM(
-            "pending", "confirmed", "cancelled", name="order_status"
-        ),
-        postgresql.ENUM(
-            "active", "exhausted", "expired", name="entitlement_status"
-        ),
+        postgresql.ENUM("pending", "confirmed", "cancelled", name="order_status"),
+        postgresql.ENUM("active", "exhausted", "expired", name="entitlement_status"),
     ):
         enum.create(bind, checkfirst=True)
 
@@ -348,11 +344,26 @@ def downgrade() -> None:
     )
     op.execute(sa.text("DELETE FROM permissions WHERE code = 'users:read'"))
     op.drop_index("ix_entitlements_user_store_status", table_name="course_entitlements")
-    op.drop_index(op.f("ix_course_entitlements_user_id"), table_name="course_entitlements")
-    op.drop_index(op.f("ix_course_entitlements_store_id"), table_name="course_entitlements")
-    op.drop_index(op.f("ix_course_entitlements_status"), table_name="course_entitlements")
-    op.drop_index(op.f("ix_course_entitlements_product_sku_id"), table_name="course_entitlements")
-    op.drop_index(op.f("ix_course_entitlements_product_id"), table_name="course_entitlements")
+    op.drop_index(
+        op.f("ix_course_entitlements_user_id"),
+        table_name="course_entitlements",
+    )
+    op.drop_index(
+        op.f("ix_course_entitlements_store_id"),
+        table_name="course_entitlements",
+    )
+    op.drop_index(
+        op.f("ix_course_entitlements_status"),
+        table_name="course_entitlements",
+    )
+    op.drop_index(
+        op.f("ix_course_entitlements_product_sku_id"),
+        table_name="course_entitlements",
+    )
+    op.drop_index(
+        op.f("ix_course_entitlements_product_id"),
+        table_name="course_entitlements",
+    )
     op.drop_table("course_entitlements")
     op.drop_index(op.f("ix_order_items_product_sku_id"), table_name="order_items")
     op.drop_index(op.f("ix_order_items_product_id"), table_name="order_items")
@@ -364,7 +375,10 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_orders_status"), table_name="orders")
     op.drop_table("orders")
     op.drop_index(op.f("ix_provider_accounts_user_id"), table_name="provider_accounts")
-    op.drop_index(op.f("ix_provider_accounts_union_subject"), table_name="provider_accounts")
+    op.drop_index(
+        op.f("ix_provider_accounts_union_subject"),
+        table_name="provider_accounts",
+    )
     op.drop_index(op.f("ix_provider_accounts_provider"), table_name="provider_accounts")
     op.drop_table("provider_accounts")
     op.drop_index(op.f("ix_users_status"), table_name="users")
