@@ -50,10 +50,17 @@ const statusColors: Record<ProductStatus, string> = {
   archived: 'red',
 }
 
-const nextStatus: Partial<Record<ProductStatus, ProductStatus>> = {
-  draft: 'published',
-  published: 'offline',
-  offline: 'archived',
+const statusActions: Record<
+  ProductStatus,
+  { target: ProductStatus; label: string; icon: typeof Send }[]
+> = {
+  draft: [{ target: 'published', label: '发布', icon: Send }],
+  published: [{ target: 'offline', label: '下架', icon: CirclePause }],
+  offline: [
+    { target: 'published', label: '上架', icon: Send },
+    { target: 'archived', label: '归档', icon: Archive },
+  ],
+  archived: [],
 }
 
 function formatMoney(priceCents: number): string {
@@ -151,9 +158,8 @@ export function ProductsPage() {
     setKeyword(keywordInput.trim())
   }
 
-  async function changeStatus(product: ProductRead) {
-    const targetStatus = nextStatus[product.status]
-    if (!activeStoreId || !targetStatus) {
+  async function changeStatus(product: ProductRead, targetStatus: ProductStatus) {
+    if (!activeStoreId) {
       return
     }
     setUpdatingId(product.id)
@@ -241,21 +247,7 @@ export function ProductsPage() {
       fixed: 'right',
       width: 150,
       render: (_, product) => {
-        const targetStatus = nextStatus[product.status]
-        const actionLabel =
-          targetStatus === 'published'
-            ? '发布'
-            : targetStatus === 'offline'
-              ? '下架'
-              : targetStatus === 'archived'
-                ? '归档'
-                : null
-        const ActionIcon =
-          targetStatus === 'published'
-            ? Send
-            : targetStatus === 'offline'
-              ? CirclePause
-              : Archive
+        const actions = statusActions[product.status]
         return (
           <div className="table-actions">
             <Tooltip title="预览商品">
@@ -278,27 +270,26 @@ export function ProductsPage() {
                 }}
               />
             </Tooltip>
-            {actionLabel ? (
+            {actions.map(({ target, label, icon: ActionIcon }) => (
               <Popconfirm
-                title={`确认${actionLabel}“${product.name}”？`}
-                description={
-                  targetStatus === 'archived' ? '归档后不能恢复或修改。' : undefined
-                }
+                key={target}
+                title={`确认${label}“${product.name}”？`}
+                description={target === 'archived' ? '归档后不能恢复或修改。' : undefined}
                 okText="确认"
                 cancelText="取消"
-                onConfirm={() => void changeStatus(product)}
+                onConfirm={() => void changeStatus(product, target)}
               >
-                <Tooltip title={actionLabel}>
+                <Tooltip title={label}>
                   <Button
                     type="text"
                     loading={updatingId === product.id}
-                    danger={targetStatus !== 'published'}
+                    danger={target !== 'published'}
                     icon={<ActionIcon size={17} aria-hidden="true" />}
-                    aria-label={`${actionLabel}${product.name}`}
+                    aria-label={`${label}${product.name}`}
                   />
                 </Tooltip>
               </Popconfirm>
-            ) : null}
+            ))}
           </div>
         )
       },

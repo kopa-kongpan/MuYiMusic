@@ -13,7 +13,7 @@ from app.models.admin import AdminUser
 from app.models.user import User, UserStatus
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.user_repository import UserRepository
-from app.services.auth_service import permission_codes
+from app.services.auth_service import has_platform_scope, permission_codes
 
 bearer_scheme = HTTPBearer(auto_error=False)
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
@@ -64,6 +64,21 @@ def require_permission(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="没有执行此操作的权限",
+            )
+        return current_admin
+
+    return dependency
+
+
+def require_platform_admin() -> Callable[[AdminUser], Awaitable[AdminUser]]:
+    async def dependency(
+        current_admin: Annotated[AdminUser, Depends(get_current_admin)],
+    ) -> AdminUser:
+        has_account_permission = "admins:manage" in permission_codes(current_admin)
+        if not has_platform_scope(current_admin) or not has_account_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="仅平台管理员可以管理运营账号",
             )
         return current_admin
 

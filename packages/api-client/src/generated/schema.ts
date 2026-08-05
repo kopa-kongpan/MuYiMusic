@@ -123,6 +123,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/admin-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Admin Users */
+        get: operations["list_admin_users_api_v1_admin_admin_users_get"];
+        put?: never;
+        /** Create Admin User */
+        post: operations["create_admin_user_api_v1_admin_admin_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/admin-users/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin User Options */
+        get: operations["admin_user_options_api_v1_admin_admin_users_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/admin-users/{admin_user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Admin User */
+        patch: operations["update_admin_user_api_v1_admin_admin_users__admin_user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/admin-users/{admin_user_id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Admin User Password */
+        post: operations["reset_admin_user_password_api_v1_admin_admin_users__admin_user_id__reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/media/upload-tickets": {
         parameters: {
             query?: never;
@@ -732,6 +801,29 @@ export interface components {
             /** Permissions */
             permissions: string[];
         };
+        /** AdminRoleRead */
+        AdminRoleRead: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Permissions */
+            permissions: string[];
+        };
+        /** AdminStoreOption */
+        AdminStoreOption: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** City */
+            city: string;
+            /** Status */
+            status: string;
+        };
         /** AdminTokenResponse */
         AdminTokenResponse: {
             /** Access Token */
@@ -745,6 +837,75 @@ export interface components {
             /** Expires In */
             expires_in: number;
             admin: components["schemas"]["AdminProfile"];
+        };
+        /** AdminUserCreate */
+        AdminUserCreate: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+            /** Role Code */
+            role_code: string;
+            /** Store Ids */
+            store_ids: string[];
+        };
+        /** AdminUserListResponse */
+        AdminUserListResponse: {
+            /** Items */
+            items: components["schemas"]["AdminUserRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** AdminUserOptionsResponse */
+        AdminUserOptionsResponse: {
+            /** Roles */
+            roles: components["schemas"]["AdminRoleRead"][];
+            /** Stores */
+            stores: components["schemas"]["AdminStoreOption"][];
+        };
+        /** AdminUserPasswordReset */
+        AdminUserPasswordReset: {
+            /** Password */
+            password: string;
+        };
+        /** AdminUserRead */
+        AdminUserRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Username */
+            username: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Roles */
+            roles: components["schemas"]["AdminRoleRead"][];
+            /** Stores */
+            stores: components["schemas"]["AdminStoreOption"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** AdminUserUpdate */
+        AdminUserUpdate: {
+            /** Role Code */
+            role_code?: string | null;
+            /** Store Ids */
+            store_ids?: string[] | null;
+            /** Is Active */
+            is_active?: boolean | null;
         };
         /** AppointmentAdminCancelRequest */
         AppointmentAdminCancelRequest: {
@@ -2404,6 +2565,163 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_admin_users_api_v1_admin_admin_users_get: {
+        parameters: {
+            query?: {
+                keyword?: string | null;
+                is_active?: boolean | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_admin_user_api_v1_admin_admin_users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUserCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_user_options_api_v1_admin_admin_users_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserOptionsResponse"];
+                };
+            };
+        };
+    };
+    update_admin_user_api_v1_admin_admin_users__admin_user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                admin_user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_admin_user_password_api_v1_admin_admin_users__admin_user_id__reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                admin_user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUserPasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserRead"];
                 };
             };
             /** @description Validation Error */

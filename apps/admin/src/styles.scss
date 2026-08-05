@@ -871,6 +871,76 @@ select {
   gap: 12px;
 }
 
+.account-toolbar {
+  flex-wrap: wrap;
+}
+
+.account-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.account-cell > div,
+.account-status {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-cell strong {
+  color: #202522;
+  font-weight: 600;
+}
+
+.account-cell span:not(.account-avatar),
+.account-status > span:last-child {
+  color: #78807b;
+  font-size: 12px;
+}
+
+.account-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 8px;
+  font-weight: 650;
+}
+
+.account-tags,
+.account-stores {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.account-stores span {
+  color: #59615d;
+  font-size: 13px;
+}
+
+.account-stores span + span::before {
+  margin-right: 5px;
+  color: #a5ada8;
+  content: '·';
+}
+
+.account-status {
+  align-items: flex-start;
+}
+
+.account-form {
+  padding-top: 14px;
+}
+
 .product-cell > div:last-child,
 .product-price-cell {
   display: flex;

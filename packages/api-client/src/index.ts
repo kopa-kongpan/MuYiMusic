@@ -1,5 +1,16 @@
 import type { components } from './generated/schema'
 
+export type AdminRoleRead = components['schemas']['AdminRoleRead']
+export type AdminStoreOption = components['schemas']['AdminStoreOption']
+export type AdminUserCreate = components['schemas']['AdminUserCreate']
+export type AdminUserListResponse =
+  components['schemas']['AdminUserListResponse']
+export type AdminUserOptionsResponse =
+  components['schemas']['AdminUserOptionsResponse']
+export type AdminUserPasswordReset =
+  components['schemas']['AdminUserPasswordReset']
+export type AdminUserRead = components['schemas']['AdminUserRead']
+export type AdminUserUpdate = components['schemas']['AdminUserUpdate']
 export type AdminLoginRequest = components['schemas']['AdminLoginRequest']
 export type AdminProfile = components['schemas']['AdminProfile']
 export type AdminTokenResponse = components['schemas']['AdminTokenResponse']
@@ -175,6 +186,13 @@ export interface AdminUserQuery {
   pageSize?: number
 }
 
+export interface AdminAccountQuery {
+  keyword?: string
+  isActive?: boolean
+  page?: number
+  pageSize?: number
+}
+
 export interface AdminTeacherQuery {
   keyword?: string
   isActive?: boolean
@@ -331,6 +349,47 @@ export function createApiClient(options: ApiClientOptions = {}) {
           page: query.page,
           page_size: query.pageSize,
         }),
+      )
+    },
+    listAdminAccounts(query: AdminAccountQuery = {}) {
+      return request<AdminUserListResponse>(
+        appendQuery('/api/v1/admin/admin-users', {
+          keyword: query.keyword,
+          is_active:
+            query.isActive === undefined ? undefined : String(query.isActive),
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    getAdminUserOptions() {
+      return request<AdminUserOptionsResponse>('/api/v1/admin/admin-users/options')
+    },
+    createAdminUser(payload: AdminUserCreate) {
+      return request<AdminUserRead>('/api/v1/admin/admin-users', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+    },
+    updateAdminUser(adminUserId: string, payload: AdminUserUpdate) {
+      return request<AdminUserRead>(
+        `/api/v1/admin/admin-users/${adminUserId}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    resetAdminUserPassword(
+      adminUserId: string,
+      payload: AdminUserPasswordReset,
+    ) {
+      return request<AdminUserRead>(
+        `/api/v1/admin/admin-users/${adminUserId}/reset-password`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
       )
     },
     createStore(payload: StoreCreate) {

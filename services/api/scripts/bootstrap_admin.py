@@ -18,8 +18,18 @@ PERMISSIONS = {
     "appointments:manage": "管理预约",
     "consumptions:manage": "执行消课与缺席",
     "consumptions:reverse": "撤销消课",
+    "admins:manage": "管理运营账号",
 }
 PLATFORM_ADMIN_ROLE_CODE = "platform_admin"
+STORE_OPERATOR_ROLE_CODE = "store_operator"
+STORE_OPERATOR_PERMISSION_CODES = (
+    "store_content:manage",
+    "products:manage",
+    "users:read",
+    "schedules:manage",
+    "appointments:manage",
+    "consumptions:manage",
+)
 
 
 async def bootstrap_admin(username: str, password: str) -> bool:
@@ -53,6 +63,23 @@ async def bootstrap_admin(username: str, password: str) -> bool:
         for permission in permissions:
             if permission not in role.permissions:
                 role.permissions.append(permission)
+
+        operator_role = await session.scalar(
+            select(Role)
+            .where(Role.code == STORE_OPERATOR_ROLE_CODE)
+            .options(selectinload(Role.permissions))
+        )
+        if operator_role is None:
+            operator_role = Role(code=STORE_OPERATOR_ROLE_CODE, name="门店运营")
+            session.add(operator_role)
+        operator_permissions = [
+            permission
+            for permission in permissions
+            if permission.code in STORE_OPERATOR_PERMISSION_CODES
+        ]
+        for permission in operator_permissions:
+            if permission not in operator_role.permissions:
+                operator_role.permissions.append(permission)
 
         if existing_user is not None:
             if role not in existing_user.roles:

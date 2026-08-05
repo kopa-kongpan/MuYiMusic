@@ -283,6 +283,31 @@ async def test_course_product_lifecycle_and_public_purchase_validation() -> None
                     )
                 ).status_code == 404
 
+                republish_response = await client.post(
+                    (
+                        f"/api/v1/admin/stores/{allowed_store.id}/products/"
+                        f"{product_id}/status"
+                    ),
+                    headers=headers,
+                    json={"status": "published"},
+                )
+                assert republish_response.status_code == 200
+                assert (
+                    await client.get(
+                        f"/api/v1/app/stores/{allowed_store.id}/products/{product_id}"
+                    )
+                ).status_code == 200
+
+                second_offline_response = await client.post(
+                    (
+                        f"/api/v1/admin/stores/{allowed_store.id}/products/"
+                        f"{product_id}/status"
+                    ),
+                    headers=headers,
+                    json={"status": "offline"},
+                )
+                assert second_offline_response.status_code == 200
+
                 archive_response = await client.post(
                     (
                         f"/api/v1/admin/stores/{allowed_store.id}/products/"
@@ -307,7 +332,7 @@ async def test_course_product_lifecycle_and_public_purchase_validation() -> None
                     AuditLog.resource_type.in_(("category", "product"))
                 )
             )
-            assert audit_count == 8
+            assert audit_count == 10
         finally:
             app.dependency_overrides.clear()
             await session.close()

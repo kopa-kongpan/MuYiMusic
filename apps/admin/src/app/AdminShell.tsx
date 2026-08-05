@@ -9,6 +9,7 @@ import {
   LogOut,
   Music2,
   Store,
+  ShieldCheck,
   UsersRound,
 } from 'lucide-react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -24,6 +25,7 @@ const pageNames: Record<string, string> = {
   'store-content': '首页内容',
   stores: '门店管理',
   users: '用户与权益',
+  'admin-accounts': '运营账号',
 }
 
 export function AdminShell() {
@@ -51,8 +53,10 @@ export function AdminShell() {
         : location.pathname.startsWith('/appointments')
           ? 'appointments'
           : location.pathname.startsWith('/users')
-          ? 'users'
-          : 'stores'
+            ? 'users'
+            : location.pathname.startsWith('/admin-accounts')
+              ? 'admin-accounts'
+              : 'stores'
   const hasPermission = (permission: string) =>
     session.admin.permissions.includes(permission)
   const storeItems: MenuProps['items'] = [
@@ -109,6 +113,15 @@ export function AdminShell() {
         },
       ]
     : []
+  const platformItems: MenuProps['items'] = hasPermission('admins:manage')
+    ? [
+        {
+          key: 'admin-accounts',
+          icon: <ShieldCheck size={18} aria-hidden="true" />,
+          label: '运营账号',
+        },
+      ]
+    : []
   const menuItems: MenuProps['items'] = [
     { type: 'group', label: '门店经营', children: storeItems },
     ...(teachingItems.length
@@ -116,6 +129,9 @@ export function AdminShell() {
       : []),
     ...(customerItems.length
       ? [{ type: 'group' as const, label: '客户中心', children: customerItems }]
+      : []),
+    ...(platformItems.length
+      ? [{ type: 'group' as const, label: '平台设置', children: platformItems }]
       : []),
   ]
   const currentPageName = pageNames[selectedMenuKey]

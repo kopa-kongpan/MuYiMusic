@@ -408,12 +408,16 @@ class ProductService:
     ) -> ProductRead:
         await self._require_store_access(store_id, admin_user)
         product = await self._require_product(store_id, product_id)
-        transitions = {
-            ProductStatus.DRAFT: ProductStatus.PUBLISHED,
-            ProductStatus.PUBLISHED: ProductStatus.OFFLINE,
-            ProductStatus.OFFLINE: ProductStatus.ARCHIVED,
+        allowed_transitions = {
+            ProductStatus.DRAFT: {ProductStatus.PUBLISHED},
+            ProductStatus.PUBLISHED: {ProductStatus.OFFLINE},
+            ProductStatus.OFFLINE: {
+                ProductStatus.PUBLISHED,
+                ProductStatus.ARCHIVED,
+            },
+            ProductStatus.ARCHIVED: set(),
         }
-        if transitions.get(product.status) != payload.status:
+        if payload.status not in allowed_transitions[product.status]:
             raise InvalidProductError(
                 f"商品不能从 {product.status.value} 变更为 {payload.status.value}"
             )
