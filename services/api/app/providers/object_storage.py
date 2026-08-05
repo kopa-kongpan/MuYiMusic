@@ -121,15 +121,19 @@ class ObjectStorageProvider:
         file_name: str,
         content_type: str,
         file_size: int,
+        purpose: str = "home_content",
     ) -> UploadTicket:
         client = self._configured_client()
         extension, max_size_bytes = self._validate_media(content_type, file_size)
+        if purpose == "product" and content_type not in ALLOWED_IMAGE_CONTENT_TYPES:
+            raise UnsupportedMediaTypeError
         key_prefix = self.settings.object_storage_path_prefix.strip("/")
+        directory = "products" if purpose == "product" else "home"
         object_path = PurePosixPath(
             key_prefix,
             "stores",
             str(store_id),
-            "home",
+            directory,
             f"{uuid4().hex}{extension}",
         )
         object_key = str(object_path)
@@ -171,6 +175,13 @@ class ObjectStorageProvider:
 
     def is_home_object_key(self, store_id: UUID, object_key: str) -> bool:
         return object_key.startswith(self.expected_home_prefix(store_id))
+
+    def expected_product_prefix(self, store_id: UUID) -> str:
+        key_prefix = self.settings.object_storage_path_prefix.strip("/")
+        return str(PurePosixPath(key_prefix, "stores", str(store_id), "products")) + "/"
+
+    def is_product_object_key(self, store_id: UUID, object_key: str) -> bool:
+        return object_key.startswith(self.expected_product_prefix(store_id))
 
     def _validate_media(self, content_type: str, file_size: int) -> tuple[str, int]:
         if content_type in ALLOWED_IMAGE_CONTENT_TYPES:

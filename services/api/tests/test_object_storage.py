@@ -6,6 +6,7 @@ from app.core.config import Settings
 from app.providers.object_storage import (
     MediaFileTooLargeError,
     ObjectStorageProvider,
+    UnsupportedMediaTypeError,
 )
 
 
@@ -52,3 +53,28 @@ def test_object_storage_rejects_oversized_media() -> None:
         )
 
     assert error.value.max_size_bytes == 100
+
+
+def test_object_storage_uses_product_scope_for_product_images() -> None:
+    store_id = uuid4()
+    provider = ObjectStorageProvider(storage_settings())
+    ticket = provider.create_upload_ticket(
+        store_id=store_id,
+        file_name="course.jpg",
+        content_type="image/jpeg",
+        file_size=1024,
+        purpose="product",
+    )
+
+    assert ticket.object_key.startswith(f"muyimusic/stores/{store_id}/products/")
+    assert provider.is_product_object_key(store_id, ticket.object_key)
+    assert not provider.is_home_object_key(store_id, ticket.object_key)
+
+    with pytest.raises(UnsupportedMediaTypeError):
+        provider.create_upload_ticket(
+            store_id=store_id,
+            file_name="course.mp4",
+            content_type="video/mp4",
+            file_size=1024,
+            purpose="product",
+        )

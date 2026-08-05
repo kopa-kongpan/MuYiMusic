@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import StrEnum
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -140,6 +141,7 @@ class UploadTicketRequest(BaseModel):
     file_name: str = Field(min_length=1, max_length=255)
     content_type: str = Field(min_length=3, max_length=128)
     file_size: int = Field(gt=0)
+    purpose: "UploadPurpose" = Field(default_factory=lambda: UploadPurpose.HOME_CONTENT)
 
 
 class UploadTicketResponse(BaseModel):
@@ -150,3 +152,11 @@ class UploadTicketResponse(BaseModel):
     public_url: str | None
     expires_at: datetime
     max_size_bytes: int
+
+
+class UploadPurpose(StrEnum):
+    HOME_CONTENT = "home_content"
+    PRODUCT = "product"
+
+
+UploadTicketRequest.model_rebuild()

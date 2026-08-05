@@ -3,6 +3,11 @@ import type { components } from './generated/schema'
 export type AdminLoginRequest = components['schemas']['AdminLoginRequest']
 export type AdminProfile = components['schemas']['AdminProfile']
 export type AdminTokenResponse = components['schemas']['AdminTokenResponse']
+export type CategoryCreate = components['schemas']['CategoryCreate']
+export type CategoryOrderUpdate = components['schemas']['CategoryOrderUpdate']
+export type CategoryPublicRead = components['schemas']['CategoryPublicRead']
+export type CategoryRead = components['schemas']['CategoryRead']
+export type CategoryUpdate = components['schemas']['CategoryUpdate']
 export type ContentBlockAdminListResponse =
   components['schemas']['ContentBlockAdminListResponse']
 export type ContentBlockCreate = components['schemas']['ContentBlockCreate']
@@ -13,6 +18,25 @@ export type ContentBlockType = components['schemas']['ContentBlockType']
 export type ContentBlockUpdate = components['schemas']['ContentBlockUpdate']
 export type ContentJumpType = components['schemas']['ContentJumpType']
 export type ContentOrderUpdate = components['schemas']['ContentOrderUpdate']
+export type ProductAdminListResponse =
+  components['schemas']['ProductAdminListResponse']
+export type ProductCreate = components['schemas']['ProductCreate']
+export type ProductImageRead = components['schemas']['ProductImageRead']
+export type ProductPublicListItem =
+  components['schemas']['ProductPublicListItem']
+export type ProductPublicListResponse =
+  components['schemas']['ProductPublicListResponse']
+export type ProductPublicRead = components['schemas']['ProductPublicRead']
+export type ProductRead = components['schemas']['ProductRead']
+export type ProductSkuRead = components['schemas']['ProductSkuRead']
+export type ProductSort = components['schemas']['ProductSort']
+export type ProductStatus = components['schemas']['ProductStatus']
+export type ProductStatusUpdate = components['schemas']['ProductStatusUpdate']
+export type ProductUpdate = components['schemas']['ProductUpdate']
+export type PurchaseValidationRequest =
+  components['schemas']['PurchaseValidationRequest']
+export type PurchaseValidationResponse =
+  components['schemas']['PurchaseValidationResponse']
 export type StoreAdminListResponse =
   components['schemas']['StoreAdminListResponse']
 export type StoreCreate = components['schemas']['StoreCreate']
@@ -67,6 +91,22 @@ export interface PublicStoreQuery {
 export interface AdminContentQuery {
   blockType?: ContentBlockType
   status?: ContentBlockStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface AdminProductQuery {
+  keyword?: string
+  categoryId?: string
+  status?: ProductStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface PublicProductQuery {
+  keyword?: string
+  categoryId?: string
+  sort?: ProductSort
   page?: number
   pageSize?: number
 }
@@ -182,6 +222,89 @@ export function createApiClient(options: ApiClientOptions = {}) {
         body: JSON.stringify(payload),
       })
     },
+    listAdminCategories(storeId: string) {
+      return request<CategoryRead[]>(
+        `/api/v1/admin/stores/${storeId}/categories`,
+      )
+    },
+    createCategory(storeId: string, payload: CategoryCreate) {
+      return request<CategoryRead>(
+        `/api/v1/admin/stores/${storeId}/categories`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    updateCategory(
+      storeId: string,
+      categoryId: string,
+      payload: CategoryUpdate,
+    ) {
+      return request<CategoryRead>(
+        `/api/v1/admin/stores/${storeId}/categories/${categoryId}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    reorderCategories(storeId: string, payload: CategoryOrderUpdate) {
+      return request<CategoryRead[]>(
+        `/api/v1/admin/stores/${storeId}/categories/order`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    listAdminProducts(storeId: string, query: AdminProductQuery = {}) {
+      return request<ProductAdminListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/products`, {
+          keyword: query.keyword,
+          category_id: query.categoryId,
+          status: query.status,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    getAdminProduct(storeId: string, productId: string) {
+      return request<ProductRead>(
+        `/api/v1/admin/stores/${storeId}/products/${productId}`,
+      )
+    },
+    createProduct(storeId: string, payload: ProductCreate) {
+      return request<ProductRead>(
+        `/api/v1/admin/stores/${storeId}/products`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    updateProduct(storeId: string, productId: string, payload: ProductUpdate) {
+      return request<ProductRead>(
+        `/api/v1/admin/stores/${storeId}/products/${productId}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    changeProductStatus(
+      storeId: string,
+      productId: string,
+      payload: ProductStatusUpdate,
+    ) {
+      return request<ProductRead>(
+        `/api/v1/admin/stores/${storeId}/products/${productId}/status`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
     listPublicStores(query: PublicStoreQuery = {}) {
       return request<StorePublicListResponse>(
         appendQuery('/api/v1/app/stores', {
@@ -193,6 +316,40 @@ export function createApiClient(options: ApiClientOptions = {}) {
     },
     getStoreHome(storeId: string) {
       return request<StoreHomeResponse>(`/api/v1/app/stores/${storeId}/home`)
+    },
+    listPublicCategories(storeId: string) {
+      return request<CategoryPublicRead[]>(
+        `/api/v1/app/stores/${storeId}/categories`,
+      )
+    },
+    listPublicProducts(storeId: string, query: PublicProductQuery = {}) {
+      return request<ProductPublicListResponse>(
+        appendQuery(`/api/v1/app/stores/${storeId}/products`, {
+          keyword: query.keyword,
+          category_id: query.categoryId,
+          sort: query.sort,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    getPublicProduct(storeId: string, productId: string) {
+      return request<ProductPublicRead>(
+        `/api/v1/app/stores/${storeId}/products/${productId}`,
+      )
+    },
+    validatePurchase(
+      storeId: string,
+      productId: string,
+      payload: PurchaseValidationRequest,
+    ) {
+      return request<PurchaseValidationResponse>(
+        `/api/v1/app/stores/${storeId}/products/${productId}/purchase-validation`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+      )
     },
   }
 }

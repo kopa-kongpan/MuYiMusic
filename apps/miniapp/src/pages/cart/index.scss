@@ -1,0 +1,254 @@
+.cart-page {
+  min-height: 100vh;
+  padding: 30rpx 28rpx 150rpx;
+  color: #202522;
+  background: #f3f5f4;
+}
+
+.cart-heading,
+.cart-item,
+.cart-item-bottom,
+.cart-stepper,
+.cart-summary-bar,
+.cart-total {
+  display: flex;
+  align-items: center;
+}
+
+.cart-heading {
+  justify-content: space-between;
+  margin-bottom: 26rpx;
+  gap: 20rpx;
+}
+
+.cart-heading > text {
+  color: #707974;
+  font-size: 22rpx;
+}
+
+.cart-title,
+.cart-store {
+  display: block;
+}
+
+.cart-title {
+  font-size: 36rpx;
+  font-weight: 650;
+}
+
+.cart-store {
+  max-width: 520rpx;
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: #6f7873;
+  font-size: 23rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.cart-item {
+  position: relative;
+  align-items: stretch;
+  min-height: 220rpx;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+}
+
+.cart-cover {
+  flex: 0 0 226rpx;
+  width: 226rpx;
+  height: 220rpx;
+  background: #e7ebe9;
+}
+
+.cart-cover--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6f7873;
+  font-size: 24rpx;
+}
+
+.cart-item-body {
+  display: flex;
+  min-width: 0;
+  padding: 22rpx;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.cart-item-name,
+.cart-item-sku {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-item-name {
+  padding-right: 70rpx;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.cart-item-sku {
+  margin-top: 9rpx;
+  color: #747c77;
+  font-size: 21rpx;
+}
+
+.cart-item-bottom {
+  justify-content: space-between;
+  margin-top: auto;
+  gap: 14rpx;
+}
+
+.cart-item-price {
+  color: #b64031;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.cart-stepper {
+  height: 54rpx;
+  overflow: hidden;
+  border: 1rpx solid #d7ddda;
+  border-radius: 5rpx;
+}
+
+.cart-stepper button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54rpx;
+  height: 54rpx;
+  margin: 0;
+  padding: 0;
+  background: #f2f4f3;
+  border-radius: 0;
+  font-size: 26rpx;
+}
+
+.cart-stepper button::after,
+.cart-remove-button::after,
+.cart-browse-button::after,
+.cart-summary-bar button::after {
+  border: 0;
+}
+
+.cart-stepper > text {
+  width: 60rpx;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.cart-remove-button {
+  position: absolute;
+  top: 13rpx;
+  right: 12rpx;
+  margin: 0;
+  padding: 0 10rpx;
+  color: #9b4c42;
+  background: transparent;
+  font-size: 20rpx;
+}
+
+.cart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 430rpx;
+  padding: 40rpx;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+  flex-direction: column;
+}
+
+.cart-empty-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76rpx;
+  height: 76rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+}
+
+.cart-empty-title {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.cart-browse-button {
+  height: 60rpx;
+  margin-top: 26rpx;
+  padding: 0 24rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+}
+
+.cart-summary-bar {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  min-height: 112rpx;
+  padding: 14rpx 22rpx calc(14rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1rpx solid #dfe4e1;
+  gap: 16rpx;
+}
+
+.cart-summary-bar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 68rpx;
+  margin: 0;
+  padding: 0 20rpx;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+}
+
+.cart-refresh-button {
+  color: #46504a;
+  background: #eef1ef;
+}
+
+.cart-total {
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.cart-total > text:first-child {
+  color: #78807b;
+  font-size: 20rpx;
+}
+
+.cart-total > text:last-child {
+  color: #b64031;
+  font-size: 29rpx;
+  font-weight: 650;
+}
+
+.cart-continue-button {
+  color: #ffffff;
+  background: #176b57;
+}

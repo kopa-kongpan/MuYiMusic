@@ -1,5 +1,5 @@
 import { Button, Layout, Menu, Tooltip } from 'antd'
-import { LayoutDashboard, LogOut, Music2, Store } from 'lucide-react'
+import { BookOpen, LayoutDashboard, LogOut, Music2, Store } from 'lucide-react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { clearAdminSession, getAdminSession } from './session'
@@ -22,7 +22,9 @@ export function AdminShell() {
 
   const selectedMenuKey = location.pathname.startsWith('/store-content')
     ? 'store-content'
-    : 'stores'
+    : location.pathname.startsWith('/products')
+      ? 'products'
+      : 'stores'
   const menuItems = [
     {
       key: 'stores',
@@ -35,6 +37,15 @@ export function AdminShell() {
             key: 'store-content',
             icon: <LayoutDashboard size={17} aria-hidden="true" />,
             label: '首页内容',
+          },
+        ]
+      : []),
+    ...(session.admin.permissions.includes('products:manage')
+      ? [
+          {
+            key: 'products',
+            icon: <BookOpen size={17} aria-hidden="true" />,
+            label: '课程商品',
           },
         ]
       : []),

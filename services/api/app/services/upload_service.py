@@ -6,11 +6,20 @@ from app.models.admin import AdminUser
 from app.providers.object_storage import ObjectStorageProvider
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.store_repository import StoreRepository
-from app.schemas.store_content import UploadTicketRequest, UploadTicketResponse
+from app.schemas.store_content import (
+    UploadPurpose,
+    UploadTicketRequest,
+    UploadTicketResponse,
+)
+from app.services.auth_service import permission_codes
 from app.services.store_service import can_access_store
 
 
 class UploadStoreNotFoundError(Exception):
+    pass
+
+
+class UploadPermissionError(Exception):
     pass
 
 
@@ -31,11 +40,19 @@ class UploadService:
         admin_user: AdminUser,
     ) -> UploadTicketResponse:
         await self._require_store_access(payload.store_id, admin_user)
+        required_permission = (
+            "products:manage"
+            if payload.purpose == UploadPurpose.PRODUCT
+            else "store_content:manage"
+        )
+        if required_permission not in permission_codes(admin_user):
+            raise UploadPermissionError
         ticket = self.storage.create_upload_ticket(
             store_id=payload.store_id,
             file_name=payload.file_name,
             content_type=payload.content_type,
             file_size=payload.file_size,
+            purpose=payload.purpose.value,
         )
         try:
             self.audit_repository.add(
@@ -47,6 +64,7 @@ class UploadService:
                     "store_id": str(payload.store_id),
                     "content_type": payload.content_type,
                     "file_size": payload.file_size,
+                    "purpose": payload.purpose.value,
                 },
             )
             await self.session.commit()

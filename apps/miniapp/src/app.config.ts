@@ -3,6 +3,8 @@ export default defineAppConfig({
     'pages/index/index',
     'pages/home/index',
     'pages/courses/index',
+    'pages/course-detail/index',
+    'pages/cart/index',
     'pages/booking/index',
     'pages/me/index',
     'pages/webview/index',

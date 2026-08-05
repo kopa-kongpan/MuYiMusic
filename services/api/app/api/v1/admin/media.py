@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import require_permission
+from app.api.dependencies import get_current_admin
 from app.core.database import get_session
 from app.models.admin import AdminUser
 from app.providers.object_storage import (
@@ -14,12 +14,16 @@ from app.providers.object_storage import (
     get_object_storage,
 )
 from app.schemas.store_content import UploadTicketRequest, UploadTicketResponse
-from app.services.upload_service import UploadService, UploadStoreNotFoundError
+from app.services.upload_service import (
+    UploadPermissionError,
+    UploadService,
+    UploadStoreNotFoundError,
+)
 
 router = APIRouter(prefix="/media", tags=["admin-media"])
-ContentManager = Annotated[
+AuthenticatedAdmin = Annotated[
     AdminUser,
-    Depends(require_permission("store_content:manage")),
+    Depends(get_current_admin),
 ]
 
 
@@ -32,7 +36,7 @@ async def create_upload_ticket(
     payload: UploadTicketRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     storage: Annotated[ObjectStorageProvider, Depends(get_object_storage)],
-    current_admin: ContentManager,
+    current_admin: AuthenticatedAdmin,
 ) -> UploadTicketResponse:
     try:
         return await UploadService(session, storage).create_ticket(
@@ -41,6 +45,8 @@ async def create_upload_ticket(
         )
     except UploadStoreNotFoundError as error:
         raise HTTPException(status_code=404, detail="门店不存在") from error
+    except UploadPermissionError as error:
+        raise HTTPException(status_code=403, detail="没有上传此类媒体的权限") from error
     except ObjectStorageNotConfiguredError as error:
         raise HTTPException(
             status_code=503,
