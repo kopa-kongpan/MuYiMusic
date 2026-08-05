@@ -12,6 +12,8 @@ from app.models.admin import AdminUser, Permission, Role
 PERMISSIONS = {
     "stores:manage": "管理门店",
     "store_content:manage": "管理门店首页内容",
+    "products:manage": "管理课程商品",
+    "users:read": "查询用户订单与课程权益",
 }
 PLATFORM_ADMIN_ROLE_CODE = "platform_admin"
 

@@ -247,6 +247,126 @@ export interface paths {
         patch: operations["update_store_api_v1_admin_stores__store_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_v1_admin_stores__store_id__users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/users/{user_id}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List User Orders */
+        get: operations["list_user_orders_api_v1_admin_stores__store_id__users__user_id__orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/users/{user_id}/course-entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List User Entitlements */
+        get: operations["list_user_entitlements_api_v1_admin_stores__store_id__users__user_id__course_entitlements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_app_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile */
+        get: operations["get_profile_api_v1_app_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Profile */
+        patch: operations["update_profile_api_v1_app_me_patch"];
+        trace?: never;
+    };
+    "/api/v1/app/me/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Orders */
+        get: operations["list_orders_api_v1_app_me_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/course-entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Entitlements */
+        get: operations["list_entitlements_api_v1_app_me_course_entitlements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/stores/{store_id}/home": {
         parameters: {
             query?: never;
@@ -606,6 +726,67 @@ export interface components {
             /** Items */
             items: components["schemas"]["ContentOrderItem"][];
         };
+        /** CourseEntitlementListResponse */
+        CourseEntitlementListResponse: {
+            /** Items */
+            items: components["schemas"]["CourseEntitlementRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** CourseEntitlementRead */
+        CourseEntitlementRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** Store Name */
+            store_name: string;
+            /** Order Item Id */
+            order_item_id: string | null;
+            /** Product Id */
+            product_id: string | null;
+            /** Product Sku Id */
+            product_sku_id: string | null;
+            /** Course Name */
+            course_name: string;
+            /** Total Lessons */
+            total_lessons: number;
+            /** Remaining Lessons */
+            remaining_lessons: number;
+            /**
+             * Valid From
+             * Format: date-time
+             */
+            valid_from: string;
+            /** Expires At */
+            expires_at: string | null;
+            status: components["schemas"]["EntitlementStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * EntitlementStatus
+         * @enum {string}
+         */
+        EntitlementStatus: "active" | "exhausted" | "expired";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -619,6 +800,90 @@ export interface components {
              */
             status: "ok";
         };
+        /**
+         * IdentityProvider
+         * @enum {string}
+         */
+        IdentityProvider: "weapp" | "tt" | "h5";
+        /** OrderItemRead */
+        OrderItemRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Product Id */
+            product_id: string | null;
+            /** Product Sku Id */
+            product_sku_id: string | null;
+            /** Product Name */
+            product_name: string;
+            /** Sku Name */
+            sku_name: string;
+            /** Unit Price Cents */
+            unit_price_cents: number;
+            /** Quantity */
+            quantity: number;
+            /** Total Amount Cents */
+            total_amount_cents: number;
+            /** Lesson Count */
+            lesson_count: number;
+            /** Validity Days */
+            validity_days: number;
+        };
+        /** OrderListResponse */
+        OrderListResponse: {
+            /** Items */
+            items: components["schemas"]["OrderRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** OrderRead */
+        OrderRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order No */
+            order_no: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** Store Name */
+            store_name: string;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Amount Cents */
+            total_amount_cents: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Items */
+            items: components["schemas"]["OrderItemRead"][];
+        };
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "pending" | "confirmed" | "cancelled";
         /** ProductAdminListResponse */
         ProductAdminListResponse: {
             /** Items */
@@ -1149,6 +1414,94 @@ export interface components {
             expires_at: string;
             /** Max Size Bytes */
             max_size_bytes: number;
+        };
+        /** UserAdminListResponse */
+        UserAdminListResponse: {
+            /** Items */
+            items: components["schemas"]["UserAdminRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** UserAdminRead */
+        UserAdminRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nickname */
+            nickname: string;
+            /** Avatar Url */
+            avatar_url: string | null;
+            /** Phone Masked */
+            phone_masked: string | null;
+            status: components["schemas"]["UserStatus"];
+            /** Provider Names */
+            provider_names: components["schemas"]["IdentityProvider"][];
+            /** Order Count */
+            order_count: number;
+            /** Entitlement Count */
+            entitlement_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** UserLoginRequest */
+        UserLoginRequest: {
+            provider: components["schemas"]["IdentityProvider"];
+            /** Code */
+            code: string;
+            /** Nickname */
+            nickname?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+        };
+        /** UserProfile */
+        UserProfile: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nickname */
+            nickname: string;
+            /** Avatar Url */
+            avatar_url: string | null;
+            /** Phone */
+            phone: string | null;
+            status: components["schemas"]["UserStatus"];
+        };
+        /** UserProfileUpdate */
+        UserProfileUpdate: {
+            /** Nickname */
+            nickname?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+        };
+        /**
+         * UserStatus
+         * @enum {string}
+         */
+        UserStatus: "active" | "disabled";
+        /** UserTokenResponse */
+        UserTokenResponse: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             * @constant
+             */
+            token_type: "bearer";
+            /** Expires In */
+            expires_in: number;
+            user: components["schemas"]["UserProfile"];
         };
         /** ValidationError */
         ValidationError: {
@@ -1802,6 +2155,267 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoreRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_admin_stores__store_id__users_get: {
+        parameters: {
+            query?: {
+                keyword?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAdminListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_orders_api_v1_admin_stores__store_id__users__user_id__orders_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["OrderStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                store_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_entitlements_api_v1_admin_stores__store_id__users__user_id__course_entitlements_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["EntitlementStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                store_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseEntitlementListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_v1_app_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_api_v1_app_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfile"];
+                };
+            };
+        };
+    };
+    update_profile_api_v1_app_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_orders_api_v1_app_me_orders_get: {
+        parameters: {
+            query?: {
+                store_id?: string | null;
+                status?: components["schemas"]["OrderStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entitlements_api_v1_app_me_course_entitlements_get: {
+        parameters: {
+            query?: {
+                store_id?: string | null;
+                status?: components["schemas"]["EntitlementStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseEntitlementListResponse"];
                 };
             };
             /** @description Validation Error */

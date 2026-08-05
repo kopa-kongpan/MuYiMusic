@@ -1,0 +1,208 @@
+.me-page {
+  min-height: 100vh;
+  padding: 38rpx 28rpx 64rpx;
+  color: #202522;
+  background: #f3f5f4;
+}
+
+.me-heading,
+.me-profile-card,
+.me-entry,
+.me-heading > view:first-child {
+  display: flex;
+  align-items: center;
+}
+
+.me-heading {
+  justify-content: space-between;
+  margin-bottom: 26rpx;
+  gap: 20rpx;
+}
+
+.me-heading > view:first-child {
+  min-width: 0;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.me-title,
+.me-store,
+.me-profile-name,
+.me-profile-meta,
+.me-login-title,
+.me-login-copy {
+  display: block;
+}
+
+.me-title {
+  font-size: 36rpx;
+  font-weight: 650;
+}
+
+.me-store {
+  max-width: 500rpx;
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: #6f7873;
+  font-size: 23rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-store-button,
+.me-logout {
+  margin: 0;
+  color: #4f5954;
+  background: #eef1ef;
+  border-radius: 6rpx;
+  font-size: 21rpx;
+}
+
+.me-store-button::after,
+.me-logout::after,
+.me-login-button::after {
+  border: 0;
+}
+
+.me-profile-card {
+  padding: 28rpx;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+  gap: 20rpx;
+}
+
+.me-avatar,
+.me-login-mark,
+.me-entry-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 7rpx;
+  font-weight: 650;
+}
+
+.me-avatar {
+  flex: 0 0 82rpx;
+  width: 82rpx;
+  height: 82rpx;
+  font-size: 31rpx;
+}
+
+.me-profile-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.me-profile-name,
+.me-profile-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-profile-name {
+  font-size: 29rpx;
+  font-weight: 650;
+}
+
+.me-profile-meta {
+  margin-top: 8rpx;
+  color: #737c77;
+  font-size: 22rpx;
+}
+
+.me-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 20rpx;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+}
+
+.me-entry {
+  min-height: 142rpx;
+  padding: 26rpx;
+  border-right: 1rpx solid #e7ebe9;
+  border-bottom: 1rpx solid #e7ebe9;
+  gap: 16rpx;
+}
+
+.me-entry:nth-child(2n) {
+  border-right: 0;
+}
+
+.me-entry:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.me-entry--pressed {
+  background: #f1f4f2;
+}
+
+.me-entry-mark {
+  width: 54rpx;
+  height: 54rpx;
+  font-size: 21rpx;
+}
+
+.me-entry > text {
+  font-size: 25rpx;
+  font-weight: 600;
+}
+
+.me-readonly-note {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  color: #737c77;
+  background: #e9eeeb;
+  border-radius: 7rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
+}
+
+.me-login-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 430rpx;
+  padding: 42rpx;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+  flex-direction: column;
+  text-align: center;
+}
+
+.me-login-mark {
+  width: 76rpx;
+  height: 76rpx;
+  margin-bottom: 22rpx;
+  font-size: 29rpx;
+}
+
+.me-login-title {
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.me-login-copy {
+  margin-top: 12rpx;
+  color: #7a827d;
+  font-size: 23rpx;
+}
+
+.me-login-button {
+  width: 260rpx;
+  height: 68rpx;
+  margin-top: 32rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 6rpx;
+  font-size: 24rpx;
+  line-height: 68rpx;
+}

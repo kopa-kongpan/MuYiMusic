@@ -5,6 +5,7 @@ import { LoginPage } from './LoginPage'
 import { ProductsPage } from './ProductsPage'
 import { StoreContentPage } from './StoreContentPage'
 import { StoresPage } from './StoresPage'
+import { UsersPage } from './UsersPage'
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: 'stores', element: <StoresPage /> },
       { path: 'store-content', element: <StoreContentPage /> },
       { path: 'products', element: <ProductsPage /> },
+      { path: 'users', element: <UsersPage /> },
     ],
   },
   {

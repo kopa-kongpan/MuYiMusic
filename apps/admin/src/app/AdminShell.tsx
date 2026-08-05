@@ -1,5 +1,12 @@
 import { Button, Layout, Menu, Tooltip } from 'antd'
-import { BookOpen, LayoutDashboard, LogOut, Music2, Store } from 'lucide-react'
+import {
+  BookOpen,
+  LayoutDashboard,
+  LogOut,
+  Music2,
+  Store,
+  UsersRound,
+} from 'lucide-react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { clearAdminSession, getAdminSession } from './session'
@@ -24,7 +31,9 @@ export function AdminShell() {
     ? 'store-content'
     : location.pathname.startsWith('/products')
       ? 'products'
-      : 'stores'
+      : location.pathname.startsWith('/users')
+        ? 'users'
+        : 'stores'
   const menuItems = [
     {
       key: 'stores',
@@ -46,6 +55,15 @@ export function AdminShell() {
             key: 'products',
             icon: <BookOpen size={17} aria-hidden="true" />,
             label: '课程商品',
+          },
+        ]
+      : []),
+    ...(session.admin.permissions.includes('users:read')
+      ? [
+          {
+            key: 'users',
+            icon: <UsersRound size={17} aria-hidden="true" />,
+            label: '用户与权益',
           },
         ]
       : []),

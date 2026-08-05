@@ -23,8 +23,13 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     jwt_secret: str | None = None
     jwt_access_token_minutes: int = 480
+    user_access_token_minutes: int = 10080
     admin_initial_username: str = "admin"
     admin_initial_password: str | None = None
+    wechat_app_id: str | None = None
+    wechat_app_secret: str | None = None
+    douyin_app_id: str | None = None
+    douyin_app_secret: str | None = None
     sentry_dsn: str | None = None
     object_storage_provider: str | None = None
     object_storage_endpoint: str | None = None

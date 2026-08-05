@@ -10,7 +10,9 @@ from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.security import decode_access_token
 from app.models.admin import AdminUser
+from app.models.user import User, UserStatus
 from app.repositories.admin_repository import AdminRepository
+from app.repositories.user_repository import UserRepository
 from app.services.auth_service import permission_codes
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -33,7 +35,11 @@ async def get_current_admin(
     if secret is None:
         raise RuntimeError("JWT_SECRET is required")
     try:
-        admin_user_id = decode_access_token(credentials.credentials, secret)
+        admin_user_id = decode_access_token(
+            credentials.credentials,
+            secret,
+            expected_subject_type="admin",
+        )
     except jwt.InvalidTokenError as error:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -62,3 +68,35 @@ def require_permission(
         return current_admin
 
     return dependency
+
+
+async def get_current_user(
+    session: SessionDependency,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
+) -> User:
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="请先登录")
+    secret = get_settings().jwt_secret
+    if secret is None:
+        raise RuntimeError("JWT_SECRET is required")
+    try:
+        user_id = decode_access_token(
+            credentials.credentials,
+            secret,
+            expected_subject_type="user",
+        )
+    except jwt.InvalidTokenError as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="登录状态已失效",
+        ) from error
+    user = await UserRepository(session).get_user(user_id)
+    if user is None or user.status != UserStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户账号不可用",
+        )
+    return user

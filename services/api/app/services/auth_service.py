@@ -54,6 +54,7 @@ class AuthService:
                 admin_user.id,
                 secret,
                 self.settings.jwt_access_token_minutes,
+                subject_type="admin",
             ),
             expires_in=expires_in,
             admin=AdminProfile(

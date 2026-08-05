@@ -1,0 +1,191 @@
+.record-page {
+  min-height: 100vh;
+  padding: 32rpx 28rpx 64rpx;
+  color: #202522;
+  background: #f3f5f4;
+}
+
+.record-heading {
+  margin-bottom: 24rpx;
+}
+
+.record-title,
+.record-store,
+.record-state-title,
+.record-state-copy,
+.record-card-title,
+.record-card-meta,
+.record-card-price,
+.record-line-title,
+.record-line-meta {
+  display: block;
+}
+
+.record-title {
+  font-size: 34rpx;
+  font-weight: 650;
+}
+
+.record-store {
+  margin-top: 7rpx;
+  overflow: hidden;
+  color: #707974;
+  font-size: 22rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400rpx;
+  padding: 42rpx;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+  flex-direction: column;
+  text-align: center;
+}
+
+.record-state-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 7rpx;
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.record-state-title {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.record-state-copy {
+  margin-top: 10rpx;
+  color: #78817c;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.record-state-button {
+  height: 60rpx;
+  margin-top: 24rpx;
+  padding: 0 24rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  line-height: 60rpx;
+}
+
+.record-state-button::after {
+  border: 0;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.record-card {
+  padding: 26rpx;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+}
+
+.record-card-header,
+.record-card-footer,
+.record-course-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.record-card-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 25rpx;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-status {
+  flex: 0 0 auto;
+  padding: 5rpx 11rpx;
+  color: #176b57;
+  background: #e3eee9;
+  border-radius: 4rpx;
+  font-size: 19rpx;
+}
+
+.record-status--muted {
+  color: #6f7873;
+  background: #ecefed;
+}
+
+.record-card-meta {
+  margin-top: 8rpx;
+  color: #7a827d;
+  font-size: 20rpx;
+}
+
+.record-lines {
+  margin: 22rpx 0;
+  padding: 18rpx 0;
+  border-top: 1rpx solid #e7ebe9;
+  border-bottom: 1rpx solid #e7ebe9;
+}
+
+.record-line + .record-line {
+  margin-top: 16rpx;
+}
+
+.record-line-title {
+  font-size: 23rpx;
+  font-weight: 600;
+}
+
+.record-line-meta {
+  margin-top: 5rpx;
+  color: #78817c;
+  font-size: 20rpx;
+}
+
+.record-card-footer text:first-child {
+  color: #78817c;
+  font-size: 20rpx;
+}
+
+.record-card-price {
+  color: #b64031;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.record-course-progress {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #e7ebe9;
+}
+
+.record-course-progress text:first-child {
+  color: #68716c;
+  font-size: 22rpx;
+}
+
+.record-course-progress text:last-child {
+  color: #176b57;
+  font-size: 27rpx;
+  font-weight: 650;
+}

@@ -7,6 +7,10 @@ export default defineAppConfig({
     'pages/cart/index',
     'pages/booking/index',
     'pages/me/index',
+    'pages/my-orders/index',
+    'pages/my-courses/index',
+    'pages/schedule/index',
+    'pages/my-bookings/index',
     'pages/webview/index',
   ],
   window: {

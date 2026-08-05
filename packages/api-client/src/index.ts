@@ -3,6 +3,15 @@ import type { components } from './generated/schema'
 export type AdminLoginRequest = components['schemas']['AdminLoginRequest']
 export type AdminProfile = components['schemas']['AdminProfile']
 export type AdminTokenResponse = components['schemas']['AdminTokenResponse']
+export type CourseEntitlementListResponse =
+  components['schemas']['CourseEntitlementListResponse']
+export type CourseEntitlementRead =
+  components['schemas']['CourseEntitlementRead']
+export type EntitlementStatus = components['schemas']['EntitlementStatus']
+export type IdentityProvider = components['schemas']['IdentityProvider']
+export type OrderListResponse = components['schemas']['OrderListResponse']
+export type OrderRead = components['schemas']['OrderRead']
+export type OrderStatus = components['schemas']['OrderStatus']
 export type CategoryCreate = components['schemas']['CategoryCreate']
 export type CategoryOrderUpdate = components['schemas']['CategoryOrderUpdate']
 export type CategoryPublicRead = components['schemas']['CategoryPublicRead']
@@ -49,6 +58,14 @@ export type StoreHomeResponse = components['schemas']['StoreHomeResponse']
 export type StoreUpdate = components['schemas']['StoreUpdate']
 export type UploadTicketRequest = components['schemas']['UploadTicketRequest']
 export type UploadTicketResponse = components['schemas']['UploadTicketResponse']
+export type UserAdminListResponse =
+  components['schemas']['UserAdminListResponse']
+export type UserAdminRead = components['schemas']['UserAdminRead']
+export type UserLoginRequest = components['schemas']['UserLoginRequest']
+export type UserProfile = components['schemas']['UserProfile']
+export type UserProfileUpdate = components['schemas']['UserProfileUpdate']
+export type UserStatus = components['schemas']['UserStatus']
+export type UserTokenResponse = components['schemas']['UserTokenResponse']
 
 interface ApiErrorBody {
   code?: string
@@ -111,6 +128,26 @@ export interface PublicProductQuery {
   pageSize?: number
 }
 
+export interface UserOrderQuery {
+  storeId?: string
+  status?: OrderStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface UserEntitlementQuery {
+  storeId?: string
+  status?: EntitlementStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface AdminUserQuery {
+  keyword?: string
+  page?: number
+  pageSize?: number
+}
+
 function appendQuery(
   path: string,
   query: Record<string, string | number | undefined>,
@@ -152,6 +189,41 @@ export function createApiClient(options: ApiClientOptions = {}) {
         method: 'POST',
         body: JSON.stringify(payload),
       })
+    },
+    loginUser(payload: UserLoginRequest) {
+      return request<UserTokenResponse>('/api/v1/app/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+    },
+    getUserProfile() {
+      return request<UserProfile>('/api/v1/app/me')
+    },
+    updateUserProfile(payload: UserProfileUpdate) {
+      return request<UserProfile>('/api/v1/app/me', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      })
+    },
+    listMyOrders(query: UserOrderQuery = {}) {
+      return request<OrderListResponse>(
+        appendQuery('/api/v1/app/me/orders', {
+          store_id: query.storeId,
+          status: query.status,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    listMyCourseEntitlements(query: UserEntitlementQuery = {}) {
+      return request<CourseEntitlementListResponse>(
+        appendQuery('/api/v1/app/me/course-entitlements', {
+          store_id: query.storeId,
+          status: query.status,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
     },
     listAdminStores(query: AdminStoreQuery = {}) {
       return request<StoreAdminListResponse>(
@@ -267,6 +339,47 @@ export function createApiClient(options: ApiClientOptions = {}) {
           page: query.page,
           page_size: query.pageSize,
         }),
+      )
+    },
+    listAdminUsers(storeId: string, query: AdminUserQuery = {}) {
+      return request<UserAdminListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/users`, {
+          keyword: query.keyword,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    listAdminUserOrders(
+      storeId: string,
+      userId: string,
+      query: Omit<UserOrderQuery, 'storeId'> = {},
+    ) {
+      return request<OrderListResponse>(
+        appendQuery(
+          `/api/v1/admin/stores/${storeId}/users/${userId}/orders`,
+          {
+            status: query.status,
+            page: query.page,
+            page_size: query.pageSize,
+          },
+        ),
+      )
+    },
+    listAdminUserCourseEntitlements(
+      storeId: string,
+      userId: string,
+      query: Omit<UserEntitlementQuery, 'storeId'> = {},
+    ) {
+      return request<CourseEntitlementListResponse>(
+        appendQuery(
+          `/api/v1/admin/stores/${storeId}/users/${userId}/course-entitlements`,
+          {
+            status: query.status,
+            page: query.page,
+            page_size: query.pageSize,
+          },
+        ),
       )
     },
     getAdminProduct(storeId: string, productId: string) {

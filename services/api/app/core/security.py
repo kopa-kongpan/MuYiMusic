@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import UUID
 
 import jwt
@@ -10,6 +11,7 @@ import jwt
 PASSWORD_ALGORITHM = "pbkdf2_sha256"
 PASSWORD_ITERATIONS = 600_000
 JWT_ALGORITHM = "HS256"
+TokenSubjectType = Literal["admin", "user"]
 
 
 def hash_password(password: str) -> str:
@@ -53,21 +55,29 @@ def verify_password(password: str, encoded_password: str) -> bool:
 
 
 def create_access_token(
-    admin_user_id: UUID,
+    subject_id: UUID,
     secret: str,
     expires_in_minutes: int,
+    subject_type: TokenSubjectType = "admin",
 ) -> str:
     now = datetime.now(UTC)
     payload = {
-        "sub": str(admin_user_id),
+        "sub": str(subject_id),
+        "type": subject_type,
         "iat": now,
         "exp": now + timedelta(minutes=expires_in_minutes),
     }
     return jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
 
 
-def decode_access_token(token: str, secret: str) -> UUID:
+def decode_access_token(
+    token: str,
+    secret: str,
+    expected_subject_type: TokenSubjectType = "admin",
+) -> UUID:
     payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
+    if payload.get("type") != expected_subject_type:
+        raise jwt.InvalidTokenError("Token subject type is invalid")
     subject = payload.get("sub")
     if not isinstance(subject, str):
         raise jwt.InvalidTokenError("Token subject is missing")

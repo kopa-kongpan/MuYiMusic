@@ -1,4 +1,4 @@
-export type PlatformName = 'weapp' | 'tt'
+export type PlatformName = 'weapp' | 'tt' | 'h5'
 
 export interface LoginResult {
   code: string
@@ -14,4 +14,3 @@ export interface PlatformAdapter {
   openCustomerService(): Promise<void>
   getPlatformInfo(): Readonly<Record<string, unknown>>
 }
-
