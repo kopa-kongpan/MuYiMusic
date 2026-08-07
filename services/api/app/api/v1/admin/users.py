@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_permission
@@ -12,13 +12,19 @@ from app.models.user import EntitlementStatus, OrderStatus
 from app.providers.miniapp_identity import get_miniapp_identity_provider
 from app.schemas.user import (
     CourseEntitlementListResponse,
+    EntitlementGrantRequest,
     OrderListResponse,
+    OrderRead,
     UserAdminListResponse,
 )
 from app.services.user_service import UserResourceNotFoundError, UserService
 
 router = APIRouter(prefix="/stores/{store_id}/users", tags=["admin-users"])
 UserReader = Annotated[AdminUser, Depends(require_permission("users:read"))]
+GrantManager = Annotated[
+    AdminUser,
+    Depends(require_permission("products:manage")),
+]
 
 
 def service(session: AsyncSession) -> UserService:
@@ -100,3 +106,26 @@ async def list_user_entitlements(
         )
     except UserResourceNotFoundError as error:
         raise HTTPException(status_code=404, detail="门店不存在") from error
+
+
+@router.post(
+    "/{user_id}/entitlements",
+    response_model=OrderRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def grant_entitlement(
+    store_id: UUID,
+    user_id: UUID,
+    payload: EntitlementGrantRequest,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_admin: GrantManager,
+) -> OrderRead:
+    try:
+        return await service(session).grant_entitlement(
+            store_id=store_id,
+            user_id=user_id,
+            payload=payload,
+            admin_user=current_admin,
+        )
+    except UserResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="用户或商品不存在") from error

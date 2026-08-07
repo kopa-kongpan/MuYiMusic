@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.core.database import get_session
 from app.models.user import EntitlementStatus, OrderStatus, User
 from app.providers.miniapp_identity import get_miniapp_identity_provider
+from app.providers.object_storage import get_object_storage
 from app.schemas.user import (
     CourseEntitlementListResponse,
     OrderListResponse,
@@ -77,6 +78,7 @@ async def list_entitlements(
         session,
         get_settings(),
         get_miniapp_identity_provider(),
+        storage=get_object_storage(),
     ).list_entitlements(
         user_id=current_user.id,
         store_id=store_id,

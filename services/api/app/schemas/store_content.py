@@ -160,6 +160,7 @@ class UploadTicketResponse(BaseModel):
 class UploadPurpose(StrEnum):
     HOME_CONTENT = "home_content"
     PRODUCT = "product"
+    PRODUCT_VIDEO = "product_video"
 
 
 UploadTicketRequest.model_rebuild()

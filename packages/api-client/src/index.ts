@@ -42,6 +42,8 @@ export type CourseEntitlementListResponse =
 export type CourseEntitlementRead =
   components['schemas']['CourseEntitlementRead']
 export type EntitlementStatus = components['schemas']['EntitlementStatus']
+export type EntitlementVideoChapterRead =
+  components['schemas']['EntitlementVideoChapterRead']
 export type IdentityProvider = components['schemas']['IdentityProvider']
 export type OrderListResponse = components['schemas']['OrderListResponse']
 export type OrderRead = components['schemas']['OrderRead']
@@ -75,6 +77,7 @@ export type ProductSkuRead = components['schemas']['ProductSkuRead']
 export type ProductSort = components['schemas']['ProductSort']
 export type ProductStatus = components['schemas']['ProductStatus']
 export type ProductStatusUpdate = components['schemas']['ProductStatusUpdate']
+export type ProductType = components['schemas']['ProductType']
 export type ProductUpdate = components['schemas']['ProductUpdate']
 export type PurchaseValidationRequest =
   components['schemas']['PurchaseValidationRequest']

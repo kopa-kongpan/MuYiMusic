@@ -11,6 +11,7 @@ export default defineAppConfig({
     'pages/my-courses/index',
     'pages/schedule/index',
     'pages/my-bookings/index',
+    'pages/video-player/index',
     'pages/webview/index',
   ],
   window: {

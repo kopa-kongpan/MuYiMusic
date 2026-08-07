@@ -42,7 +42,7 @@ class UploadService:
         await self._require_store_access(payload.store_id, admin_user)
         required_permission = (
             "products:manage"
-            if payload.purpose == UploadPurpose.PRODUCT
+            if payload.purpose in (UploadPurpose.PRODUCT, UploadPurpose.PRODUCT_VIDEO)
             else "store_content:manage"
         )
         if required_permission not in permission_codes(admin_user):

@@ -539,6 +539,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/users/{user_id}/entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grant Entitlement */
+        post: operations["grant_entitlement_api_v1_admin_stores__store_id__users__user_id__entitlements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/auth/login": {
         parameters: {
             query?: never;
@@ -1311,6 +1328,7 @@ export interface components {
             product_sku_id: string | null;
             /** Course Name */
             course_name: string;
+            product_type: components["schemas"]["ProductType"];
             /** Total Lessons */
             total_lessons: number;
             /** Remaining Lessons */
@@ -1332,12 +1350,53 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Video Chapters */
+            video_chapters?: components["schemas"]["EntitlementVideoChapterRead"][];
+        };
+        /**
+         * EntitlementGrantRequest
+         * @description 管理员为已成交用户开通商品权益（线下成交后录入）。
+         */
+        EntitlementGrantRequest: {
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Idempotency Key */
+            idempotency_key: string;
         };
         /**
          * EntitlementStatus
          * @enum {string}
          */
         EntitlementStatus: "active" | "exhausted" | "expired";
+        /**
+         * EntitlementVideoChapterRead
+         * @description 已购权益下的视频章节：持有效权益时可获得播放地址。
+         */
+        EntitlementVideoChapterRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Duration Seconds */
+            duration_seconds: number | null;
+            /** Sort Order */
+            sort_order: number;
+            /** Video Url */
+            video_url: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1381,6 +1440,7 @@ export interface components {
             lesson_count: number;
             /** Validity Days */
             validity_days: number;
+            product_type: components["schemas"]["ProductType"];
         };
         /** OrderListResponse */
         OrderListResponse: {
@@ -1469,6 +1529,8 @@ export interface components {
             notes?: string | null;
             /** Cover Object Key */
             cover_object_key: string;
+            /** @default course */
+            product_type: components["schemas"]["ProductType"];
             /** Sale Starts At */
             sale_starts_at?: string | null;
             /** Sale Ends At */
@@ -1482,6 +1544,8 @@ export interface components {
             skus: components["schemas"]["ProductSkuWrite"][];
             /** Images */
             images?: components["schemas"]["ProductImageWrite"][];
+            /** Videos */
+            videos?: components["schemas"]["ProductVideoWrite"][];
         };
         /** ProductImageRead */
         ProductImageRead: {
@@ -1527,6 +1591,9 @@ export interface components {
             summary: string;
             /** Cover Url */
             cover_url: string | null;
+            product_type: components["schemas"]["ProductType"];
+            /** Video Chapter Count */
+            video_chapter_count: number;
             /**
              * Default Sku Id
              * Format: uuid
@@ -1582,6 +1649,7 @@ export interface components {
             notes: string | null;
             /** Cover Url */
             cover_url: string | null;
+            product_type: components["schemas"]["ProductType"];
             /** Sales Count */
             sales_count: number;
             /** Sale Starts At */
@@ -1592,6 +1660,8 @@ export interface components {
             skus: components["schemas"]["ProductSkuRead"][];
             /** Images */
             images: components["schemas"]["ProductImageRead"][];
+            /** Video Chapters */
+            video_chapters: components["schemas"]["ProductVideoChapterPreview"][];
         };
         /** ProductRead */
         ProductRead: {
@@ -1624,6 +1694,7 @@ export interface components {
             cover_object_key: string;
             /** Cover Url */
             cover_url: string | null;
+            product_type: components["schemas"]["ProductType"];
             status: components["schemas"]["ProductStatus"];
             /** Sale Starts At */
             sale_starts_at: string | null;
@@ -1649,6 +1720,8 @@ export interface components {
             skus: components["schemas"]["ProductSkuRead"][];
             /** Images */
             images: components["schemas"]["ProductImageRead"][];
+            /** Videos */
+            videos: components["schemas"]["ProductVideoRead"][];
         };
         /** ProductSkuRead */
         ProductSkuRead: {
@@ -1707,6 +1780,11 @@ export interface components {
         ProductStatusUpdate: {
             status: components["schemas"]["ProductStatus"];
         };
+        /**
+         * ProductType
+         * @enum {string}
+         */
+        ProductType: "course" | "video";
         /** ProductUpdate */
         ProductUpdate: {
             /** Category Id */
@@ -1721,6 +1799,7 @@ export interface components {
             notes?: string | null;
             /** Cover Object Key */
             cover_object_key?: string | null;
+            product_type?: components["schemas"]["ProductType"] | null;
             /** Sale Starts At */
             sale_starts_at?: string | null;
             /** Sale Ends At */
@@ -1731,6 +1810,66 @@ export interface components {
             skus?: components["schemas"]["ProductSkuWrite"][] | null;
             /** Images */
             images?: components["schemas"]["ProductImageWrite"][] | null;
+            /** Videos */
+            videos?: components["schemas"]["ProductVideoWrite"][] | null;
+        };
+        /**
+         * ProductVideoChapterPreview
+         * @description 公开详情中的视频章节预览：只暴露元信息，不暴露播放地址。
+         */
+        ProductVideoChapterPreview: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Duration Seconds */
+            duration_seconds: number | null;
+            /** Sort Order */
+            sort_order: number;
+        };
+        /** ProductVideoRead */
+        ProductVideoRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Object Key */
+            object_key: string;
+            /** Video Url */
+            video_url: string | null;
+            /** Duration Seconds */
+            duration_seconds: number | null;
+            /** Sort Order */
+            sort_order: number;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** ProductVideoWrite */
+        ProductVideoWrite: {
+            /** Id */
+            id?: string | null;
+            /** Title */
+            title: string;
+            /** Object Key */
+            object_key: string;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
         };
         /** PurchaseValidationRequest */
         PurchaseValidationRequest: {
@@ -2184,7 +2323,7 @@ export interface components {
          * UploadPurpose
          * @enum {string}
          */
-        UploadPurpose: "home_content" | "product";
+        UploadPurpose: "home_content" | "product" | "product_video";
         /** UploadTicketRequest */
         UploadTicketRequest: {
             /**
@@ -3671,6 +3810,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseEntitlementListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    grant_entitlement_api_v1_admin_stores__store_id__users__user_id__entitlements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntitlementGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderRead"];
                 };
             };
             /** @description Validation Error */

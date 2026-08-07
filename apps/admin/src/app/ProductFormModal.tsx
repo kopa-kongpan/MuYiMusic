@@ -2,6 +2,7 @@ import type {
   CategoryRead,
   ProductCreate,
   ProductRead,
+  ProductType,
   StoreRead,
 } from '@muyimusic/api-client'
 import {
@@ -16,7 +17,7 @@ import {
   Upload,
 } from 'antd'
 import type { UploadFile, UploadProps } from 'antd'
-import { ImagePlus, Plus, Trash2, UploadCloud } from 'lucide-react'
+import { ImagePlus, Plus, Trash2, UploadCloud, Video } from 'lucide-react'
 import { useState } from 'react'
 
 import { apiClient } from './api'
@@ -40,7 +41,17 @@ interface SkuFormValue {
   is_active: boolean
 }
 
+interface VideoChapterFormValue {
+  id?: string
+  object_key: string
+  title: string
+  duration_seconds: number | null
+  sort_order: number
+  is_active: boolean
+}
+
 interface ProductFormValues {
+  product_type: ProductType
   category_id: string
   name: string
   summary: string
@@ -51,6 +62,7 @@ interface ProductFormValues {
   sale_ends_at?: string
   sort_order: number
   skus: SkuFormValue[]
+  videos: VideoChapterFormValue[]
 }
 
 interface ProductImageValue {
@@ -90,9 +102,42 @@ export function ProductFormModal({
   const [isSaving, setIsSaving] = useState(false)
   const [coverFiles, setCoverFiles] = useState<UploadFile[]>([])
   const [images, setImages] = useState<ProductImageValue[]>([])
+  const [isChapterUploading, setIsChapterUploading] = useState(false)
+  const productType = Form.useWatch('product_type', form) ?? 'course'
+  const chapterValues = Form.useWatch('videos', form) ?? []
+
+  const uploadChapterVideo: (index: number) => UploadProps['customRequest'] =
+    (index) => async (options) => {
+      const file = options.file as File
+      setIsChapterUploading(true)
+      try {
+        const ticket = await uploadFile(file, 'product_video')
+        form.setFieldValue(['videos', index, 'object_key'], ticket.object_key)
+        options.onSuccess?.({ objectKey: ticket.object_key })
+        void message.success('视频上传完成')
+      } catch (error) {
+        const uploadError = error instanceof Error ? error : new Error('视频上传失败')
+        options.onError?.(uploadError)
+        void message.error(uploadError.message)
+      } finally {
+        setIsChapterUploading(false)
+      }
+    }
+
+  function handleProductTypeChange(value: ProductType) {
+    if (value === productType) {
+      return
+    }
+    const lessonCount = value === 'video' ? 0 : 1
+    const skus = (form.getFieldValue('skus') ?? []).map(
+      (sku: SkuFormValue) => ({ ...sku, lesson_count: lessonCount }),
+    )
+    form.setFieldsValue({ skus })
+  }
 
   function initializeForm() {
     form.setFieldsValue({
+      product_type: product?.product_type ?? 'course',
       category_id: product?.category_id ?? categories[0]?.id,
       name: product?.name ?? '',
       summary: product?.summary ?? '',
@@ -121,6 +166,15 @@ export function ProductFormModal({
             is_active: true,
           },
         ],
+      videos:
+        product?.videos.map((video) => ({
+          id: video.id,
+          title: video.title,
+          object_key: video.object_key,
+          duration_seconds: video.duration_seconds,
+          sort_order: video.sort_order,
+          is_active: video.is_active,
+        })) ?? [],
     })
     setCoverFiles(
       product
@@ -144,13 +198,13 @@ export function ProductFormModal({
     )
   }
 
-  async function uploadFile(file: File) {
+  async function uploadFile(file: File, purpose: 'product' | 'product_video') {
     const ticket = await apiClient.createUploadTicket({
       store_id: store.id,
       file_name: file.name,
       content_type: file.type,
       file_size: file.size,
-      purpose: 'product',
+      purpose,
     })
     const response = await fetch(ticket.upload_url, {
       method: ticket.method,
@@ -166,7 +220,7 @@ export function ProductFormModal({
   const uploadCover: UploadProps['customRequest'] = async (options) => {
     const file = options.file as File
     try {
-      const ticket = await uploadFile(file)
+      const ticket = await uploadFile(file, 'product')
       form.setFieldValue('cover_object_key', ticket.object_key)
       setCoverFiles([
         {
@@ -188,7 +242,7 @@ export function ProductFormModal({
   const uploadGalleryImage: UploadProps['customRequest'] = async (options) => {
     const file = options.file as File
     try {
-      const ticket = await uploadFile(file)
+      const ticket = await uploadFile(file, 'product')
       setImages((current) => [
         ...current,
         {
@@ -217,6 +271,7 @@ export function ProductFormModal({
       return
     }
     const payload: ProductCreate = {
+      product_type: values.product_type,
       category_id: values.category_id,
       name: values.name,
       summary: values.summary,
@@ -239,6 +294,14 @@ export function ProductFormModal({
         object_key: image.objectKey,
         sort_order: (index + 1) * 10,
       })),
+      videos: values.videos.map((video) => ({
+        id: video.id ?? null,
+        title: video.title,
+        object_key: video.object_key,
+        duration_seconds: video.duration_seconds,
+        sort_order: video.sort_order,
+        is_active: video.is_active,
+      })),
     }
     setIsSaving(true)
     try {
@@ -251,6 +314,11 @@ export function ProductFormModal({
             const createSku = { ...sku }
             delete createSku.id
             return createSku
+          }),
+          videos: (payload.videos ?? []).map((video) => {
+            const createVideo = { ...video }
+            delete createVideo.id
+            return createVideo
           }),
         })
       }
@@ -299,6 +367,24 @@ export function ProductFormModal({
             <Input value={store.name} disabled />
           </Form.Item>
           <Form.Item
+            name="product_type"
+            label="商品类型"
+            rules={[{ required: true, message: '请选择商品类型' }]}
+            extra={product ? '已创建的商品类型不可修改' : undefined}
+          >
+            <Select
+              disabled={Boolean(product)}
+              options={[
+                { value: 'course', label: '线下课时课' },
+                { value: 'video', label: '视频课程' },
+              ]}
+              onChange={(value) => handleProductTypeChange(value as ProductType)}
+            />
+          </Form.Item>
+        </div>
+
+        <div className="form-grid form-grid--two">
+          <Form.Item
             name="category_id"
             label="课程分类"
             rules={[{ required: true, message: '请选择课程分类' }]}
@@ -312,20 +398,18 @@ export function ProductFormModal({
               }))}
             />
           </Form.Item>
-        </div>
-
-        <div className="form-grid form-grid--two">
-          <Form.Item
-            name="name"
-            label="商品名称"
-            rules={[{ required: true, message: '请输入商品名称' }]}
-          >
-            <Input maxLength={128} placeholder="例如：少儿钢琴启蒙课" />
-          </Form.Item>
           <Form.Item name="sort_order" label="展示顺序" rules={[{ required: true }]}>
             <InputNumber className="field-full" min={0} max={9999} />
           </Form.Item>
         </div>
+
+        <Form.Item
+          name="name"
+          label="商品名称"
+          rules={[{ required: true, message: '请输入商品名称' }]}
+        >
+          <Input maxLength={128} placeholder="例如：少儿钢琴启蒙课" />
+        </Form.Item>
 
         <Form.Item name="summary" label="商品摘要">
           <Input maxLength={300} showCount placeholder="列表页展示的简短介绍" />
@@ -430,7 +514,16 @@ export function ProductFormModal({
                     label="课时数"
                     rules={[{ required: true }]}
                   >
-                    <InputNumber className="field-full" min={1} max={10000} />
+                    {productType === 'video' ? (
+                      <InputNumber
+                        className="field-full"
+                        value={0}
+                        disabled
+                        aria-label="视频课程按观看权益售卖，课时固定为 0"
+                      />
+                    ) : (
+                      <InputNumber className="field-full" min={1} max={10000} />
+                    )}
                   </Form.Item>
                   <Form.Item
                     name={[field.name, 'validity_days']}
@@ -484,6 +577,118 @@ export function ProductFormModal({
             </div>
           )}
         </Form.List>
+
+        {productType === 'video' ? (
+          <>
+            <div className="sku-heading">
+              <strong>视频章节</strong>
+              <span>上传教学视频，用户购买后在小程序按章节观看</span>
+            </div>
+            <Form.List name="videos">
+              {(fields, { add, remove }) => (
+                <div className="chapter-list">
+                  {fields.map((field, index) => {
+                    const chapter = chapterValues[field.name]
+                    const objectKey = chapter?.object_key ?? ''
+                    return (
+                      <div className="chapter-row" key={field.key}>
+                        <Form.Item name={[field.name, 'id']} hidden>
+                          <Input />
+                        </Form.Item>
+                        <Form.Item
+                          name={[field.name, 'object_key']}
+                          hidden
+                          rules={[{ required: true, message: '请上传视频文件' }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                        <Form.Item
+                          name={[field.name, 'title']}
+                          label="章节标题"
+                          rules={[{ required: true, message: '请输入章节标题' }]}
+                        >
+                          <Input maxLength={128} placeholder="例如：第一章 认识键盘" />
+                        </Form.Item>
+                        <Form.Item
+                          name={[field.name, 'duration_seconds']}
+                          label="时长（秒）"
+                          tooltip="选填，用于章节列表展示"
+                        >
+                          <InputNumber
+                            className="field-full"
+                            min={1}
+                            max={604800}
+                            placeholder="选填"
+                          />
+                        </Form.Item>
+                        <Form.Item
+                          name={[field.name, 'sort_order']}
+                          label="顺序"
+                          rules={[{ required: true }]}
+                        >
+                          <InputNumber className="field-full" min={0} max={9999} />
+                        </Form.Item>
+                        <Form.Item
+                          name={[field.name, 'is_active']}
+                          label="启用"
+                          valuePropName="checked"
+                        >
+                          <Switch size="small" />
+                        </Form.Item>
+                        <Form.Item label="视频文件" required>
+                          <Upload
+                            accept="video/mp4,video/quicktime,video/webm"
+                            customRequest={uploadChapterVideo(field.name)}
+                            showUploadList={false}
+                            disabled={isChapterUploading}
+                          >
+                            <Button
+                              size="small"
+                              loading={isChapterUploading}
+                              icon={<Video size={14} aria-hidden="true" />}
+                            >
+                              {objectKey ? '更换视频' : '上传'}
+                            </Button>
+                          </Upload>
+                          {objectKey ? (
+                            <span className="chapter-file">
+                              {fileNameFromKey(objectKey)}
+                            </span>
+                          ) : null}
+                        </Form.Item>
+                        <Button
+                          className="sku-remove"
+                          type="text"
+                          danger
+                          disabled={fields.length === 1}
+                          icon={<Trash2 size={17} aria-hidden="true" />}
+                          aria-label={`移除第 ${index + 1} 个章节`}
+                          onClick={() => remove(field.name)}
+                        />
+                      </div>
+                    )
+                  })}
+                  <Button
+                    block
+                    type="dashed"
+                    icon={<Plus size={17} aria-hidden="true" />}
+                    onClick={() =>
+                      add({
+                        title: '',
+                        object_key: '',
+                        duration_seconds: null,
+                        sort_order: (fields.length + 1) * 10,
+                        is_active: true,
+                      })
+                    }
+                  >
+                    添加视频章节
+                  </Button>
+                </div>
+              )}
+            </Form.List>
+          </>
+        ) : null}
       </Form>
     </Modal>
   )

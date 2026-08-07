@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     DateTime,
     Enum,
     ForeignKey,
@@ -26,6 +27,11 @@ class ProductStatus(StrEnum):
     PUBLISHED = "published"
     OFFLINE = "offline"
     ARCHIVED = "archived"
+
+
+class ProductType(StrEnum):
+    COURSE = "course"
+    VIDEO = "video"
 
 
 class Category(Base):
@@ -74,6 +80,16 @@ class Product(Base):
     details: Mapped[str] = mapped_column(Text, default="", server_default="")
     notes: Mapped[str | None] = mapped_column(Text)
     cover_object_key: Mapped[str] = mapped_column(String(1024))
+    product_type: Mapped[ProductType] = mapped_column(
+        Enum(
+            ProductType,
+            name="product_type",
+            values_callable=lambda values: [value.value for value in values],
+        ),
+        default=ProductType.COURSE,
+        server_default=ProductType.COURSE.value,
+        index=True,
+    )
     status: Mapped[ProductStatus] = mapped_column(
         Enum(
             ProductStatus,
@@ -111,6 +127,12 @@ class Product(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
         order_by="ProductImage.sort_order, ProductImage.created_at",
+    )
+    videos: Mapped[list["ProductVideo"]] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="ProductVideo.sort_order, ProductVideo.created_at",
     )
 
 
@@ -160,3 +182,36 @@ class ProductImage(Base):
         server_default=func.now(),
     )
     product: Mapped[Product] = relationship(back_populates="images")
+
+
+class ProductVideo(Base):
+    __tablename__ = "product_videos"
+    __table_args__ = (
+        CheckConstraint("sort_order >= 0", name="ck_product_videos_sort_order"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    product_id: Mapped[UUID] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"),
+        index=True,
+    )
+    title: Mapped[str] = mapped_column(String(128))
+    object_key: Mapped[str] = mapped_column(String(1024))
+    duration_seconds: Mapped[int | None] = mapped_column(Integer)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default="true",
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+    product: Mapped[Product] = relationship(back_populates="videos")

@@ -11,6 +11,8 @@ from app.models.product import (
     ProductImage,
     ProductSku,
     ProductStatus,
+    ProductType,
+    ProductVideo,
 )
 from app.models.store import StoreStatus
 from app.providers.object_storage import ObjectStorageProvider
@@ -34,6 +36,8 @@ from app.schemas.product import (
     ProductSort,
     ProductStatusUpdate,
     ProductUpdate,
+    ProductVideoChapterPreview,
+    ProductVideoRead,
     PurchaseValidationRequest,
     PurchaseValidationResponse,
     validate_sale_window,
@@ -299,6 +303,7 @@ class ProductService:
             store_id,
             payload.cover_object_key,
             [image.object_key for image in payload.images],
+            [video.object_key for video in payload.videos],
         )
         product = Product(
             store_id=store_id,
@@ -308,6 +313,7 @@ class ProductService:
             details=payload.details,
             notes=payload.notes,
             cover_object_key=payload.cover_object_key,
+            product_type=payload.product_type,
             sale_starts_at=payload.sale_starts_at,
             sale_ends_at=payload.sale_ends_at,
             sort_order=payload.sort_order,
@@ -319,15 +325,19 @@ class ProductService:
         product.images.extend(
             ProductImage(**image.model_dump()) for image in payload.images
         )
+        product.videos.extend(
+            ProductVideo(**video.model_dump()) for video in payload.videos
+        )
         try:
             self.repository.add_product(product)
+            details = {"after": product_snapshot(product)}
             await self.session.flush()
             self.audit_repository.add(
                 admin_user_id=admin_user.id,
                 action="product.create",
                 resource_type="product",
                 resource_id=str(product.id),
-                details={"after": product_snapshot(product)},
+                details=details,
             )
             await self.session.commit()
         except Exception:
@@ -349,7 +359,10 @@ class ProductService:
         product = await self._require_product(store_id, product_id)
         if product.status == ProductStatus.ARCHIVED:
             raise InvalidProductError("已归档商品不能再修改")
-        changes = payload.model_dump(exclude_unset=True, exclude={"skus", "images"})
+        changes = payload.model_dump(
+            exclude_unset=True,
+            exclude={"skus", "images", "videos"},
+        )
         category = product.category
         if payload.category_id is not None:
             category = await self._require_category(store_id, payload.category_id)
@@ -365,7 +378,12 @@ class ProductService:
             if payload.images is not None
             else [image.object_key for image in product.images]
         )
-        self._validate_media_keys(store_id, cover_key, image_keys)
+        video_keys = (
+            [video.object_key for video in payload.videos]
+            if payload.videos is not None
+            else [video.object_key for video in product.videos]
+        )
+        self._validate_media_keys(store_id, cover_key, image_keys, video_keys)
         before = product_snapshot(product)
         for field, value in changes.items():
             if field == "category_id":
@@ -379,16 +397,23 @@ class ProductService:
             product.images.extend(
                 ProductImage(**image.model_dump()) for image in payload.images
             )
+        if payload.videos is not None:
+            self._sync_videos(product, payload.videos)
+        if product.product_type == ProductType.COURSE and any(
+            video.is_active for video in product.videos
+        ):
+            raise InvalidProductError("线下课时课不能关联视频章节")
         if product.status == ProductStatus.PUBLISHED:
             self._validate_publishable(product)
         try:
+            details = {"before": before, "after": product_snapshot(product)}
             await self.session.flush()
             self.audit_repository.add(
                 admin_user_id=admin_user.id,
                 action="product.update",
                 resource_type="product",
                 resource_id=str(product.id),
-                details={"before": before, "after": product_snapshot(product)},
+                details=details,
             )
             await self.session.commit()
         except Exception:
@@ -428,13 +453,14 @@ class ProductService:
         before = product_snapshot(product)
         product.status = payload.status
         try:
+            details = {"before": before, "after": product_snapshot(product)}
             await self.session.flush()
             self.audit_repository.add(
                 admin_user_id=admin_user.id,
                 action="product.status.change",
                 resource_type="product",
                 resource_id=str(product.id),
-                details={"before": before, "after": product_snapshot(product)},
+                details=details,
             )
             await self.session.commit()
         except Exception:
@@ -559,6 +585,7 @@ class ProductService:
         store_id: UUID,
         cover_key: str,
         image_keys: list[str],
+        video_keys: list[str],
     ) -> None:
         if not self.storage.is_product_object_key(store_id, cover_key):
             raise InvalidProductError("商品封面不属于当前门店")
@@ -566,6 +593,11 @@ class ProductService:
             not self.storage.is_product_object_key(store_id, key) for key in image_keys
         ):
             raise InvalidProductError("商品图集包含不属于当前门店的图片")
+        if any(
+            not self.storage.is_product_video_object_key(store_id, key)
+            for key in video_keys
+        ):
+            raise InvalidProductError("视频章节包含不属于当前门店的视频文件")
 
     def _sync_skus(self, product: Product, payload_skus: list[Any]) -> None:
         existing = {sku.id: sku for sku in product.skus}
@@ -584,6 +616,23 @@ class ProductService:
                 for field, value in values.items():
                     setattr(target, field, value)
 
+    def _sync_videos(self, product: Product, payload_videos: list[Any]) -> None:
+        existing = {video.id: video for video in product.videos}
+        submitted_ids = {video.id for video in payload_videos if video.id is not None}
+        if any(video_id not in existing for video_id in submitted_ids):
+            raise InvalidProductError("视频章节不属于当前商品")
+        for video in product.videos:
+            if video.id not in submitted_ids:
+                video.is_active = False
+        for item in payload_videos:
+            values = item.model_dump(exclude={"id"})
+            if item.id is None:
+                product.videos.append(ProductVideo(**values))
+            else:
+                target = existing[item.id]
+                for field, value in values.items():
+                    setattr(target, field, value)
+
     def _validate_publishable(self, product: Product) -> None:
         try:
             validate_sale_window(product.sale_starts_at, product.sale_ends_at)
@@ -593,10 +642,23 @@ class ProductService:
             raise InvalidProductError("启用商品分类后才能发布")
         if not any(sku.is_active for sku in product.skus):
             raise InvalidProductError("至少需要一个启用的课程规格")
+        if product.product_type == ProductType.COURSE:
+            if any(sku.lesson_count == 0 for sku in product.skus if sku.is_active):
+                raise InvalidProductError("线下课时课的启用规格必须设置课时数")
+            if any(video.is_active for video in product.videos):
+                raise InvalidProductError("线下课时课不能关联视频章节")
+        else:
+            if any(
+                sku.lesson_count != 0 for sku in product.skus if sku.is_active
+            ):
+                raise InvalidProductError("视频课程的启用规格课时数必须为 0")
+            if not any(video.is_active for video in product.videos):
+                raise InvalidProductError("视频课程至少需要一个启用的视频章节")
         self._validate_media_keys(
             product.store_id,
             product.cover_object_key,
             [image.object_key for image in product.images],
+            [video.object_key for video in product.videos if video.is_active],
         )
 
     @staticmethod
@@ -629,6 +691,7 @@ class ProductService:
             notes=product.notes,
             cover_object_key=product.cover_object_key,
             cover_url=self.storage.media_url(product.cover_object_key),
+            product_type=product.product_type,
             status=product.status,
             sale_starts_at=product.sale_starts_at,
             sale_ends_at=product.sale_ends_at,
@@ -639,6 +702,7 @@ class ProductService:
             updated_at=product.updated_at,
             skus=[ProductSkuRead.model_validate(sku) for sku in product.skus],
             images=[self._to_image_read(image) for image in product.images],
+            videos=[self._to_video_read(video) for video in product.videos],
         )
 
     def _to_public_list_item(self, product: Product) -> ProductPublicListItem:
@@ -655,6 +719,8 @@ class ProductService:
             name=product.name,
             summary=product.summary,
             cover_url=self.storage.media_url(product.cover_object_key),
+            product_type=product.product_type,
+            video_chapter_count=sum(1 for video in product.videos if video.is_active),
             default_sku_id=default_sku.id,
             default_sku_name=default_sku.name,
             lesson_count=default_sku.lesson_count,
@@ -675,6 +741,7 @@ class ProductService:
             details=product.details,
             notes=product.notes,
             cover_url=self.storage.media_url(product.cover_object_key),
+            product_type=product.product_type,
             sales_count=product.sales_count,
             sale_starts_at=product.sale_starts_at,
             sale_ends_at=product.sale_ends_at,
@@ -684,6 +751,27 @@ class ProductService:
                 if sku.is_active
             ],
             images=[self._to_image_read(image) for image in product.images],
+            video_chapters=[
+                ProductVideoChapterPreview(
+                    id=video.id,
+                    title=video.title,
+                    duration_seconds=video.duration_seconds,
+                    sort_order=video.sort_order,
+                )
+                for video in product.videos
+                if video.is_active
+            ],
+        )
+
+    def _to_video_read(self, video: ProductVideo) -> ProductVideoRead:
+        return ProductVideoRead(
+            id=video.id,
+            title=video.title,
+            object_key=video.object_key,
+            video_url=self.storage.presigned_get_url(video.object_key),
+            duration_seconds=video.duration_seconds,
+            sort_order=video.sort_order,
+            is_active=video.is_active,
         )
 
     def _to_image_read(self, image: ProductImage) -> ProductImageRead:

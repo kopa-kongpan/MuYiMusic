@@ -60,6 +60,7 @@ class ProductRepository:
                 selectinload(Product.category),
                 selectinload(Product.skus),
                 selectinload(Product.images),
+                selectinload(Product.videos),
             )
             .where(Product.id == product_id)
         )
@@ -95,6 +96,7 @@ class ProductRepository:
                 selectinload(Product.category),
                 selectinload(Product.skus),
                 selectinload(Product.images),
+                selectinload(Product.videos),
             )
             .where(*filters)
             .order_by(Product.sort_order, Product.created_at.desc(), Product.id)
@@ -168,6 +170,7 @@ class ProductRepository:
                 selectinload(Product.category),
                 selectinload(Product.skus),
                 selectinload(Product.images),
+                selectinload(Product.videos),
             )
             .where(*filters)
             .order_by(*order_by, Product.id)

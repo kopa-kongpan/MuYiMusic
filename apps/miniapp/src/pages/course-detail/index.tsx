@@ -13,6 +13,15 @@ function formatMoney(priceCents: number): string {
   return `¥${(priceCents / 100).toFixed(2)}`
 }
 
+function formatDuration(seconds: number | null): string {
+  if (!seconds) {
+    return '时长未知'
+  }
+  const minutes = Math.floor(seconds / 60)
+  const rest = seconds % 60
+  return rest ? `${minutes}分${rest}秒` : `${minutes}分钟`
+}
+
 export default function CourseDetailPage() {
   const router = useRouter()
   const [product, setProduct] = useState<ProductPublicRead | null>(null)
@@ -201,7 +210,11 @@ export default function CourseDetailPage() {
             >
               <View>
                 <Text>{sku.name}</Text>
-                <Text>{sku.lesson_count} 课时 · {sku.validity_days} 天有效</Text>
+                <Text>
+                  {product.product_type === 'video'
+                    ? `${sku.validity_days} 天观看权益`
+                    : `${sku.lesson_count} 课时 · ${sku.validity_days} 天有效`}
+                </Text>
               </View>
               <Text>{formatMoney(sku.price_cents)}</Text>
             </View>
@@ -230,6 +243,28 @@ export default function CourseDetailPage() {
           </View>
         </View>
       </View>
+
+      {product.product_type === 'video' && product.video_chapters.length > 0 ? (
+        <View className="detail-section">
+          <Text className="detail-section-title">
+            视频章节（{product.video_chapters.length}）
+          </Text>
+          <View className="detail-chapters">
+            {product.video_chapters.map((chapter, index) => (
+              <View className="detail-chapter" key={chapter.id}>
+                <Text className="detail-chapter-index">{index + 1}</Text>
+                <Text className="detail-chapter-title">{chapter.title}</Text>
+                <Text className="detail-chapter-duration">
+                  {formatDuration(chapter.duration_seconds)}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <Text className="detail-chapter-notice">
+            购买后可在「我的 - 我的课程」中观看视频
+          </Text>
+        </View>
+      ) : null}
 
       <View className="detail-section detail-copy">
         <Text className="detail-section-title">课程详情</Text>

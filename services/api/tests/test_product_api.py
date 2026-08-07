@@ -386,3 +386,310 @@ async def test_course_product_requires_manage_permission() -> None:
             app.dependency_overrides.clear()
             await session.close()
             await transaction.rollback()
+
+
+async def test_video_course_lifecycle_and_public_chapter_preview() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        try:
+            permission = await session.scalar(
+                select(Permission).where(Permission.code == "products:manage")
+            )
+            assert permission is not None
+            role = Role(code=f"video-operator-{uuid4()}", name="视频课程运营")
+            role.permissions.append(permission)
+            password = "test-password-2026"
+            admin = AdminUser(
+                username=f"video-admin-{uuid4().hex}",
+                password_hash=hash_password(password),
+            )
+            admin.roles.append(role)
+            store = make_store("视频课程门店")
+            admin.stores.append(store)
+            session.add_all((admin, store))
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                login_response = await client.post(
+                    "/api/v1/admin/auth/login",
+                    json={"username": admin.username, "password": password},
+                )
+                assert login_response.status_code == 200
+                headers = {
+                    "Authorization": f"Bearer {login_response.json()['access_token']}"
+                }
+
+                category_response = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/categories",
+                    headers=headers,
+                    json={"name": "视频课程", "sort_order": 10},
+                )
+                assert category_response.status_code == 201
+                category_id = category_response.json()["id"]
+
+                video_prefix = f"muyimusic/stores/{store.id}/products/videos/"
+
+                # 线下课时课关联视频章节 → 422
+                course_with_videos = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "线下钢琴课",
+                        "cover_object_key": (
+                            f"muyimusic/stores/{store.id}/products/cover.jpg"
+                        ),
+                        "product_type": "course",
+                        "skus": [
+                            {
+                                "name": "10 课时",
+                                "price_cents": 168000,
+                                "lesson_count": 10,
+                                "validity_days": 180,
+                            }
+                        ],
+                        "videos": [
+                            {
+                                "title": "第一章",
+                                "object_key": f"{video_prefix}chapter1.mp4",
+                                "sort_order": 10,
+                            }
+                        ],
+                    },
+                )
+                assert course_with_videos.status_code == 422
+
+                # 视频课程 SKU 课时数不为 0 → 422
+                video_with_lessons = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "钢琴视频课",
+                        "cover_object_key": (
+                            f"muyimusic/stores/{store.id}/products/cover.jpg"
+                        ),
+                        "product_type": "video",
+                        "skus": [
+                            {
+                                "name": "全期",
+                                "price_cents": 9900,
+                                "lesson_count": 10,
+                                "validity_days": 365,
+                            }
+                        ],
+                        "videos": [
+                            {
+                                "title": "第一章",
+                                "object_key": f"{video_prefix}chapter1.mp4",
+                                "sort_order": 10,
+                            }
+                        ],
+                    },
+                )
+                assert video_with_lessons.status_code == 422
+
+                # 视频文件的 object_key 不在视频目录 → 422
+                wrong_key = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "钢琴视频课",
+                        "cover_object_key": (
+                            f"muyimusic/stores/{store.id}/products/cover.jpg"
+                        ),
+                        "product_type": "video",
+                        "skus": [
+                            {
+                                "name": "全期",
+                                "price_cents": 9900,
+                                "lesson_count": 0,
+                                "validity_days": 365,
+                            }
+                        ],
+                        "videos": [
+                            {
+                                "title": "第一章",
+                                "object_key": (
+                                    f"muyimusic/stores/{store.id}/products/"
+                                    "chapter1.mp4"
+                                ),
+                                "sort_order": 10,
+                            }
+                        ],
+                    },
+                )
+                assert wrong_key.status_code == 422
+
+                # 正常创建视频课程
+                video_response = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "钢琴视频课",
+                        "summary": "录播教学",
+                        "cover_object_key": (
+                            f"muyimusic/stores/{store.id}/products/cover.jpg"
+                        ),
+                        "product_type": "video",
+                        "skus": [
+                            {
+                                "name": "全期观看",
+                                "price_cents": 9900,
+                                "lesson_count": 0,
+                                "validity_days": 365,
+                                "sort_order": 10,
+                            }
+                        ],
+                        "videos": [
+                            {
+                                "title": "第一章 认识键盘",
+                                "object_key": f"{video_prefix}chapter1.mp4",
+                                "duration_seconds": 720,
+                                "sort_order": 10,
+                            },
+                            {
+                                "title": "第二章 基础指法",
+                                "object_key": f"{video_prefix}chapter2.mp4",
+                                "duration_seconds": 840,
+                                "sort_order": 20,
+                            },
+                        ],
+                    },
+                )
+                assert video_response.status_code == 201
+                video_product = video_response.json()
+                assert video_product["product_type"] == "video"
+                assert len(video_product["videos"]) == 2
+                assert video_product["videos"][0]["title"] == "第一章 认识键盘"
+                product_id = video_product["id"]
+                video_id = video_product["videos"][0]["id"]
+                video2_id = video_product["videos"][1]["id"]
+
+                # 未发布 → 公开详情不可见
+                hidden = await client.get(
+                    f"/api/v1/app/stores/{store.id}/products/{product_id}"
+                )
+                assert hidden.status_code == 404
+
+                # 视频课程没有章节不可发布
+                no_chapter_product = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "空视频课",
+                        "cover_object_key": (
+                            f"muyimusic/stores/{store.id}/products/cover.jpg"
+                        ),
+                        "product_type": "video",
+                        "skus": [
+                            {
+                                "name": "全期",
+                                "price_cents": 9900,
+                                "lesson_count": 0,
+                                "validity_days": 365,
+                            }
+                        ],
+                    },
+                )
+                assert no_chapter_product.status_code == 201
+                no_chapter_id = no_chapter_product.json()["id"]
+                empty_publish = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products/{no_chapter_id}/status",
+                    headers=headers,
+                    json={"status": "published"},
+                )
+                assert empty_publish.status_code == 409
+
+                publish_response = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products/{product_id}/status",
+                    headers=headers,
+                    json={"status": "published"},
+                )
+                assert publish_response.status_code == 200
+
+                # 公开详情返回章节预览，不含播放地址
+                public_response = await client.get(
+                    f"/api/v1/app/stores/{store.id}/products/{product_id}"
+                )
+                assert public_response.status_code == 200
+                public_product = public_response.json()
+                assert public_product["product_type"] == "video"
+                assert len(public_product["video_chapters"]) == 2
+                chapter = public_product["video_chapters"][0]
+                assert chapter["title"] == "第一章 认识键盘"
+                assert chapter["duration_seconds"] == 720
+                assert "video_url" not in chapter
+                assert "object_key" not in chapter
+
+                # 列表项带视频章节数
+                list_response = await client.get(
+                    f"/api/v1/app/stores/{store.id}/products",
+                    params={"keyword": "钢琴视频课"},
+                )
+                assert list_response.status_code == 200
+                assert list_response.json()["items"][0]["video_chapter_count"] == 2
+
+                # 更新：禁用第一章、新增第三章（全量提交，未提交的第二章保持启用）
+                update_response = await client.patch(
+                    f"/api/v1/admin/stores/{store.id}/products/{product_id}",
+                    headers=headers,
+                    json={
+                        "videos": [
+                            {
+                                "id": video_id,
+                                "title": "第一章 认识键盘",
+                                "object_key": f"{video_prefix}chapter1.mp4",
+                                "duration_seconds": 720,
+                                "sort_order": 10,
+                                "is_active": False,
+                            },
+                            {
+                                "id": video2_id,
+                                "title": "第二章 指法练习",
+                                "object_key": f"{video_prefix}chapter2.mp4",
+                                "duration_seconds": 840,
+                                "sort_order": 20,
+                            },
+                            {
+                                "title": "第三章 和声入门",
+                                "object_key": f"{video_prefix}chapter3.mp4",
+                                "duration_seconds": 900,
+                                "sort_order": 30,
+                            },
+                        ]
+                    },
+                )
+                assert update_response.status_code == 200
+                assert len(update_response.json()["videos"]) == 3
+                assert sum(
+                    video["is_active"]
+                    for video in update_response.json()["videos"]
+                ) == 2
+
+                # 更新后公开详情章节数为 2（禁用章节不展示）
+                public_after = await client.get(
+                    f"/api/v1/app/stores/{store.id}/products/{product_id}"
+                )
+                assert len(public_after.json()["video_chapters"]) == 2
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()

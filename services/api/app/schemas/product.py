@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.models.product import ProductStatus
+from app.models.product import ProductStatus, ProductType
 
 
 def validate_sale_window(
@@ -86,7 +86,7 @@ class ProductSkuWrite(BaseModel):
     id: UUID | None = None
     name: str = Field(min_length=1, max_length=128)
     price_cents: int = Field(ge=0, le=100_000_000)
-    lesson_count: int = Field(gt=0, le=10000)
+    lesson_count: int = Field(ge=0, le=10000)
     validity_days: int = Field(gt=0, le=36500)
     sort_order: int = Field(default=0, ge=0, le=9999)
     is_active: bool = True
@@ -99,6 +99,17 @@ class ProductImageWrite(BaseModel):
     sort_order: int = Field(default=0, ge=0, le=9999)
 
 
+class ProductVideoWrite(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    id: UUID | None = None
+    title: str = Field(min_length=1, max_length=128)
+    object_key: str = Field(min_length=1, max_length=1024)
+    duration_seconds: int | None = Field(default=None, ge=1, le=604800)
+    sort_order: int = Field(default=0, ge=0, le=9999)
+    is_active: bool = True
+
+
 class ProductCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -108,11 +119,13 @@ class ProductCreate(BaseModel):
     details: str = Field(default="", max_length=50000)
     notes: str | None = Field(default=None, max_length=5000)
     cover_object_key: str = Field(min_length=1, max_length=1024)
+    product_type: ProductType = ProductType.COURSE
     sale_starts_at: datetime | None = None
     sale_ends_at: datetime | None = None
     sort_order: int = Field(default=0, ge=0, le=9999)
     skus: list[ProductSkuWrite] = Field(min_length=1, max_length=100)
     images: list[ProductImageWrite] = Field(default_factory=list, max_length=20)
+    videos: list[ProductVideoWrite] = Field(default_factory=list, max_length=100)
 
     @model_validator(mode="after")
     def validate_product(self) -> "ProductCreate":
@@ -121,7 +134,20 @@ class ProductCreate(BaseModel):
             raise ValueError("新商品的 SKU 不能预设编号")
         if len({image.object_key for image in self.images}) != len(self.images):
             raise ValueError("商品图集不能包含重复图片")
+        self.validate_product_type()
         return self
+
+    def validate_product_type(self) -> None:
+        if self.product_type == ProductType.COURSE:
+            if any(sku.lesson_count == 0 for sku in self.skus):
+                raise ValueError("线下课时课的每个 SKU 必须设置课时数")
+            if self.videos:
+                raise ValueError("线下课时课不能关联视频章节")
+        elif any(sku.lesson_count != 0 for sku in self.skus):
+            raise ValueError("视频课程的所有 SKU 课时数必须为 0")
+        keys = [video.object_key for video in self.videos]
+        if len(keys) != len(set(keys)):
+            raise ValueError("视频章节不能包含重复视频文件")
 
 
 class ProductUpdate(BaseModel):
@@ -133,6 +159,7 @@ class ProductUpdate(BaseModel):
     details: str | None = Field(default=None, max_length=50000)
     notes: str | None = Field(default=None, max_length=5000)
     cover_object_key: str | None = Field(default=None, min_length=1, max_length=1024)
+    product_type: ProductType | None = None
     sale_starts_at: datetime | None = None
     sale_ends_at: datetime | None = None
     sort_order: int | None = Field(default=None, ge=0, le=9999)
@@ -142,6 +169,7 @@ class ProductUpdate(BaseModel):
         max_length=100,
     )
     images: list[ProductImageWrite] | None = Field(default=None, max_length=20)
+    videos: list[ProductVideoWrite] | None = Field(default=None, max_length=100)
 
     @field_validator(
         "category_id",
@@ -149,9 +177,11 @@ class ProductUpdate(BaseModel):
         "summary",
         "details",
         "cover_object_key",
+        "product_type",
         "sort_order",
         "skus",
         "images",
+        "videos",
         mode="before",
     )
     @classmethod
@@ -162,6 +192,8 @@ class ProductUpdate(BaseModel):
 
     @model_validator(mode="after")
     def validate_unique_resources(self) -> "ProductUpdate":
+        if self.product_type == ProductType.COURSE and self.videos:
+            raise ValueError("线下课时课不能关联视频章节")
         if self.skus is not None:
             ids = [sku.id for sku in self.skus if sku.id is not None]
             if len(ids) != len(set(ids)):
@@ -170,6 +202,13 @@ class ProductUpdate(BaseModel):
             keys = [image.object_key for image in self.images]
             if len(keys) != len(set(keys)):
                 raise ValueError("商品图集不能包含重复图片")
+        if self.videos is not None:
+            ids = [video.id for video in self.videos if video.id is not None]
+            if len(ids) != len(set(ids)):
+                raise ValueError("视频章节编号不能重复")
+            keys = [video.object_key for video in self.videos]
+            if len(keys) != len(set(keys)):
+                raise ValueError("视频章节不能包含重复视频文件")
         return self
 
 
@@ -192,6 +231,16 @@ class ProductImageRead(BaseModel):
     sort_order: int
 
 
+class ProductVideoRead(BaseModel):
+    id: UUID
+    title: str
+    object_key: str
+    video_url: str | None
+    duration_seconds: int | None
+    sort_order: int
+    is_active: bool
+
+
 class ProductRead(BaseModel):
     id: UUID
     store_id: UUID
@@ -203,6 +252,7 @@ class ProductRead(BaseModel):
     notes: str | None
     cover_object_key: str
     cover_url: str | None
+    product_type: ProductType
     status: ProductStatus
     sale_starts_at: datetime | None
     sale_ends_at: datetime | None
@@ -213,6 +263,7 @@ class ProductRead(BaseModel):
     updated_at: datetime
     skus: list[ProductSkuRead]
     images: list[ProductImageRead]
+    videos: list[ProductVideoRead]
 
 
 class ProductAdminListResponse(BaseModel):
@@ -233,6 +284,8 @@ class ProductPublicListItem(BaseModel):
     name: str
     summary: str
     cover_url: str | None
+    product_type: ProductType
+    video_chapter_count: int
     default_sku_id: UUID
     default_sku_name: str
     lesson_count: int
@@ -250,6 +303,15 @@ class ProductPublicListResponse(BaseModel):
     page_size: int
 
 
+class ProductVideoChapterPreview(BaseModel):
+    """公开详情中的视频章节预览：只暴露元信息，不暴露播放地址。"""
+
+    id: UUID
+    title: str
+    duration_seconds: int | None
+    sort_order: int
+
+
 class ProductPublicRead(BaseModel):
     id: UUID
     category_id: UUID
@@ -259,11 +321,13 @@ class ProductPublicRead(BaseModel):
     details: str
     notes: str | None
     cover_url: str | None
+    product_type: ProductType
     sales_count: int
     sale_starts_at: datetime | None
     sale_ends_at: datetime | None
     skus: list[ProductSkuRead]
     images: list[ProductImageRead]
+    video_chapters: list[ProductVideoChapterPreview]
 
 
 class PurchaseValidationRequest(BaseModel):

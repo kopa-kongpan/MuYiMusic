@@ -90,15 +90,8 @@ class ObjectStorageProvider:
             )
         return self._client
 
-    def media_url(self, object_key: str | None) -> str | None:
-        if not object_key:
-            return None
-        public_base_url = self.settings.object_storage_public_base_url
-        if public_base_url:
-            encoded_key = "/".join(
-                quote(part, safe="") for part in object_key.split("/")
-            )
-            return f"{public_base_url.rstrip('/')}/{encoded_key}"
+    def presigned_get_url(self, object_key: str) -> str | None:
+        """恒签名 GET 地址（用于受保护内容，不经过公开直链）。"""
         try:
             client = self._configured_client()
         except ObjectStorageNotConfiguredError:
@@ -114,6 +107,17 @@ class ObjectStorageProvider:
             )
         )
 
+    def media_url(self, object_key: str | None) -> str | None:
+        if not object_key:
+            return None
+        public_base_url = self.settings.object_storage_public_base_url
+        if public_base_url:
+            encoded_key = "/".join(
+                quote(part, safe="") for part in object_key.split("/")
+            )
+            return f"{public_base_url.rstrip('/')}/{encoded_key}"
+        return self.presigned_get_url(object_key)
+
     def create_upload_ticket(
         self,
         *,
@@ -127,8 +131,18 @@ class ObjectStorageProvider:
         extension, max_size_bytes = self._validate_media(content_type, file_size)
         if purpose == "product" and content_type not in ALLOWED_IMAGE_CONTENT_TYPES:
             raise UnsupportedMediaTypeError
+        if (
+            purpose == "product_video"
+            and content_type not in ALLOWED_VIDEO_CONTENT_TYPES
+        ):
+            raise UnsupportedMediaTypeError
         key_prefix = self.settings.object_storage_path_prefix.strip("/")
-        directory = "products" if purpose == "product" else "home"
+        if purpose == "product":
+            directory = "products"
+        elif purpose == "product_video":
+            directory = "products/videos"
+        else:
+            directory = "home"
         object_path = PurePosixPath(
             key_prefix,
             "stores",
@@ -182,6 +196,18 @@ class ObjectStorageProvider:
 
     def is_product_object_key(self, store_id: UUID, object_key: str) -> bool:
         return object_key.startswith(self.expected_product_prefix(store_id))
+
+    def expected_product_video_prefix(self, store_id: UUID) -> str:
+        key_prefix = self.settings.object_storage_path_prefix.strip("/")
+        return (
+            str(
+                PurePosixPath(key_prefix, "stores", str(store_id), "products", "videos")
+            )
+            + "/"
+        )
+
+    def is_product_video_object_key(self, store_id: UUID, object_key: str) -> bool:
+        return object_key.startswith(self.expected_product_video_prefix(store_id))
 
     def _validate_media(self, content_type: str, file_size: int) -> tuple[str, int]:
         if content_type in ALLOWED_IMAGE_CONTENT_TYPES:

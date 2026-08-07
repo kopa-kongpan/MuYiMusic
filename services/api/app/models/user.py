@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -15,6 +16,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.product import ProductType
+
+if TYPE_CHECKING:
+    from app.models.product import Product
 
 
 class UserStatus(StrEnum):
@@ -117,6 +122,16 @@ class Order(Base):
     __tablename__ = "orders"
     __table_args__ = (
         CheckConstraint("total_amount_cents >= 0", name="ck_orders_total_amount"),
+        UniqueConstraint(
+            "user_id",
+            "create_idempotency_key",
+            name="uq_orders_user_create_key",
+        ),
+        UniqueConstraint(
+            "user_id",
+            "pay_idempotency_key",
+            name="uq_orders_user_pay_key",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -140,6 +155,8 @@ class Order(Base):
         index=True,
     )
     total_amount_cents: Mapped[int] = mapped_column(Integer)
+    create_idempotency_key: Mapped[str | None] = mapped_column(String(128))
+    pay_idempotency_key: Mapped[str | None] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -163,7 +180,7 @@ class OrderItem(Base):
         CheckConstraint("unit_price_cents >= 0", name="ck_order_items_unit_price"),
         CheckConstraint("quantity > 0", name="ck_order_items_quantity"),
         CheckConstraint("total_amount_cents >= 0", name="ck_order_items_total_amount"),
-        CheckConstraint("lesson_count > 0", name="ck_order_items_lesson_count"),
+        CheckConstraint("lesson_count >= 0", name="ck_order_items_lesson_count"),
         CheckConstraint("validity_days > 0", name="ck_order_items_validity_days"),
     )
 
@@ -187,13 +204,22 @@ class OrderItem(Base):
     total_amount_cents: Mapped[int] = mapped_column(Integer)
     lesson_count: Mapped[int] = mapped_column(Integer)
     validity_days: Mapped[int] = mapped_column(Integer)
+    product_type: Mapped[ProductType] = mapped_column(
+        Enum(
+            ProductType,
+            name="product_type",
+            values_callable=lambda values: [value.value for value in values],
+        ),
+        default=ProductType.COURSE,
+        server_default=ProductType.COURSE.value,
+    )
     order: Mapped[Order] = relationship(back_populates="items")
 
 
 class CourseEntitlement(Base):
     __tablename__ = "course_entitlements"
     __table_args__ = (
-        CheckConstraint("total_lessons > 0", name="ck_entitlements_total_lessons"),
+        CheckConstraint("total_lessons >= 0", name="ck_entitlements_total_lessons"),
         CheckConstraint(
             "remaining_lessons >= 0 AND remaining_lessons <= total_lessons",
             name="ck_entitlements_remaining_lessons",
@@ -237,6 +263,15 @@ class CourseEntitlement(Base):
         default=0,
         server_default="0",
     )
+    product_type: Mapped[ProductType] = mapped_column(
+        Enum(
+            ProductType,
+            name="product_type",
+            values_callable=lambda values: [value.value for value in values],
+        ),
+        default=ProductType.COURSE,
+        server_default=ProductType.COURSE.value,
+    )
     valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[EntitlementStatus] = mapped_column(
@@ -259,3 +294,7 @@ class CourseEntitlement(Base):
         onupdate=func.now(),
     )
     user: Mapped[User] = relationship(back_populates="course_entitlements")
+    product: Mapped["Product | None"] = relationship(
+        foreign_keys=[product_id],
+        lazy="selectin",
+    )

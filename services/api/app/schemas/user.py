@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.product import ProductType
 from app.models.user import (
     EntitlementStatus,
     IdentityProvider,
@@ -54,6 +55,7 @@ class OrderItemRead(BaseModel):
     total_amount_cents: int
     lesson_count: int
     validity_days: int
+    product_type: ProductType
 
 
 class OrderRead(BaseModel):
@@ -76,6 +78,16 @@ class OrderListResponse(BaseModel):
     page_size: int
 
 
+class EntitlementVideoChapterRead(BaseModel):
+    """已购权益下的视频章节：持有效权益时可获得播放地址。"""
+
+    id: UUID
+    title: str
+    duration_seconds: int | None
+    sort_order: int
+    video_url: str | None
+
+
 class CourseEntitlementRead(BaseModel):
     id: UUID
     user_id: UUID
@@ -85,6 +97,7 @@ class CourseEntitlementRead(BaseModel):
     product_id: UUID | None
     product_sku_id: UUID | None
     course_name: str
+    product_type: ProductType
     total_lessons: int
     remaining_lessons: int
     reserved_lessons: int
@@ -93,6 +106,7 @@ class CourseEntitlementRead(BaseModel):
     expires_at: datetime | None
     status: EntitlementStatus
     created_at: datetime
+    video_chapters: list[EntitlementVideoChapterRead] = Field(default_factory=list)
 
 
 class CourseEntitlementListResponse(BaseModel):
@@ -100,6 +114,15 @@ class CourseEntitlementListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class EntitlementGrantRequest(BaseModel):
+    """管理员为已成交用户开通商品权益（线下成交后录入）。"""
+
+    product_id: UUID
+    sku_id: UUID
+    quantity: int = Field(ge=1, le=99)
+    idempotency_key: str = Field(min_length=8, max_length=128)
 
 
 class UserAdminRead(BaseModel):

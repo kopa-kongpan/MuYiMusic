@@ -28,6 +28,7 @@ from app.schemas.appointment import (
     ConsumptionCreateRequest,
     ConsumptionReverseRequest,
 )
+from app.services.entitlement_service import sync_entitlement_status
 from app.services.store_service import can_access_store
 
 
@@ -310,7 +311,7 @@ class AppointmentService:
         now = datetime.now(UTC)
         entitlement.remaining_lessons += consumption.lessons
         entitlement.reserved_lessons += consumption.lessons
-        self._sync_entitlement_status(entitlement, now)
+        sync_entitlement_status(entitlement, now)
         appointment.status = AppointmentStatus.RESERVED
         appointment.completed_at = None
         appointment.no_show_at = None
@@ -374,7 +375,7 @@ class AppointmentService:
             raise AppointmentConflictError("课程权益锁定课时不足")
         entitlement.reserved_lessons -= 1
         entitlement.remaining_lessons -= 1
-        self._sync_entitlement_status(entitlement, now)
+        sync_entitlement_status(entitlement, now)
         if kind == ConsumptionKind.ATTENDED:
             appointment.status = AppointmentStatus.COMPLETED
             appointment.completed_at = now
@@ -551,18 +552,6 @@ class AppointmentService:
     @staticmethod
     def _appointment_no(now: datetime) -> str:
         return f"A{now:%Y%m%d%H%M%S}{uuid4().hex[:12].upper()}"
-
-    @staticmethod
-    def _sync_entitlement_status(
-        entitlement: CourseEntitlement,
-        now: datetime,
-    ) -> None:
-        if entitlement.remaining_lessons == 0:
-            entitlement.status = EntitlementStatus.EXHAUSTED
-        elif entitlement.expires_at is not None and entitlement.expires_at <= now:
-            entitlement.status = EntitlementStatus.EXPIRED
-        else:
-            entitlement.status = EntitlementStatus.ACTIVE
 
     @staticmethod
     def _validate_query_window(starts_from: datetime, starts_before: datetime) -> None:

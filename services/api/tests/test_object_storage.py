@@ -78,3 +78,50 @@ def test_object_storage_uses_product_scope_for_product_images() -> None:
             file_size=1024,
             purpose="product",
         )
+
+
+def test_object_storage_product_video_scope_accepts_video_only() -> None:
+    store_id = uuid4()
+    provider = ObjectStorageProvider(storage_settings())
+    ticket = provider.create_upload_ticket(
+        store_id=store_id,
+        file_name="第一章.mp4",
+        content_type="video/mp4",
+        file_size=1024,
+        purpose="product_video",
+    )
+
+    assert ticket.object_key.startswith(f"muyimusic/stores/{store_id}/products/videos/")
+    assert ticket.object_key.endswith(".mp4")
+    assert provider.is_product_video_object_key(store_id, ticket.object_key)
+    assert provider.is_product_object_key(store_id, ticket.object_key)
+
+    with pytest.raises(UnsupportedMediaTypeError):
+        provider.create_upload_ticket(
+            store_id=store_id,
+            file_name="cover.jpg",
+            content_type="image/jpeg",
+            file_size=1024,
+            purpose="product_video",
+        )
+
+
+def test_object_storage_presigned_get_url_signs_get_requests() -> None:
+    settings = storage_settings()
+    settings.object_storage_public_base_url = None
+    provider = ObjectStorageProvider(settings)
+    store_id = uuid4()
+    ticket = provider.create_upload_ticket(
+        store_id=store_id,
+        file_name="chapter.mp4",
+        content_type="video/mp4",
+        file_size=1024,
+        purpose="product_video",
+    )
+
+    url = provider.presigned_get_url(ticket.object_key)
+    assert url is not None
+    assert "X-Amz-Signature=" in url
+    assert "get_object" not in url  # 签名 URL 不暴露操作名
+
+    assert ticket.public_url == url

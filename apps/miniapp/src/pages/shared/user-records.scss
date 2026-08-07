@@ -190,6 +190,62 @@
   font-weight: 650;
 }
 
+.record-course-chapters {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #e7ebe9;
+}
+
+.record-course-chapters-heading {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #68716c;
+  font-size: 21rpx;
+}
+
+.record-chapter {
+  display: flex;
+  align-items: center;
+  padding: 16rpx;
+  background: #f5f7f6;
+  border-radius: 6rpx;
+  gap: 14rpx;
+}
+
+.record-chapter + .record-chapter {
+  margin-top: 10rpx;
+}
+
+.record-chapter-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36rpx;
+  height: 36rpx;
+  flex: 0 0 auto;
+  color: #176b57;
+  background: #e3eee9;
+  border-radius: 5rpx;
+  font-size: 18rpx;
+  font-weight: 650;
+}
+
+.record-chapter-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 22rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-chapter-duration {
+  flex: 0 0 auto;
+  color: #7a827d;
+  font-size: 19rpx;
+}
+
 .record-card-notice {
   display: block;
   margin-top: 16rpx;

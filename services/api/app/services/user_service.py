@@ -1,27 +1,34 @@
-from datetime import UTC, datetime
-from uuid import UUID
+from datetime import UTC, datetime, timedelta
+from uuid import UUID, uuid4
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
 from app.core.security import create_access_token
 from app.models.admin import AdminUser
+from app.models.product import ProductStatus
 from app.models.user import (
     CourseEntitlement,
     EntitlementStatus,
     IdentityProvider,
     Order,
+    OrderItem,
     OrderStatus,
     ProviderAccount,
     User,
     UserStatus,
 )
 from app.providers.miniapp_identity import MiniAppIdentityProvider
+from app.providers.object_storage import ObjectStorageProvider
+from app.repositories.product_repository import ProductRepository
 from app.repositories.store_repository import StoreRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
     CourseEntitlementListResponse,
     CourseEntitlementRead,
+    EntitlementGrantRequest,
+    EntitlementVideoChapterRead,
     OrderItemRead,
     OrderListResponse,
     OrderRead,
@@ -67,12 +74,15 @@ class UserService:
         session: AsyncSession,
         settings: Settings,
         identity_provider: MiniAppIdentityProvider,
+        storage: ObjectStorageProvider | None = None,
     ) -> None:
         self.session = session
         self.settings = settings
         self.identity_provider = identity_provider
+        self.storage = storage
         self.repository = UserRepository(session)
         self.store_repository = StoreRepository(session)
+        self.product_repository = ProductRepository(session)
 
     async def login(self, payload: UserLoginRequest) -> UserTokenResponse:
         identity = await self.identity_provider.exchange(payload.provider, payload.code)
@@ -196,6 +206,110 @@ class UserService:
             page_size=page_size,
         )
 
+    async def grant_entitlement(
+        self,
+        *,
+        store_id: UUID,
+        user_id: UUID,
+        payload: EntitlementGrantRequest,
+        admin_user: AdminUser,
+    ) -> OrderRead:
+        """线下成交后录入订单并开通课程权益。
+
+        同一用户 + 同一幂等键重复提交时直接返回已有订单，不重复发权益。
+        """
+        await self._require_store_access(store_id, admin_user)
+        if await self.repository.get_user(user_id) is None:
+            raise UserResourceNotFoundError
+        existing = await self.repository.get_order_by_create_key(
+            user_id,
+            payload.idempotency_key,
+        )
+        if existing is not None:
+            store = await self.store_repository.get(store_id)
+            store_name = store.name if store is not None else ""
+            return self._to_order_read(existing, store_name)
+        product = await self.product_repository.get_product(payload.product_id)
+        if (
+            product is None
+            or product.store_id != store_id
+            or product.status == ProductStatus.ARCHIVED
+        ):
+            raise UserResourceNotFoundError
+        sku = next(
+            (
+                item
+                for item in product.skus
+                if item.id == payload.sku_id and item.is_active
+            ),
+            None,
+        )
+        if sku is None:
+            raise UserResourceNotFoundError
+        now = datetime.now(UTC)
+        order = Order(
+            order_no=self._order_no(now),
+            user_id=user_id,
+            store_id=store_id,
+            status=OrderStatus.CONFIRMED,
+            total_amount_cents=sku.price_cents * payload.quantity,
+            create_idempotency_key=payload.idempotency_key,
+        )
+        item = OrderItem(
+            product_id=product.id,
+            product_sku_id=sku.id,
+            product_name=product.name,
+            sku_name=sku.name,
+            unit_price_cents=sku.price_cents,
+            quantity=payload.quantity,
+            total_amount_cents=sku.price_cents * payload.quantity,
+            lesson_count=sku.lesson_count,
+            validity_days=sku.validity_days,
+            product_type=product.product_type,
+        )
+        order.items.append(item)
+        expires_at = (
+            now + timedelta(days=sku.validity_days)
+            if sku.validity_days
+            else None
+        )
+        entitlement = CourseEntitlement(
+            user_id=user_id,
+            store_id=store_id,
+            order_item_id=item.id,
+            product_id=product.id,
+            product_sku_id=sku.id,
+            course_name=product.name,
+            product_type=product.product_type,
+            total_lessons=sku.lesson_count,
+            remaining_lessons=sku.lesson_count,
+            reserved_lessons=0,
+            valid_from=now,
+            expires_at=expires_at,
+            status=EntitlementStatus.ACTIVE,
+        )
+        try:
+            self.session.add_all([order, entitlement])
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            existing = await self.repository.get_order_by_create_key(
+                user_id,
+                payload.idempotency_key,
+            )
+            if existing is None:
+                raise
+            store = await self.store_repository.get(store_id)
+            store_name = store.name if store is not None else ""
+            return self._to_order_read(existing, store_name)
+        store = await self.store_repository.get(store_id)
+        store_name = store.name if store is not None else ""
+        return self._to_order_read(order, store_name)
+
+    @staticmethod
+    def _order_no(now: datetime) -> str:
+        return f"O{now:%Y%m%d%H%M%S}{uuid4().hex[:12].upper()}"
+
     async def list_users_admin(
         self,
         *,
@@ -310,16 +424,36 @@ class UserService:
                     total_amount_cents=item.total_amount_cents,
                     lesson_count=item.lesson_count,
                     validity_days=item.validity_days,
+                    product_type=item.product_type,
                 )
                 for item in order.items
             ],
         )
 
-    @staticmethod
     def _to_entitlement_read(
+        self,
         entitlement: CourseEntitlement,
         store_name: str,
     ) -> CourseEntitlementRead:
+        product = entitlement.product
+        video_chapters = []
+        if product is not None:
+            for video in product.videos:
+                if not video.is_active:
+                    continue
+                video_chapters.append(
+                    EntitlementVideoChapterRead(
+                        id=video.id,
+                        title=video.title,
+                        duration_seconds=video.duration_seconds,
+                        sort_order=video.sort_order,
+                        video_url=(
+                            self.storage.presigned_get_url(video.object_key)
+                            if self.storage is not None
+                            else None
+                        ),
+                    )
+                )
         return CourseEntitlementRead(
             id=entitlement.id,
             user_id=entitlement.user_id,
@@ -329,6 +463,7 @@ class UserService:
             product_id=entitlement.product_id,
             product_sku_id=entitlement.product_sku_id,
             course_name=entitlement.course_name,
+            product_type=entitlement.product_type,
             total_lessons=entitlement.total_lessons,
             remaining_lessons=entitlement.remaining_lessons,
             reserved_lessons=entitlement.reserved_lessons,
@@ -339,4 +474,5 @@ class UserService:
             expires_at=entitlement.expires_at,
             status=entitlement.status,
             created_at=entitlement.created_at,
+            video_chapters=video_chapters,
         )

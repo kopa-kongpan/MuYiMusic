@@ -2,6 +2,7 @@ import hashlib
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -14,6 +15,7 @@ from app.core.database import get_engine, get_session
 from app.core.security import hash_password
 from app.main import app
 from app.models.admin import AdminUser, Permission, Role
+from app.models.product import Category, Product, ProductImage, ProductSku, ProductStatus, ProductType, ProductVideo
 from app.models.store import Store
 from app.models.user import (
     CourseEntitlement,
@@ -63,13 +65,15 @@ async def login_h5(
     client: AsyncClient,
     code: str,
     nickname: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     response = await client.post(
         "/api/v1/app/auth/login",
         json={"provider": "h5", "code": code, "nickname": nickname},
     )
     assert response.status_code == 200
-    return response.json()
+    data = response.json()
+    assert isinstance(data, dict)
+    return data
 
 
 async def test_user_login_read_model_and_store_isolation() -> None:
@@ -380,3 +384,217 @@ async def test_h5_local_identity_is_rejected_outside_local_environment() -> None
             IdentityProvider.H5,
             f"h5-production-device-{uuid4().hex}",
         )
+
+
+async def test_grant_video_course_entitlement_and_watch_chapters() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        try:
+            manage_permission = await session.scalar(
+                select(Permission).where(Permission.code == "products:manage")
+            )
+            assert manage_permission is not None
+            read_permission = await session.scalar(
+                select(Permission).where(Permission.code == "users:read")
+            )
+            assert read_permission is not None
+            store = make_store("视频课程开通门店")
+            manager_role = Role(code=f"video-manager-{uuid4()}", name="视频课程管理")
+            manager_role.permissions.append(manage_permission)
+            manager_role.permissions.append(read_permission)
+            manager = AdminUser(
+                username=f"video-manager-{uuid4().hex}",
+                password_hash=hash_password("test-password-2026"),
+            )
+            manager.roles.append(manager_role)
+            manager.stores.append(store)
+            category = Category(
+                store=store,
+                name="视频课程",
+                sort_order=0,
+                is_enabled=True,
+            )
+            product = Product(
+                store=store,
+                category=category,
+                name="钢琴教学视频课",
+                summary="全套钢琴教学",
+                details="从零开始学钢琴",
+                cover_object_key=(
+                    f"muyimusic/stores/{store.id}/products/cover.jpg"
+                ),
+                product_type=ProductType.VIDEO,
+                status=ProductStatus.PUBLISHED,
+                published_at=datetime.now(UTC),
+            )
+            sku = ProductSku(
+                name="全期观看",
+                price_cents=19900,
+                lesson_count=0,
+                validity_days=365,
+                sort_order=10,
+            )
+            product.skus.append(sku)
+            product.videos.extend(
+                (
+                    ProductVideo(
+                        title="第一章 认识键盘",
+                        object_key=(
+                            f"muyimusic/stores/{store.id}/products/videos/chapter1.mp4"
+                        ),
+                        duration_seconds=720,
+                        sort_order=10,
+                    ),
+                    ProductVideo(
+                        title="第二章 基础指法",
+                        object_key=(
+                            f"muyimusic/stores/{store.id}/products/videos/chapter2.mp4"
+                        ),
+                        duration_seconds=840,
+                        sort_order=20,
+                    ),
+                )
+            )
+            session.add_all((manager, category, product))
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                login = await login_h5(
+                    client,
+                    f"h5-video-student-{uuid4().hex}",
+                    "视频课学员",
+                )
+                user_token = str(login["access_token"])
+                user_id = login["user"]["id"]
+                manager_token = await login_admin(
+                    client,
+                    manager.username,
+                    "test-password-2026",
+                )
+                manager_headers = {"Authorization": f"Bearer {manager_token}"}
+                user_headers = {"Authorization": f"Bearer {user_token}"}
+
+                payload = {
+                    "product_id": str(product.id),
+                    "sku_id": str(sku.id),
+                    "quantity": 1,
+                    "idempotency_key": f"grant-{uuid4().hex}",
+                }
+                grant_url = (
+                    f"/api/v1/admin/stores/{store.id}/users/{user_id}/entitlements"
+                )
+                granted = await client.post(
+                    grant_url,
+                    headers=manager_headers,
+                    json=payload,
+                )
+                assert granted.status_code == 201
+                order = granted.json()
+                assert order["user_id"] == user_id
+                assert order["status"] == "confirmed"
+                assert order["items"][0]["product_type"] == "video"
+                assert order["items"][0]["lesson_count"] == 0
+                assert order["items"][0]["validity_days"] == 365
+
+                # 同一幂等键重复提交返回同一订单，不重复发放
+                duplicated = await client.post(
+                    grant_url,
+                    headers=manager_headers,
+                    json=payload,
+                )
+                assert duplicated.status_code == 201
+                assert duplicated.json()["id"] == order["id"]
+
+                # 权益落库：视频课程课时为 0，永久活跃
+                entitlement = await session.scalar(
+                    select(CourseEntitlement).where(
+                        CourseEntitlement.user_id == user_id,
+                        CourseEntitlement.store_id == store.id,
+                    )
+                )
+                assert entitlement is not None
+                assert entitlement.product_type == ProductType.VIDEO
+                assert entitlement.total_lessons == 0
+                assert entitlement.remaining_lessons == 0
+                assert entitlement.reserved_lessons == 0
+                assert entitlement.status == EntitlementStatus.ACTIVE
+                assert entitlement.expires_at is not None
+
+                # 用户端权益返回视频章节（未配置对象存储时播放地址为 null）
+                mine = await client.get(
+                    "/api/v1/app/me/course-entitlements",
+                    headers=user_headers,
+                    params={"store_id": str(store.id)},
+                )
+                assert mine.status_code == 200
+                assert mine.json()["total"] == 1
+                my_entitlement = mine.json()["items"][0]
+                assert my_entitlement["product_type"] == "video"
+                assert my_entitlement["total_lessons"] == 0
+                assert len(my_entitlement["video_chapters"]) == 2
+                chapter = my_entitlement["video_chapters"][0]
+                assert chapter["title"] == "第一章 认识键盘"
+                assert chapter["duration_seconds"] == 720
+                assert chapter["sort_order"] == 10
+                assert chapter["video_url"] is None
+                assert "object_key" not in chapter
+
+                # 管理员端权益列表同样透传章节
+                admin_view = await client.get(
+                    (
+                        f"/api/v1/admin/stores/{store.id}/users/"
+                        f"{user_id}/course-entitlements"
+                    ),
+                    headers=manager_headers,
+                )
+                assert admin_view.status_code == 200
+                assert admin_view.json()["items"][0]["product_type"] == "video"
+                assert len(admin_view.json()["items"][0]["video_chapters"]) == 2
+
+                # 无管理权限的管理员不能开通权益
+                permission = await session.scalar(
+                    select(Permission).where(Permission.code == "users:read")
+                )
+                assert permission is not None
+                limited_role = Role(
+                    code=f"video-viewer-{uuid4()}",
+                    name="仅查看",
+                )
+                limited_role.permissions.append(permission)
+                limited = AdminUser(
+                    username=f"video-viewer-{uuid4().hex}",
+                    password_hash=hash_password("test-password-2026"),
+                )
+                limited.roles.append(limited_role)
+                limited.stores.append(store)
+                session.add(limited)
+                await session.flush()
+                limited_token = await login_admin(
+                    client,
+                    limited.username,
+                    "test-password-2026",
+                )
+                forbidden = await client.post(
+                    grant_url,
+                    headers={"Authorization": f"Bearer {limited_token}"},
+                    json={**payload, "idempotency_key": f"grant-{uuid4().hex}"},
+                )
+                assert forbidden.status_code == 403
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()

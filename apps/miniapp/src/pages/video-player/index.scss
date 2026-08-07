@@ -1,0 +1,142 @@
+.player-page {
+  min-height: 100vh;
+  color: #202522;
+  background: #f3f5f4;
+}
+
+.player-video {
+  width: 100%;
+  height: 420rpx;
+  background: #0e1411;
+}
+
+.player-video--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa39e;
+  font-size: 24rpx;
+}
+
+.player-info {
+  padding: 24rpx 28rpx 8rpx;
+  background: #ffffff;
+}
+
+.player-course,
+.player-current {
+  display: block;
+}
+
+.player-course {
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.player-current {
+  margin-top: 8rpx;
+  color: #176b57;
+  font-size: 22rpx;
+}
+
+.player-chapters {
+  padding: 28rpx;
+}
+
+.player-chapters-title {
+  display: block;
+  margin-bottom: 14rpx;
+  color: #68716c;
+  font-size: 22rpx;
+}
+
+.player-chapter {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 24rpx;
+  background: #ffffff;
+  border: 1rpx solid #e0e5e2;
+  border-radius: 8rpx;
+  gap: 16rpx;
+}
+
+.player-chapter + .player-chapter {
+  margin-top: 12rpx;
+}
+
+.player-chapter--active {
+  border-color: #176b57;
+  background: #eef5f2;
+}
+
+.player-chapter-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38rpx;
+  height: 38rpx;
+  flex: 0 0 auto;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 6rpx;
+  font-size: 19rpx;
+  font-weight: 650;
+}
+
+.player-chapter-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 23rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-chapter-duration {
+  flex: 0 0 auto;
+  color: #78817c;
+  font-size: 20rpx;
+}
+
+.player-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  padding: 42rpx;
+  background: #f3f5f4;
+  flex-direction: column;
+  text-align: center;
+}
+
+.player-state-title,
+.player-state-copy {
+  display: block;
+}
+
+.player-state-title {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.player-state-copy {
+  margin-top: 10rpx;
+  color: #78817c;
+  font-size: 22rpx;
+}
+
+.player-state-button {
+  height: 60rpx;
+  margin-top: 24rpx;
+  padding: 0 24rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  line-height: 60rpx;
+}
+
+.player-state-button::after {
+  border: 0;
+}

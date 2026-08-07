@@ -1,6 +1,7 @@
 import type {
   ProductRead,
   ProductStatus,
+  ProductType,
 } from '@muyimusic/api-client'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -221,6 +222,16 @@ export function ProductsPage() {
       ),
     },
     {
+      title: '类型',
+      dataIndex: 'product_type',
+      width: 100,
+      render: (productType: ProductType) => (
+        <Tag color={productType === 'video' ? 'blue' : 'default'}>
+          {productType === 'video' ? '视频课程' : '线下课时课'}
+        </Tag>
+      ),
+    },
+    {
       title: '销售时间',
       key: 'sale-window',
       width: 210,
@@ -419,7 +430,7 @@ export function ProductsPage() {
             }
             columns={columns}
             dataSource={productsQuery.data?.items ?? []}
-            scroll={{ x: 1060 }}
+            scroll={{ x: 1160 }}
             pagination={{
               current: page,
               pageSize,

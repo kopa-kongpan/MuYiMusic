@@ -23,6 +23,21 @@ function formatDate(value: string | null): string {
     : '长期有效'
 }
 
+function formatDuration(seconds: number | null): string {
+  if (!seconds) {
+    return '时长未知'
+  }
+  const minutes = Math.floor(seconds / 60)
+  const rest = seconds % 60
+  return rest ? `${minutes}分${rest}秒` : `${minutes}分钟`
+}
+
+function openChapter(entitlementId: string, index: number) {
+  void Taro.navigateTo({
+    url: `/pages/video-player/index?entitlementId=${entitlementId}&index=${index}`,
+  })
+}
+
 export default function MyCoursesPage() {
   const [courses, setCourses] = useState<CourseEntitlementRead[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -95,13 +110,34 @@ export default function MyCoursesPage() {
               </Text>
             </View>
             <Text className="record-card-meta">{course.store_name}</Text>
-            <View className="record-course-progress">
-              <Text>可用 / 锁定 / 总剩余</Text>
-              <Text>
-                {course.available_lessons} / {course.reserved_lessons} /{' '}
-                {course.remaining_lessons}
-              </Text>
-            </View>
+            {course.product_type === 'video' ? (
+              <View className="record-course-chapters">
+                <Text className="record-course-chapters-heading">
+                  视频课程 · 共 {course.video_chapters?.length ?? 0} 个章节
+                </Text>
+                {(course.video_chapters ?? []).map((chapter, index) => (
+                  <View
+                    className="record-chapter"
+                    key={chapter.id}
+                    onClick={() => openChapter(course.id, index)}
+                  >
+                    <Text className="record-chapter-index">{index + 1}</Text>
+                    <Text className="record-chapter-title">{chapter.title}</Text>
+                    <Text className="record-chapter-duration">
+                      {formatDuration(chapter.duration_seconds)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View className="record-course-progress">
+                <Text>可用 / 锁定 / 总剩余</Text>
+                <Text>
+                  {course.available_lessons} / {course.reserved_lessons} /{' '}
+                  {course.remaining_lessons}
+                </Text>
+              </View>
+            )}
             <Text className="record-card-meta">
               有效期：{formatDate(course.valid_from)} 至 {formatDate(course.expires_at)}
             </Text>

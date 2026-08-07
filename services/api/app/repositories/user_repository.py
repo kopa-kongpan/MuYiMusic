@@ -1,9 +1,11 @@
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.product import Product
 from app.models.store import Store
 from app.models.user import (
     CourseEntitlement,
@@ -21,6 +23,27 @@ class UserRepository:
         self.session = session
 
     async def get_user(self, user_id: UUID) -> User | None:
+        return cast(
+            User | None,
+            await self.session.scalar(select(User).where(User.id == user_id)),
+        )
+
+    async def get_order_by_create_key(
+        self,
+        user_id: UUID,
+        create_idempotency_key: str,
+    ) -> Order | None:
+        return cast(
+            Order | None,
+            await self.session.scalar(
+                select(Order)
+                .where(
+                    Order.user_id == user_id,
+                    Order.create_idempotency_key == create_idempotency_key,
+                )
+                .options(selectinload(Order.items))
+            ),
+        )
         statement = (
             select(User)
             .where(User.id == user_id)
@@ -98,6 +121,9 @@ class UserRepository:
         statement = (
             select(CourseEntitlement, Store.name)
             .join(Store, Store.id == CourseEntitlement.store_id)
+            .options(
+                selectinload(CourseEntitlement.product).selectinload(Product.videos)
+            )
             .where(*filters)
             .order_by(CourseEntitlement.created_at.desc(), CourseEntitlement.id.desc())
             .offset((page - 1) * page_size)
