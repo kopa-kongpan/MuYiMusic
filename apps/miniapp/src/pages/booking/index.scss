@@ -46,7 +46,7 @@
   align-items: center;
   justify-content: center;
   margin: 0;
-  border-radius: 6rpx;
+  border-radius: 12rpx;
   font-size: 21rpx;
 }
 
@@ -63,6 +63,7 @@
   color: #46504a;
   background: #ffffff;
   border: 1rpx solid #dce2df;
+  box-shadow: 0 4rpx 12rpx rgba(18, 44, 37, 0.04);
 }
 
 .booking-date-scroll {
@@ -85,7 +86,7 @@
   color: #5e6762;
   background: #ffffff;
   border: 1rpx solid #dce2df;
-  border-radius: 7rpx;
+  border-radius: 18rpx;
   flex-direction: column;
   gap: 9rpx;
 }
@@ -101,8 +102,9 @@
 
 .booking-date--active {
   color: #ffffff;
-  background: #176b57;
-  border-color: #176b57;
+  background: linear-gradient(135deg, #1d8166, #0d4a3b);
+  border-color: transparent;
+  box-shadow: 0 8rpx 18rpx rgba(13, 74, 59, 0.3);
 }
 
 .booking-date--active > text:last-child {
@@ -134,8 +136,8 @@
   min-height: 164rpx;
   padding: 24rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
   gap: 22rpx;
 }
 
@@ -200,12 +202,14 @@
   flex: 0 0 126rpx;
   height: 54rpx;
   color: #ffffff;
-  background: #176b57;
+  background: linear-gradient(135deg, #1d8166, #176b57);
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.24);
 }
 
 .booking-action-button[disabled] {
   color: #7b847f !important;
   background: #edf0ee !important;
+  box-shadow: none;
   opacity: 1;
 }
 
@@ -216,14 +220,15 @@
   min-height: 380rpx;
   padding: 42rpx 30rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
   flex-direction: column;
   text-align: center;
 }
 
 .booking-state--error {
-  border-color: #edd1ce;
+  border: 1rpx solid #edd1ce;
+  box-shadow: none;
 }
 
 .booking-state-mark {
@@ -234,8 +239,9 @@
   height: 76rpx;
   margin-bottom: 22rpx;
   color: #ffffff;
-  background: #176b57;
+  background: linear-gradient(135deg, #1d8166, #0d4a3b);
   border-radius: 50%;
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
   font-size: 28rpx;
   font-weight: 650;
 }
@@ -276,7 +282,8 @@
 
 .booking-select-store-button {
   color: #ffffff;
-  background: #176b57;
+  background: linear-gradient(135deg, #1d8166, #176b57);
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.24);
 }
 
 .booking-skeleton {
@@ -285,8 +292,8 @@
   height: 164rpx;
   overflow: hidden;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
 }
 
 .booking-skeleton > view:first-child,

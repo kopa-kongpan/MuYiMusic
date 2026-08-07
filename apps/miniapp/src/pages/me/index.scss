@@ -54,7 +54,7 @@
   margin: 0;
   color: #4f5954;
   background: #eef1ef;
-  border-radius: 6rpx;
+  border-radius: 12rpx;
   font-size: 21rpx;
 }
 
@@ -67,8 +67,8 @@
 .me-profile-card {
   padding: 28rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
   gap: 20rpx;
 }
 
@@ -79,8 +79,7 @@
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  background: #176b57;
-  border-radius: 7rpx;
+  background: linear-gradient(135deg, #1d8166, #0d4a3b);
   font-weight: 650;
 }
 
@@ -88,6 +87,8 @@
   flex: 0 0 82rpx;
   width: 82rpx;
   height: 82rpx;
+  border-radius: 50%;
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
   font-size: 31rpx;
 }
 
@@ -120,8 +121,8 @@
   margin-top: 20rpx;
   overflow: hidden;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
 }
 
 .me-entry {
@@ -147,6 +148,8 @@
 .me-entry-mark {
   width: 54rpx;
   height: 54rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 10rpx rgba(23, 107, 87, 0.22);
   font-size: 21rpx;
 }
 
@@ -160,7 +163,7 @@
   padding: 20rpx 24rpx;
   color: #737c77;
   background: #e9eeeb;
-  border-radius: 7rpx;
+  border-radius: 14rpx;
   font-size: 21rpx;
   line-height: 1.6;
 }
@@ -172,8 +175,8 @@
   min-height: 430rpx;
   padding: 42rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
   flex-direction: column;
   text-align: center;
 }
@@ -182,6 +185,8 @@
   width: 76rpx;
   height: 76rpx;
   margin-bottom: 22rpx;
+  border-radius: 22rpx;
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
   font-size: 29rpx;
 }
 
@@ -201,8 +206,9 @@
   height: 68rpx;
   margin-top: 32rpx;
   color: #ffffff;
-  background: #176b57;
-  border-radius: 6rpx;
+  background: linear-gradient(135deg, #1d8166, #176b57);
+  border-radius: 999rpx;
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.24);
   font-size: 24rpx;
   line-height: 68rpx;
 }

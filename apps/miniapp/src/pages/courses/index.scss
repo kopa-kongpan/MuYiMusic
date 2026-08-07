@@ -31,7 +31,7 @@
   padding: 0 16rpx;
   color: #176b57;
   background: #e4f0eb;
-  border-radius: 5rpx;
+  border-radius: 999rpx;
   font-size: 19rpx;
 }
 
@@ -72,7 +72,7 @@
   align-items: center;
   justify-content: center;
   margin: 0;
-  border-radius: 6rpx;
+  border-radius: 14rpx;
   font-size: 22rpx;
 }
 
@@ -87,6 +87,7 @@
   padding: 0 20rpx;
   color: #ffffff;
   background: #202522;
+  box-shadow: 0 4rpx 12rpx rgba(18, 44, 37, 0.18);
 }
 
 .course-search-row {
@@ -99,7 +100,7 @@
   padding: 0 22rpx;
   background: #ffffff;
   border: 1rpx solid #dce2df;
-  border-radius: 6rpx;
+  border-radius: 14rpx;
   font-size: 24rpx;
 }
 
@@ -107,7 +108,8 @@
   flex: 0 0 104rpx;
   height: 68rpx;
   color: #ffffff;
-  background: #176b57;
+  background: linear-gradient(135deg, #1d8166, #176b57);
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.24);
 }
 
 .category-scroll {
@@ -123,18 +125,19 @@
 
 .category-tab {
   flex: 0 0 auto;
-  padding: 15rpx 24rpx;
+  padding: 15rpx 26rpx;
   color: #59615d;
   background: #ffffff;
   border: 1rpx solid #dce2df;
-  border-radius: 6rpx;
+  border-radius: 999rpx;
   font-size: 23rpx;
 }
 
 .category-tab--active {
   color: #ffffff;
-  background: #176b57;
-  border-color: #176b57;
+  background: linear-gradient(135deg, #1d8166, #176b57);
+  border-color: transparent;
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.24);
 }
 
 .course-result-bar {
@@ -159,8 +162,8 @@
   min-height: 214rpx;
   overflow: hidden;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
 }
 
 .course-item--pressed {
@@ -238,14 +241,15 @@
   min-height: 380rpx;
   padding: 40rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
   flex-direction: column;
   text-align: center;
 }
 
 .course-state--error {
-  border-color: #edd1ce;
+  border: 1rpx solid #edd1ce;
+  box-shadow: none;
 }
 
 .course-state-title,
@@ -270,7 +274,8 @@
   margin-top: 24rpx;
   padding: 0 24rpx;
   color: #ffffff;
-  background: #176b57;
+  background: linear-gradient(135deg, #1d8166, #176b57);
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.24);
 }
 
 .course-skeleton {
@@ -279,8 +284,8 @@
   height: 214rpx;
   overflow: hidden;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
 }
 
 .course-skeleton > view:first-child,

@@ -38,8 +38,8 @@
   padding: 40rpx;
   color: #737c77;
   background: #ffffff;
-  border: 1rpx solid #e0e5e2;
-  border-radius: 8rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
   flex-direction: column;
   text-align: center;
 }
@@ -52,8 +52,9 @@
   height: 76rpx;
   margin-bottom: 22rpx;
   color: #ffffff;
-  background: #176b57;
-  border-radius: 8rpx;
+  background: linear-gradient(135deg, #1d8166, #0d4a3b);
+  border-radius: 22rpx;
+  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
   font-size: 29rpx;
   font-weight: 650;
 }
