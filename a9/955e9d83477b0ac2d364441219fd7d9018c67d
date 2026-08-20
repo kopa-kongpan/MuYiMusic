@@ -1,0 +1,149 @@
+.env.example
+  s_8d70d8dd67def5::t_952576a5a00e48 17-22,42-64
+apps/admin/src/app/AdminShell.tsx
+  s_b05c147f5dfb89::t_160797e7eccd53 11,24,57-58,108-112
+apps/admin/src/app/NotificationDeliveriesPage.tsx
+  s_b05c147f5dfb89::t_e66a7564142621 1-138
+apps/admin/src/app/TeacherManagerModal.tsx
+  s_b05c147f5dfb89::t_7031a0a1b4696f 3,104-126,202-209
+apps/admin/src/app/router.tsx
+  s_b05c147f5dfb89::t_e9d5dc33c0eb32 7,29
+apps/admin/src/styles.scss
+  s_b05c147f5dfb89::t_604d2d0d16f076 548-564
+apps/miniapp/config/index.ts
+  s_b05c147f5dfb89::t_1e7e16bb75fa1f 20-31
+apps/miniapp/src/app.config.ts
+  s_b05c147f5dfb89::t_37d79ef7d0a9aa 14-15
+apps/miniapp/src/pages/booking/index.tsx
+  s_b05c147f5dfb89::t_813c79b713cd49 7-8,97-124,126-129
+apps/miniapp/src/pages/me/index.scss
+  s_b05c147f5dfb89::t_2cc166909511a8 129,137-149,152-153
+apps/miniapp/src/pages/me/index.tsx
+  s_b05c147f5dfb89::t_090614d816e24c 6,21-22,28,32-40,118-122
+apps/miniapp/src/pages/notifications/index.config.ts
+  s_b05c147f5dfb89::t_957e92afd75cca 1-4
+apps/miniapp/src/pages/notifications/index.scss
+  s_b05c147f5dfb89::t_9b7fc07445ca9f 1-83
+apps/miniapp/src/pages/notifications/index.tsx
+  s_b05c147f5dfb89::t_0d1f185cb71a89 1-142
+apps/miniapp/src/pages/teacher-portal/index.config.ts
+  s_b05c147f5dfb89::t_1c3935b3041895 1-4
+apps/miniapp/src/pages/teacher-portal/index.scss
+  s_b05c147f5dfb89::t_6f175f284b2e46 1-144
+apps/miniapp/src/pages/teacher-portal/index.tsx
+  s_b05c147f5dfb89::t_7cffaa6831f3e8 1-306
+apps/miniapp/src/platform/types.ts
+  s_b05c147f5dfb89::t_96b11f318f5344 7-8,15-17
+apps/miniapp/src/platform/weapp.ts
+  s_b05c147f5dfb89::t_c1fd9177cb305b 4,17-31
+apps/miniapp/src/services/courses.ts
+  s_aba14d10e308a0::t_e5271dc11800d2 57-58
+apps/miniapp/src/services/notifications.ts
+  s_b05c147f5dfb89::t_d6878742d1b532 1-66
+apps/miniapp/src/services/teacher-portal.ts
+  s_b05c147f5dfb89::t_eb7eb6eb3d9c78 1-81
+apps/miniapp/src/types/environment.d.ts
+  s_b05c147f5dfb89::t_1a5db7e1908530 2-5
+deploy/caddy/Caddyfile
+  s_8d70d8dd67def5::t_bccd4c045d8723 1-59
+deploy/compose.prod.yaml
+  s_8d70d8dd67def5::t_d3469cfd417e10 1-117
+deploy/compose.yaml
+  s_b05c147f5dfb89::t_6d471da2fa08aa 15-19,125-136
+deploy/scripts/backup-postgres.sh
+  s_ba320f9580d6cc::t_1113860de4ea86 1-67
+deploy/scripts/restore-postgres.sh
+  s_ba320f9580d6cc::t_c7d64a5b9b4511 1-54
+docs/文档索引.md
+  s_8d70d8dd67def5::t_f86017134715e3 21,23
+docs/第九版消息通知功能说明.md
+  s_b05c147f5dfb89::t_5305df334db9ea 1-112
+docs/腾讯云生产部署说明.md
+  s_8d70d8dd67def5::t_c04a86f12d6fb0 1-318
+packages/api-client/src/generated/schema.ts
+  s_b05c147f5dfb89::t_b81ba25a31e184 212-245,386-402,730-814,934-1035,1179,1656-1749,2572-2588,2590-2611,2630-2651,3297-3358,3779-3810,4605-4736,4973-5166
+packages/api-client/src/index.ts
+  s_b05c147f5dfb89::t_4449518d69a685 100-123,555-579
+services/api/app/api/v1/admin/notifications.py
+  s_b05c147f5dfb89::t_22010dae5ca23e 1-64
+services/api/app/api/v1/admin/schedules.py
+  s_b05c147f5dfb89::t_8ae48adcaf946d 23,30-33,127-147
+services/api/app/api/v1/app/notifications.py
+  s_b05c147f5dfb89::t_722e285fb0d3ba 1-66
+services/api/app/api/v1/app/teacher_portal.py
+  s_b05c147f5dfb89::t_db9590dd1f3ee8 1-170
+services/api/app/api/v1/router.py
+  s_b05c147f5dfb89::t_3ad24c07b2afa5 7,16,21,29,38,43
+services/api/app/core/config.py
+  s_ba320f9580d6cc::t_6d6da32cf02a66 23-24,35-39
+services/api/app/core/database.py
+  s_ba320f9580d6cc::t_092841f0fe91f1 28-35
+services/api/app/models/__init__.py
+  s_b05c147f5dfb89::t_1dcfbb22f667e9 14-24,71-76,90,92-93
+services/api/app/models/appointment.py
+  s_b05c147f5dfb89::t_a1ce23eaf6a10a 40
+services/api/app/models/notification.py
+  s_b05c147f5dfb89::t_9e7cc42c75205f 1-196
+services/api/app/providers/wechat_subscribe.py
+  s_b05c147f5dfb89::t_b3e1b387b27ac3 1-137
+services/api/app/repositories/appointment_repository.py
+  s_b05c147f5dfb89::t_f9482c2504bdd3 199-222
+services/api/app/schemas/notification.py
+  s_b05c147f5dfb89::t_bfd31c9e690d0c 1-58
+services/api/app/schemas/teacher_portal.py
+  s_b05c147f5dfb89::t_bb87269bb8a3ff 1-26
+services/api/app/services/appointment_service.py
+  s_b05c147f5dfb89::t_cff733509575a9 17,33,35,117-125,252-311,528-552
+services/api/app/services/notification_delivery_service.py
+  s_b05c147f5dfb89::t_669487d8105535 1-209
+services/api/app/services/notification_service.py
+  s_b05c147f5dfb89::t_960890b453aed4 1-281
+services/api/app/workers/__init__.py
+  s_b05c147f5dfb89::t_4104e8ff1dcc17 1
+services/api/app/workers/notification_worker.py
+  s_b05c147f5dfb89::t_400979391331dc 1-45
+services/api/migrations/versions/20260813_0009_notifications.py
+  s_b05c147f5dfb89::t_5b3645a319d706 1-190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a9955e9d83477b0ac2d364441219fd7d9018c67d",
+  "prompts": {},
+  "sessions": {
+    "s_8d70d8dd67def5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0eafeeb4-3e9c-46a5-98e6-dc0e2f342dae",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    },
+    "s_aba14d10e308a0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd254-8347-7fd3-a58c-db1ec817c6a5",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    },
+    "s_b05c147f5dfb89": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff9ce-9703-73e1-a3cf-50b145fb7c02",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    },
+    "s_ba320f9580d6cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74cf05d7-06cc-451b-a66d-256d601c3425",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
