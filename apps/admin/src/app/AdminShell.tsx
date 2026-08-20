@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Music2,
+  Send,
   Store,
   ShieldCheck,
   UsersRound,
@@ -20,6 +21,7 @@ const { Content, Header, Sider } = Layout
 
 const pageNames: Record<string, string> = {
   appointments: '预约与消课',
+  notifications: '消息投递',
   products: '课程商品',
   schedules: '排课管理',
   'store-content': '首页内容',
@@ -52,6 +54,8 @@ export function AdminShell() {
         ? 'schedules'
         : location.pathname.startsWith('/appointments')
           ? 'appointments'
+          : location.pathname.startsWith('/notifications')
+            ? 'notifications'
           : location.pathname.startsWith('/users')
             ? 'users'
             : location.pathname.startsWith('/admin-accounts')
@@ -100,6 +104,11 @@ export function AdminShell() {
             key: 'appointments',
             icon: <ClipboardCheck size={18} aria-hidden="true" />,
             label: '预约与消课',
+          },
+          {
+            key: 'notifications',
+            icon: <Send size={18} aria-hidden="true" />,
+            label: '消息投递',
           },
         ]
       : []),

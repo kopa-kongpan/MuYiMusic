@@ -545,6 +545,23 @@ select {
   white-space: nowrap;
 }
 
+.teacher-bind-code {
+  display: flex;
+  padding-top: 12px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.teacher-bind-code strong {
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.teacher-bind-code span {
+  color: #68716c;
+  line-height: 1.6;
+}
+
 .teacher-row span {
   color: #78807b;
   font-size: 12px;

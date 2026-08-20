@@ -97,6 +97,30 @@ export type TeacherCreate = components['schemas']['TeacherCreate']
 export type TeacherListResponse = components['schemas']['TeacherListResponse']
 export type TeacherRead = components['schemas']['TeacherRead']
 export type TeacherUpdate = components['schemas']['TeacherUpdate']
+export interface TeacherBindCodeRead {
+  code: string
+  expires_at: string
+}
+export type NotificationDeliveryStatus = 'pending' | 'sent' | 'skipped' | 'failed'
+export interface NotificationDeliveryRead {
+  id: string
+  kind: string
+  title: string
+  channel: string
+  template_key: string
+  status: NotificationDeliveryStatus
+  attempts: number
+  last_error: string | null
+  next_attempt_at: string | null
+  sent_at: string | null
+  created_at: string
+}
+export interface NotificationDeliveryListResponse {
+  items: NotificationDeliveryRead[]
+  total: number
+  page: number
+  page_size: number
+}
 export type UploadTicketRequest = components['schemas']['UploadTicketRequest']
 export type UploadTicketResponse = components['schemas']['UploadTicketResponse']
 export type UserAdminListResponse =
@@ -526,6 +550,31 @@ export function createApiClient(options: ApiClientOptions = {}) {
       return request<TeacherRead>(
         `/api/v1/admin/stores/${storeId}/teachers/${teacherId}`,
         { method: 'PATCH', body: JSON.stringify(payload) },
+      )
+    },
+    createTeacherBindCode(storeId: string, teacherId: string) {
+      return request<TeacherBindCodeRead>(
+        `/api/v1/admin/stores/${storeId}/teachers/${teacherId}/bind-code`,
+        { method: 'POST' },
+      )
+    },
+    listNotificationDeliveries(
+      status?: NotificationDeliveryStatus,
+      page = 1,
+      pageSize = 20,
+    ) {
+      return request<NotificationDeliveryListResponse>(
+        appendQuery('/api/v1/admin/notifications/deliveries', {
+          status,
+          page,
+          page_size: pageSize,
+        }),
+      )
+    },
+    retryNotificationDelivery(deliveryId: string) {
+      return request<void>(
+        `/api/v1/admin/notifications/deliveries/${deliveryId}/retry`,
+        { method: 'POST' },
       )
     },
     listAdminSchedules(storeId: string, query: AdminScheduleQuery) {

@@ -54,8 +54,8 @@ export async function listCourseProducts(
     url: `${apiBaseUrl}/api/v1/app/stores/${storeId}/products`,
     method: 'GET',
     data: {
-      keyword: query.keyword || undefined,
-      category_id: query.categoryId,
+      ...(query.keyword ? { keyword: query.keyword } : {}),
+      ...(query.categoryId ? { category_id: query.categoryId } : {}),
       sort: query.sort ?? 'comprehensive',
       page: query.page ?? 1,
       page_size: query.pageSize ?? 20,

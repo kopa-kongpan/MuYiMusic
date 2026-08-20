@@ -4,13 +4,17 @@ export interface LoginResult {
   code: string
 }
 
+export type SubscribeMessageStatus = 'accept' | 'reject' | 'ban'
+
 export interface PlatformAdapter {
   readonly name: PlatformName
   login(): Promise<LoginResult>
   authorizePhone(): Promise<unknown>
   requestPayment(parameters: Readonly<Record<string, unknown>>): Promise<void>
   share(parameters: Readonly<Record<string, unknown>>): Promise<void>
-  subscribeMessage(templateIds: readonly string[]): Promise<void>
+  subscribeMessage(
+    templateIds: readonly string[],
+  ): Promise<Record<string, SubscribeMessageStatus>>
   openCustomerService(): Promise<void>
   getPlatformInfo(): Readonly<Record<string, unknown>>
 }

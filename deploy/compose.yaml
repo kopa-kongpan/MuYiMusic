@@ -12,6 +12,11 @@ x-api-environment: &api-environment
   CANCELLATION_CUTOFF_MINUTES: ${CANCELLATION_CUTOFF_MINUTES:-120}
   WECHAT_APP_ID: ${WECHAT_APP_ID:-}
   WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-}
+  WECHAT_TEMPLATE_TEACHER_NEW_APPOINTMENT: ${WECHAT_TEMPLATE_TEACHER_NEW_APPOINTMENT:-}
+  WECHAT_TEMPLATE_TEACHER_APPOINTMENT_CANCELLED: ${WECHAT_TEMPLATE_TEACHER_APPOINTMENT_CANCELLED:-}
+  WECHAT_TEMPLATE_STUDENT_APPOINTMENT_CANCELLED: ${WECHAT_TEMPLATE_STUDENT_APPOINTMENT_CANCELLED:-}
+  WECHAT_TEMPLATE_APPOINTMENT_NEXT_DAY_REMINDER: ${WECHAT_TEMPLATE_APPOINTMENT_NEXT_DAY_REMINDER:-}
+  WECHAT_TEMPLATE_FIELD_MAP_JSON: '${WECHAT_TEMPLATE_FIELD_MAP_JSON:-{}}'
   DOUYIN_APP_ID: ${DOUYIN_APP_ID:-}
   DOUYIN_APP_SECRET: ${DOUYIN_APP_SECRET:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
@@ -116,6 +121,18 @@ services:
       timeout: 5s
       retries: 12
       start_period: 5s
+
+  worker:
+    build:
+      context: ../services/api
+    environment:
+      <<: *api-environment
+      TZ: Asia/Shanghai
+    command: ["arq", "app.workers.notification_worker.WorkerSettings"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
   nginx:
     image: nginx:1.27-alpine

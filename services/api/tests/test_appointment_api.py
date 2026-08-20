@@ -13,10 +13,12 @@ from app.core.security import hash_password
 from app.main import app
 from app.models.admin import AdminUser, Permission, Role
 from app.models.appointment import Appointment, LessonConsumption
+from app.models.notification import Notification
 from app.models.product import Category, Product, ProductStatus
 from app.models.schedule import ClassSchedule, Teacher
 from app.models.store import Store
 from app.models.user import CourseEntitlement, EntitlementStatus, User
+from app.services.notification_service import NotificationService
 
 pytestmark = pytest.mark.asyncio
 
@@ -94,13 +96,14 @@ async def create_foundation(
                             "appointments:manage",
                             "consumptions:manage",
                             "consumptions:reverse",
+                            "schedules:manage",
                         )
                     )
                 )
             )
         ).all()
     )
-    assert len(permissions) == 3
+    assert len(permissions) == 4
     role = Role(code=f"appointment-manager-{uuid4()}", name="预约消课运营")
     role.permissions.extend(permissions)
     password_hash = hash_password("test-password-2026")
@@ -351,6 +354,158 @@ async def test_appointment_booking_conflicts_and_cancellation() -> None:
                 )
                 assert late_booking.status_code == 409
                 assert "预约截止时间" in late_booking.json()["message"]
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()
+
+
+async def test_teacher_binding_notifications_and_cancellation() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        try:
+            store, _, product, teacher, admin, _ = await create_foundation(session)
+            schedule = make_schedule(
+                store=store,
+                product=product,
+                teacher=teacher,
+                starts_at=datetime.now(UTC) + timedelta(days=1),
+            )
+            session.add(schedule)
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                student, student_headers = await create_user_login(
+                    client, session, "通知测试学员"
+                )
+                _, teacher_headers = await create_user_login(
+                    client, session, "通知测试教师账号"
+                )
+                session.add(
+                    make_entitlement(
+                        user=student,
+                        store=store,
+                        product=product,
+                    )
+                )
+                await session.flush()
+
+                admin_headers = await login_admin(client, admin, "test-password-2026")
+                bind_code_response = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/teachers/{teacher.id}/bind-code",
+                    headers=admin_headers,
+                )
+                assert bind_code_response.status_code == 201
+                bind_code = bind_code_response.json()["code"]
+
+                bind_response = await client.post(
+                    "/api/v1/app/teacher/bind",
+                    headers=teacher_headers,
+                    json={"code": bind_code, "provider": "h5"},
+                )
+                assert bind_response.status_code == 200
+                assert bind_response.json()["teacher_id"] == str(teacher.id)
+
+                repeated_bind = await client.post(
+                    "/api/v1/app/teacher/bind",
+                    headers=student_headers,
+                    json={"code": bind_code, "provider": "h5"},
+                )
+                assert repeated_bind.status_code == 409
+
+                booking_response = await client.post(
+                    f"/api/v1/app/schedules/{schedule.id}/appointments",
+                    headers={
+                        **student_headers,
+                        "Idempotency-Key": "teacher-notify-booking-0001",
+                    },
+                    json={},
+                )
+                assert booking_response.status_code == 201
+                appointment_id = booking_response.json()["id"]
+
+                teacher_messages = await client.get(
+                    f"/api/v1/app/teacher/{teacher.id}/notifications",
+                    headers=teacher_headers,
+                )
+                assert teacher_messages.status_code == 200
+                assert teacher_messages.json()["unread_count"] == 1
+                assert teacher_messages.json()["items"][0]["kind"] == (
+                    "appointment.created"
+                )
+                assert teacher_messages.json()["items"][0]["page_path"] == (
+                    "pages/teacher-portal/index"
+                )
+
+                reminder_now = schedule.starts_at - timedelta(days=1)
+                session.expire_all()
+                generated = await NotificationService(
+                    session
+                ).generate_next_day_reminders(now=reminder_now)
+                assert generated == 1
+                reminder = await session.scalar(
+                    select(Notification).where(
+                        Notification.event_key
+                        == f"appointment.next_day_reminder:{appointment_id}:student"
+                    )
+                )
+                assert reminder is not None
+                assert reminder.page_path == "pages/my-bookings/index"
+
+                denied_messages = await client.get(
+                    f"/api/v1/app/teacher/{teacher.id}/notifications",
+                    headers=student_headers,
+                )
+                assert denied_messages.status_code == 404
+
+                starts_from = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+                starts_before = (datetime.now(UTC) + timedelta(days=2)).isoformat()
+                teacher_appointments = await client.get(
+                    f"/api/v1/app/teacher/{teacher.id}/appointments",
+                    headers=teacher_headers,
+                    params={
+                        "starts_from": starts_from,
+                        "starts_before": starts_before,
+                    },
+                )
+                assert teacher_appointments.status_code == 200
+                assert teacher_appointments.json()["total"] == 1
+
+                cancel_response = await client.post(
+                    f"/api/v1/app/teacher/{teacher.id}/appointments/{appointment_id}/cancel",
+                    headers={
+                        **teacher_headers,
+                        "Idempotency-Key": "teacher-cancel-appointment-0002",
+                    },
+                    json={"reason": "教师临时调整"},
+                )
+                assert cancel_response.status_code == 200
+                assert cancel_response.json()["cancelled_by"] == "teacher"
+
+                student_messages = await client.get(
+                    "/api/v1/app/me/notifications",
+                    headers=student_headers,
+                )
+                assert student_messages.status_code == 200
+                assert student_messages.json()["unread_count"] == 2
+                assert {item["kind"] for item in student_messages.json()["items"]} >= {
+                    "appointment.cancelled_by_teacher",
+                    "appointment.next_day_reminder",
+                }
         finally:
             app.dependency_overrides.clear()
             await session.close()

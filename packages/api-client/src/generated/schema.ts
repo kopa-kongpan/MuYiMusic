@@ -209,6 +209,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/notifications/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Deliveries */
+        get: operations["list_deliveries_api_v1_admin_notifications_deliveries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/notifications/deliveries/{delivery_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Delivery */
+        post: operations["retry_delivery_api_v1_admin_notifications_deliveries__delivery_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/stores/{store_id}/categories": {
         parameters: {
             query?: never;
@@ -347,6 +381,23 @@ export interface paths {
         head?: never;
         /** Update Teacher */
         patch: operations["update_teacher_api_v1_admin_stores__store_id__teachers__teacher_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/teachers/{teacher_id}/bind-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Teacher Bind Code */
+        post: operations["create_teacher_bind_code_api_v1_admin_stores__store_id__teachers__teacher_id__bind_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/stores/{store_id}/schedules": {
@@ -676,6 +727,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Notifications */
+        get: operations["list_notifications_api_v1_app_me_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/notifications/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unread Count */
+        get: operations["unread_count_api_v1_app_me_notifications_unread_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Read */
+        post: operations["mark_read_api_v1_app_me_notifications__notification_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark All Read */
+        post: operations["mark_all_read_api_v1_app_me_notifications_read_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/notifications/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Subscription */
+        put: operations["update_subscription_api_v1_app_me_notifications_subscription_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/stores/{store_id}/home": {
         parameters: {
             query?: never;
@@ -789,6 +925,108 @@ export interface paths {
         get: operations["list_stores_api_v1_app_stores_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/teacher/bind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bind Teacher */
+        post: operations["bind_teacher_api_v1_app_teacher_bind_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/teacher/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teacher Identities */
+        get: operations["teacher_identities_api_v1_app_teacher_identities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/teacher/{teacher_id}/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teacher Appointments */
+        get: operations["teacher_appointments_api_v1_app_teacher__teacher_id__appointments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/teacher/{teacher_id}/appointments/{appointment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Teacher Appointment */
+        post: operations["cancel_teacher_appointment_api_v1_app_teacher__teacher_id__appointments__appointment_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/teacher/{teacher_id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teacher Notifications */
+        get: operations["teacher_notifications_api_v1_app_teacher__teacher_id__notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/teacher/{teacher_id}/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Teacher Notification Read */
+        post: operations["mark_teacher_notification_read_api_v1_app_teacher__teacher_id__notifications__notification_id__read_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -938,7 +1176,7 @@ export interface components {
          * AppointmentCancelledBy
          * @enum {string}
          */
-        AppointmentCancelledBy: "user" | "admin";
+        AppointmentCancelledBy: "user" | "admin" | "teacher";
         /** AppointmentCreate */
         AppointmentCreate: {
             /** Entitlement Id */
@@ -1415,6 +1653,100 @@ export interface components {
          * @enum {string}
          */
         IdentityProvider: "weapp" | "tt" | "h5";
+        /** NotificationDeliveryListResponse */
+        NotificationDeliveryListResponse: {
+            /** Items */
+            items: components["schemas"]["NotificationDeliveryRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** NotificationDeliveryRead */
+        NotificationDeliveryRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Notification Id
+             * Format: uuid
+             */
+            notification_id: string;
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Channel */
+            channel: string;
+            /** Template Key */
+            template_key: string;
+            status: components["schemas"]["NotificationDeliveryStatus"];
+            /** Attempts */
+            attempts: number;
+            /** Last Error */
+            last_error: string | null;
+            /** Next Attempt At */
+            next_attempt_at: string | null;
+            /** Sent At */
+            sent_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * NotificationDeliveryStatus
+         * @enum {string}
+         */
+        NotificationDeliveryStatus: "pending" | "sent" | "skipped" | "failed";
+        /** NotificationListResponse */
+        NotificationListResponse: {
+            /** Items */
+            items: components["schemas"]["NotificationRead"][];
+            /** Total */
+            total: number;
+            /** Unread Count */
+            unread_count: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** NotificationRead */
+        NotificationRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+            /** Appointment Id */
+            appointment_id: string | null;
+            /** Page Path */
+            page_path: string | null;
+            /** Read At */
+            read_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** NotificationUnreadResponse */
+        NotificationUnreadResponse: {
+            /** Unread Count */
+            unread_count: number;
+        };
         /** OrderItemRead */
         OrderItemRead: {
             /**
@@ -2237,6 +2569,39 @@ export interface components {
             /** Sort Order */
             sort_order?: number | null;
         };
+        /**
+         * SubscriptionStatus
+         * @enum {string}
+         */
+        SubscriptionStatus: "accept" | "reject" | "ban";
+        /** SubscriptionUpdate */
+        SubscriptionUpdate: {
+            /** Provider */
+            provider: string;
+            /** Template Key */
+            template_key: string;
+            status: components["schemas"]["SubscriptionStatus"];
+        };
+        /** TeacherBindCodeRead */
+        TeacherBindCodeRead: {
+            /** Code */
+            code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** TeacherBindRequest */
+        TeacherBindRequest: {
+            /** Code */
+            code: string;
+            /**
+             * Provider
+             * @default weapp
+             */
+            provider: string;
+        };
         /** TeacherCreate */
         TeacherCreate: {
             /** Name */
@@ -2261,6 +2626,28 @@ export interface components {
              * @default 0
              */
             sort_order: number;
+        };
+        /** TeacherIdentityListResponse */
+        TeacherIdentityListResponse: {
+            /** Items */
+            items: components["schemas"]["TeacherIdentityRead"][];
+        };
+        /** TeacherIdentityRead */
+        TeacherIdentityRead: {
+            /**
+             * Teacher Id
+             * Format: uuid
+             */
+            teacher_id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** Teacher Name */
+            teacher_name: string;
+            /** Provider */
+            provider: string;
         };
         /** TeacherListResponse */
         TeacherListResponse: {
@@ -2907,6 +3294,68 @@ export interface operations {
             };
         };
     };
+    list_deliveries_api_v1_admin_notifications_deliveries_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["NotificationDeliveryStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationDeliveryListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_delivery_api_v1_admin_notifications_deliveries__delivery_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                delivery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_categories_api_v1_admin_stores__store_id__categories_get: {
         parameters: {
             query?: never;
@@ -3314,6 +3763,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_teacher_bind_code_api_v1_admin_stores__store_id__teachers__teacher_id__bind_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                teacher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherBindCodeRead"];
                 };
             };
             /** @description Validation Error */
@@ -4121,6 +4602,138 @@ export interface operations {
             };
         };
     };
+    list_notifications_api_v1_app_me_notifications_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unread_count_api_v1_app_me_notifications_unread_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationUnreadResponse"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_app_me_notifications__notification_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_all_read_api_v1_app_me_notifications_read_all_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_subscription_api_v1_app_me_notifications_subscription_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_store_home_api_v1_app_stores__store_id__home_get: {
         parameters: {
             query?: never;
@@ -4344,6 +4957,200 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StorePublicListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bind_teacher_api_v1_app_teacher_bind_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeacherBindRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherIdentityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    teacher_identities_api_v1_app_teacher_identities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherIdentityListResponse"];
+                };
+            };
+        };
+    };
+    teacher_appointments_api_v1_app_teacher__teacher_id__appointments_get: {
+        parameters: {
+            query: {
+                starts_from: string;
+                starts_before: string;
+                status?: components["schemas"]["AppointmentStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                teacher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_teacher_appointment_api_v1_app_teacher__teacher_id__appointments__appointment_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                teacher_id: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentAdminCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    teacher_notifications_api_v1_app_teacher__teacher_id__notifications_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                teacher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_teacher_notification_read_api_v1_app_teacher__teacher_id__notifications__notification_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacher_id: string;
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationRead"];
                 };
             };
             /** @description Validation Error */

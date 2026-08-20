@@ -37,6 +37,7 @@ class AppointmentStatus(StrEnum):
 class AppointmentCancelledBy(StrEnum):
     USER = "user"
     ADMIN = "admin"
+    TEACHER = "teacher"
 
 
 class ConsumptionKind(StrEnum):

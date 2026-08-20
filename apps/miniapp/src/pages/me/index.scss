@@ -126,6 +126,7 @@
 }
 
 .me-entry {
+  position: relative;
   min-height: 142rpx;
   padding: 26rpx;
   border-right: 1rpx solid #e7ebe9;
@@ -133,12 +134,23 @@
   gap: 16rpx;
 }
 
-.me-entry:nth-child(2n) {
-  border-right: 0;
+.me-entry-badge {
+  position: absolute;
+  top: 18rpx;
+  right: 18rpx;
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 6rpx;
+  color: #ffffff;
+  background: #b64031;
+  border-radius: 15rpx;
+  font-size: 17rpx;
+  line-height: 30rpx;
+  text-align: center;
 }
 
-.me-entry:nth-last-child(-n + 2) {
-  border-bottom: 0;
+.me-entry:nth-child(2n) {
+  border-right: 0;
 }
 
 .me-entry--pressed {

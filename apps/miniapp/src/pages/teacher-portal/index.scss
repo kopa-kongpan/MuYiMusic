@@ -1,0 +1,144 @@
+.teacher-page {
+  min-height: 100vh;
+  padding: 32rpx 28rpx 64rpx;
+  color: #202522;
+  background: #f3f5f4;
+}
+
+.teacher-heading,
+.teacher-section-heading,
+.teacher-item-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.teacher-title,
+.teacher-subtitle,
+.teacher-section-title,
+.teacher-item-title,
+.teacher-item-time,
+.teacher-item-meta,
+.teacher-empty {
+  display: block;
+}
+
+.teacher-title {
+  font-size: 34rpx;
+  font-weight: 650;
+}
+
+.teacher-subtitle {
+  margin-top: 7rpx;
+  color: #707974;
+  font-size: 22rpx;
+}
+
+.teacher-bind,
+.teacher-list {
+  margin-top: 24rpx;
+  padding: 26rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 28rpx rgba(18, 44, 37, 0.06);
+}
+
+.teacher-section-title {
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.teacher-bind-input {
+  height: 72rpx;
+  margin-top: 22rpx;
+  padding: 0 20rpx;
+  background: #f3f5f4;
+  border: 1rpx solid #dce2df;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+}
+
+.teacher-primary-button {
+  height: 68rpx;
+  margin-top: 18rpx;
+  color: #ffffff;
+  background: #176b57;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  line-height: 68rpx;
+}
+
+.teacher-primary-button::after,
+.teacher-identity::after,
+.teacher-cancel-button::after,
+.teacher-notification-button::after {
+  border: 0;
+}
+
+.teacher-notification-button {
+  margin: 22rpx 0 0;
+  color: #176b57;
+  background: #e3eee9;
+  border-radius: 12rpx;
+  font-size: 21rpx;
+}
+
+.teacher-identities {
+  display: flex;
+  margin-top: 22rpx;
+  gap: 12rpx;
+}
+
+.teacher-identity {
+  margin: 0;
+  color: #5e6863;
+  background: #e9eeeb;
+  border-radius: 12rpx;
+  font-size: 21rpx;
+}
+
+.teacher-identity--active {
+  color: #ffffff;
+  background: #176b57;
+}
+
+.teacher-section-heading {
+  margin-top: 30rpx;
+}
+
+.teacher-section-heading > text:last-child {
+  color: #707974;
+  font-size: 21rpx;
+}
+
+.teacher-item + .teacher-item {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #e7ebe9;
+}
+
+.teacher-item-title {
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.teacher-item-time,
+.teacher-item-meta,
+.teacher-empty {
+  color: #707974;
+  font-size: 21rpx;
+}
+
+.teacher-item-meta {
+  margin-top: 8rpx;
+  line-height: 1.5;
+}
+
+.teacher-cancel-button {
+  margin: 16rpx 0 0 auto;
+  color: #b64031;
+  background: #f8ece9;
+  border-radius: 10rpx;
+  font-size: 20rpx;
+}

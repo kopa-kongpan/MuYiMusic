@@ -648,9 +648,7 @@ class ProductService:
             if any(video.is_active for video in product.videos):
                 raise InvalidProductError("线下课时课不能关联视频章节")
         else:
-            if any(
-                sku.lesson_count != 0 for sku in product.skus if sku.is_active
-            ):
+            if any(sku.lesson_count != 0 for sku in product.skus if sku.is_active):
                 raise InvalidProductError("视频课程的启用规格课时数必须为 0")
             if not any(video.is_active for video in product.videos):
                 raise InvalidProductError("视频课程至少需要一个启用的视频章节")

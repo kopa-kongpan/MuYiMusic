@@ -62,6 +62,12 @@ async def test_course_product_lifecycle_and_public_purchase_validation() -> None
             admin.stores.append(allowed_store)
             session.add_all((admin, denied_store))
             await session.flush()
+            audit_count_before = await session.scalar(
+                select(func.count(AuditLog.id)).where(
+                    AuditLog.resource_type.in_(("category", "product"))
+                )
+            )
+            assert audit_count_before is not None
 
             transport = ASGITransport(app=app)
             async with AsyncClient(
@@ -332,7 +338,7 @@ async def test_course_product_lifecycle_and_public_purchase_validation() -> None
                     AuditLog.resource_type.in_(("category", "product"))
                 )
             )
-            assert audit_count == 10
+            assert audit_count == audit_count_before + 10
         finally:
             app.dependency_overrides.clear()
             await session.close()
@@ -526,8 +532,7 @@ async def test_video_course_lifecycle_and_public_chapter_preview() -> None:
                             {
                                 "title": "第一章",
                                 "object_key": (
-                                    f"muyimusic/stores/{store.id}/products/"
-                                    "chapter1.mp4"
+                                    f"muyimusic/stores/{store.id}/products/chapter1.mp4"
                                 ),
                                 "sort_order": 10,
                             }
@@ -679,10 +684,12 @@ async def test_video_course_lifecycle_and_public_chapter_preview() -> None:
                 )
                 assert update_response.status_code == 200
                 assert len(update_response.json()["videos"]) == 3
-                assert sum(
-                    video["is_active"]
-                    for video in update_response.json()["videos"]
-                ) == 2
+                assert (
+                    sum(
+                        video["is_active"] for video in update_response.json()["videos"]
+                    )
+                    == 2
+                )
 
                 # 更新后公开详情章节数为 2（禁用章节不展示）
                 public_after = await client.get(

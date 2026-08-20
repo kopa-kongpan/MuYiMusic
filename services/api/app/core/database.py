@@ -25,7 +25,14 @@ def database_url() -> str:
 
 @lru_cache
 def get_engine() -> AsyncEngine:
-    return create_async_engine(database_url(), pool_pre_ping=True)
+    settings = get_settings()
+    return create_async_engine(
+        database_url(),
+        pool_pre_ping=True,
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        pool_recycle=1800,
+    )
 
 
 @lru_cache

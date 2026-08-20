@@ -196,6 +196,30 @@ class AppointmentRepository:
             join_user=True,
         )
 
+    async def list_teacher(
+        self,
+        *,
+        teacher_id: UUID,
+        starts_from: datetime,
+        starts_before: datetime,
+        status: AppointmentStatus | None,
+        page: int,
+        page_size: int,
+    ) -> tuple[list[Appointment], int]:
+        filters: list[ColumnElement[bool]] = [
+            ClassSchedule.teacher_id == teacher_id,
+            ClassSchedule.starts_at < starts_before,
+            ClassSchedule.ends_at > starts_from,
+        ]
+        if status is not None:
+            filters.append(Appointment.status == status)
+        return await self._list(
+            filters=filters,
+            page=page,
+            page_size=page_size,
+            join_schedule=True,
+        )
+
     async def _list(
         self,
         *,

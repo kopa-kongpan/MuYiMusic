@@ -17,6 +17,18 @@ const config: UserConfigExport = {
     MUYIMUSIC_API_BASE_URL: JSON.stringify(
       process.env.TARO_APP_API_BASE_URL ?? 'http://127.0.0.1:8001',
     ),
+    MUYIMUSIC_WECHAT_TEMPLATE_STUDENT_CANCELLED: JSON.stringify(
+      process.env.TARO_APP_WECHAT_TEMPLATE_STUDENT_CANCELLED ?? '',
+    ),
+    MUYIMUSIC_WECHAT_TEMPLATE_NEXT_DAY_REMINDER: JSON.stringify(
+      process.env.TARO_APP_WECHAT_TEMPLATE_NEXT_DAY_REMINDER ?? '',
+    ),
+    MUYIMUSIC_WECHAT_TEMPLATE_TEACHER_NEW_APPOINTMENT: JSON.stringify(
+      process.env.TARO_APP_WECHAT_TEMPLATE_TEACHER_NEW_APPOINTMENT ?? '',
+    ),
+    MUYIMUSIC_WECHAT_TEMPLATE_TEACHER_CANCELLED: JSON.stringify(
+      process.env.TARO_APP_WECHAT_TEMPLATE_TEACHER_CANCELLED ?? '',
+    ),
   },
   cache: {
     enable: true,

@@ -1,0 +1,4 @@
+export default definePageConfig({
+  navigationBarTitleText: '教师工作台',
+  enablePullDownRefresh: true,
+})

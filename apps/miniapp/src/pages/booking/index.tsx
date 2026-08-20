@@ -4,6 +4,8 @@ import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useRef, useState } from 'react'
 
 import { createAppointment } from '../../services/appointments'
+import { updateNotificationSubscription } from '../../services/notifications'
+import { getPlatformAdapter } from '../../platform'
 import { listPublicSchedules } from '../../services/schedules'
 import { loginCurrentUser } from '../../services/user'
 import { readCurrentStore } from '../../store/current-store'
@@ -92,8 +94,39 @@ export default function BookingPage() {
       if (!readUserSession()) {
         await loginCurrentUser()
       }
+      let notificationSubscriptionFailed = false
+      try {
+        const adapter = getPlatformAdapter()
+        if (adapter.name === 'weapp') {
+          const templates = [
+            [
+              MUYIMUSIC_WECHAT_TEMPLATE_STUDENT_CANCELLED,
+              'student_appointment_cancelled',
+            ],
+            [
+              MUYIMUSIC_WECHAT_TEMPLATE_NEXT_DAY_REMINDER,
+              'appointment_next_day_reminder',
+            ],
+          ].filter(([id]) => Boolean(id))
+          if (templates.length > 0) {
+            const result = await adapter.subscribeMessage(
+              templates.map(([id]) => id!),
+            )
+            await Promise.all(
+              templates.map(([id, key]) =>
+                updateNotificationSubscription('weapp', key!, result[id!]!),
+              ),
+            )
+          }
+        }
+      } catch {
+        notificationSubscriptionFailed = true
+      }
       await createAppointment(schedule.id)
-      await Taro.showToast({ title: '预约成功', icon: 'success' })
+      await Taro.showToast({
+        title: notificationSubscriptionFailed ? '预约成功，微信通知未开启' : '预约成功',
+        icon: notificationSubscriptionFailed ? 'none' : 'success',
+      })
       await loadSchedules()
     } catch (error) {
       await Taro.showToast({

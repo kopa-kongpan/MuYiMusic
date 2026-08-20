@@ -20,11 +20,16 @@ from app.schemas.schedule import (
     TeacherRead,
     TeacherUpdate,
 )
+from app.schemas.teacher_portal import TeacherBindCodeRead
 from app.services.schedule_service import (
     ScheduleConflictError,
     ScheduleResourceNotFoundError,
     ScheduleService,
     ScheduleValidationError,
+)
+from app.services.teacher_portal_service import (
+    TeacherPortalNotFoundError,
+    TeacherPortalService,
 )
 
 router = APIRouter(prefix="/stores/{store_id}", tags=["admin-schedules"])
@@ -117,6 +122,27 @@ async def update_teacher(
         ScheduleValidationError,
     ) as error:
         handle_schedule_error(error)
+
+
+@router.post(
+    "/teachers/{teacher_id}/bind-code",
+    response_model=TeacherBindCodeRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_teacher_bind_code(
+    store_id: UUID,
+    teacher_id: UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_admin: ScheduleManager,
+) -> TeacherBindCodeRead:
+    try:
+        return await TeacherPortalService(session).create_bind_code(
+            store_id=store_id,
+            teacher_id=teacher_id,
+            admin_user=current_admin,
+        )
+    except TeacherPortalNotFoundError as error:
+        raise HTTPException(status_code=404, detail="教师资源不存在") from error
 
 
 @router.get("/schedules", response_model=ScheduleListResponse)

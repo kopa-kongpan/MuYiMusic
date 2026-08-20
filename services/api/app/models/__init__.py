@@ -11,6 +11,17 @@ from app.models.appointment import (
     LessonConsumption,
 )
 from app.models.audit import AuditLog
+from app.models.notification import (
+    Notification,
+    NotificationChannel,
+    NotificationDeliveryStatus,
+    NotificationOutbox,
+    NotificationRecipientType,
+    NotificationSubscription,
+    SubscriptionStatus,
+    TeacherAccount,
+    TeacherBindCode,
+)
 from app.models.product import (
     Category,
     Product,
@@ -57,6 +68,12 @@ __all__ = [
     "Permission",
     "IdentityProvider",
     "LessonConsumption",
+    "Notification",
+    "NotificationChannel",
+    "NotificationDeliveryStatus",
+    "NotificationOutbox",
+    "NotificationRecipientType",
+    "NotificationSubscription",
     "Order",
     "OrderItem",
     "OrderStatus",
@@ -70,7 +87,10 @@ __all__ = [
     "Store",
     "StoreStatus",
     "StoreContentBlock",
+    "SubscriptionStatus",
     "Teacher",
+    "TeacherAccount",
+    "TeacherBindCode",
     "User",
     "UserStatus",
     "admin_user_stores",

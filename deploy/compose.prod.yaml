@@ -1,0 +1,117 @@
+# MuYiMusic 生产环境覆盖配置（腾讯云轻量应用服务器，全自建 Docker）
+#
+# 与 compose.yaml 叠加使用：
+#   docker compose --env-file .env -f deploy/compose.yaml -f deploy/compose.prod.yaml up -d
+#
+# 相对本地配置的差异：
+#   1. PostgreSQL / Redis 端口只绑 127.0.0.1，公网扫不到，本地经 SSH 隧道访问。
+#   2. Redis 强制密码，淘汰策略 noeviction（arq 任务队列不能被当缓存淘汰）。
+#   3. api / admin / h5 不再直接暴露端口，统一由 Caddy 走 443。
+#   4. Caddy 自动申请并续期 Let's Encrypt 证书。
+
+# 与本地配置相比，Redis 启用了密码，因此所有连接方都要改用带凭据的 URL。
+# compose.yaml 的 x-api-environment 把 REDIS_URL 写成了无密码形式，这里逐个服务覆盖。
+# 连接池同样在这里注入：容器内没有 .env，Settings 只能从环境变量读到。
+x-prod-environment: &prod-environment
+  REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
+  DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+  DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-20}
+
+services:
+  postgres:
+    ports: !override
+      - "127.0.0.1:${DOCKER_POSTGRES_PORT:-15432}:5432"
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=${POSTGRES_MAX_CONNECTIONS:-100}"
+    logging: &default-logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    ports: !override
+      - "127.0.0.1:${DOCKER_REDIS_PORT:-16379}:6379"
+    command:
+      - "redis-server"
+      - "--appendonly"
+      - "yes"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"
+      - "--maxmemory-policy"
+      - "noeviction"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging: *default-logging
+
+  migrate:
+    environment: *prod-environment
+    logging: *default-logging
+
+  bootstrap:
+    environment: *prod-environment
+    logging: *default-logging
+
+  api:
+    environment: *prod-environment
+    command:
+      - "uvicorn"
+      - "app.main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8000"
+      - "--workers"
+      - "${API_WORKERS:-2}"
+      - "--proxy-headers"
+      - "--forwarded-allow-ips"
+      - "*"
+    logging: *default-logging
+
+  worker:
+    environment: *prod-environment
+    logging: *default-logging
+
+  # 内部 API 网关：只在 Docker 网络内提供服务，不再映射到宿主机。
+  nginx:
+    ports: !override []
+    logging: *default-logging
+
+  admin:
+    ports: !override []
+    logging: *default-logging
+
+  h5:
+    ports: !override []
+    logging: *default-logging
+
+  # 唯一对公网开放的入口。80 用于 ACME 校验和跳转，443 承载全部业务流量。
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN is required}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?ADMIN_DOMAIN is required}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+    logging: *default-logging
+
+volumes:
+  caddy-data:
+  caddy-config:

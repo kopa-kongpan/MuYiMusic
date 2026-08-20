@@ -269,9 +269,7 @@ class UserService:
         )
         order.items.append(item)
         expires_at = (
-            now + timedelta(days=sku.validity_days)
-            if sku.validity_days
-            else None
+            now + timedelta(days=sku.validity_days) if sku.validity_days else None
         )
         entitlement = CourseEntitlement(
             user_id=user_id,

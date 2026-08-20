@@ -14,6 +14,7 @@ from app.models.appointment import (
     ConsumptionStatus,
     LessonConsumption,
 )
+from app.models.notification import NotificationRecipientType
 from app.models.schedule import ClassSchedule, ScheduleStatus
 from app.models.user import CourseEntitlement, EntitlementStatus, User
 from app.repositories.appointment_repository import AppointmentRepository
@@ -29,7 +30,9 @@ from app.schemas.appointment import (
     ConsumptionReverseRequest,
 )
 from app.services.entitlement_service import sync_entitlement_status
+from app.services.notification_service import NotificationService
 from app.services.store_service import can_access_store
+from app.services.teacher_portal_service import TeacherPortalService
 
 
 class AppointmentResourceNotFoundError(Exception):
@@ -111,6 +114,15 @@ class AppointmentService:
         entitlement.reserved_lessons += 1
         try:
             self.repository.add_appointment(appointment)
+            await self.session.flush()
+            NotificationService(self.session).add_appointment_notification(
+                appointment=appointment,
+                kind="appointment.created",
+                recipient_type=NotificationRecipientType.TEACHER,
+                title="有新的课程预约",
+                content=f"{locked_user.nickname}预约了{schedule.course_name}。",
+                template_key="teacher_new_appointment",
+            )
             await self.session.commit()
         except IntegrityError as error:
             await self.session.rollback()
@@ -235,6 +247,66 @@ class AppointmentService:
             total=total,
             page=page,
             page_size=page_size,
+        )
+
+    async def list_teacher_appointments(
+        self,
+        *,
+        user_id: UUID,
+        teacher_id: UUID,
+        starts_from: datetime,
+        starts_before: datetime,
+        status: AppointmentStatus | None,
+        page: int,
+        page_size: int,
+    ) -> AppointmentListResponse:
+        await TeacherPortalService(self.session).require_teacher(user_id, teacher_id)
+        self._validate_query_window(starts_from, starts_before)
+        appointments, total = await self.repository.list_teacher(
+            teacher_id=teacher_id,
+            starts_from=starts_from,
+            starts_before=starts_before,
+            status=status,
+            page=page,
+            page_size=page_size,
+        )
+        now = datetime.now(UTC)
+        return AppointmentListResponse(
+            items=[self._to_read(item, now) for item in appointments],
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def cancel_appointment_by_teacher(
+        self,
+        *,
+        user_id: UUID,
+        teacher_id: UUID,
+        appointment_id: UUID,
+        payload: AppointmentAdminCancelRequest,
+        idempotency_key: str,
+    ) -> AppointmentRead:
+        await TeacherPortalService(self.session).require_teacher(user_id, teacher_id)
+        appointment, schedule, entitlement = await self._lock_appointment_graph(
+            appointment_id
+        )
+        if schedule.teacher_id != teacher_id:
+            raise AppointmentResourceNotFoundError
+        now = datetime.now(UTC)
+        if appointment.status == AppointmentStatus.CANCELLED:
+            return self._to_read(appointment, now)
+        if appointment.status != AppointmentStatus.RESERVED:
+            raise AppointmentConflictError("当前预约状态不允许取消")
+        return await self._cancel_locked(
+            appointment=appointment,
+            schedule=schedule,
+            entitlement=entitlement,
+            cancelled_by=AppointmentCancelledBy.TEACHER,
+            reason=payload.reason,
+            idempotency_key=idempotency_key,
+            admin_user=None,
+            now=now,
         )
 
     async def consume_appointment(
@@ -453,6 +525,31 @@ class AppointmentService:
                     resource_id=str(appointment.id),
                     details={"reason": reason or ""},
                 )
+            recipient_type = (
+                NotificationRecipientType.TEACHER
+                if cancelled_by == AppointmentCancelledBy.USER
+                else NotificationRecipientType.USER
+            )
+            NotificationService(self.session).add_appointment_notification(
+                appointment=appointment,
+                kind=(
+                    "appointment.cancelled_by_user"
+                    if cancelled_by == AppointmentCancelledBy.USER
+                    else f"appointment.cancelled_by_{cancelled_by.value}"
+                ),
+                recipient_type=recipient_type,
+                title=(
+                    "课程预约已取消"
+                    if recipient_type == NotificationRecipientType.USER
+                    else "学员取消了预约"
+                ),
+                content=f"{appointment.schedule.course_name}的预约已取消。",
+                template_key=(
+                    "teacher_appointment_cancelled"
+                    if recipient_type == NotificationRecipientType.TEACHER
+                    else "student_appointment_cancelled"
+                ),
+            )
             await self.session.commit()
         except IntegrityError as error:
             await self.session.rollback()

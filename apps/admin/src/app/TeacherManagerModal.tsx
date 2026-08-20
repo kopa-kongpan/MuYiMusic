@@ -1,6 +1,6 @@
 import type { TeacherRead } from '@muyimusic/api-client'
 import { App as AntdApp, Button, Empty, Form, Input, InputNumber, Modal, Switch } from 'antd'
-import { Pencil, Plus, X } from 'lucide-react'
+import { KeyRound, Pencil, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { apiClient } from './api'
@@ -101,6 +101,29 @@ export function TeacherManagerModal({
     }
   }
 
+  async function createBindCode(teacher: TeacherRead) {
+    setUpdatingId(teacher.id)
+    try {
+      const result = await apiClient.createTeacherBindCode(storeId, teacher.id)
+      Modal.info({
+        title: `${teacher.name} · 教师绑定码`,
+        content: (
+          <div className="teacher-bind-code">
+            <strong>{result.code}</strong>
+            <span>
+              请教师在小程序“教师工作台”中输入；15 分钟内有效，使用一次后失效。
+            </span>
+          </div>
+        ),
+        okText: '知道了',
+      })
+    } catch (error) {
+      void message.error(error instanceof Error ? error.message : '绑定码生成失败')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   return (
     <Modal
       open={open}
@@ -175,6 +198,14 @@ export function TeacherManagerModal({
                 loading={updatingId === teacher.id}
                 aria-label={`${teacher.is_active ? '停用' : '启用'}${teacher.name}`}
                 onChange={(checked) => void toggleTeacher(teacher, checked)}
+              />
+              <Button
+                type="text"
+                icon={<KeyRound size={16} aria-hidden="true" />}
+                aria-label={`生成${teacher.name}的绑定码`}
+                disabled={!teacher.is_active}
+                loading={updatingId === teacher.id}
+                onClick={() => void createBindCode(teacher)}
               />
               <Button
                 type="text"

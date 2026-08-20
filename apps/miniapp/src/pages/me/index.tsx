@@ -3,6 +3,7 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
 import { loginCurrentUser } from '../../services/user'
+import { listNotifications } from '../../services/notifications'
 import { consumeLoginReturn } from '../../store/login-return'
 import { readCurrentStore } from '../../store/current-store'
 import {
@@ -17,15 +18,26 @@ const entries = [
   { mark: '课', title: '我的课程', url: '/pages/my-courses/index' },
   { mark: '表', title: '我的课表', url: '/pages/schedule/index' },
   { mark: '约', title: '我的预约', url: '/pages/my-bookings/index' },
+  { mark: '信', title: '我的消息', url: '/pages/notifications/index' },
+  { mark: '师', title: '教师工作台', url: '/pages/teacher-portal/index' },
 ]
 
 export default function MePage() {
   const [session, setSession] = useState<UserSession | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const store = readCurrentStore()
 
   useDidShow(() => {
-    setSession(readUserSession())
+    const current = readUserSession()
+    setSession(current)
+    if (current) {
+      void listNotifications()
+        .then((result) => setUnreadCount(result.unread_count))
+        .catch(() => setUnreadCount(0))
+    } else {
+      setUnreadCount(0)
+    }
   })
 
   async function login() {
@@ -103,6 +115,11 @@ export default function MePage() {
               >
                 <View className="me-entry-mark">{entry.mark}</View>
                 <Text>{entry.title}</Text>
+                {entry.url === '/pages/notifications/index' && unreadCount > 0 ? (
+                  <Text className="me-entry-badge">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                ) : null}
               </View>
             ))}
           </View>

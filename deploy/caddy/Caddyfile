@@ -1,0 +1,59 @@
+# MuYiMusic 生产入口。Caddy 自动申请并续期 Let's Encrypt 证书。
+#
+# 域名通过环境变量注入，见 deploy/compose.prod.yaml。
+# 需要额外发布 H5 站点时，复制下面 ADMIN 那一段，把域名和上游改成 h5:80。
+
+{
+	email {$ACME_EMAIL}
+	# 服务器在容器内，真实来源 IP 由 Caddy 透传给上游。
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+# 小程序和 H5 调用的业务 API。
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	# 图片和视频由客户端凭预签名 URL 直传对象存储，不经过 API，
+	# 所以这里只需容纳普通 JSON 请求，收紧上限即可。
+	request_body {
+		max_size 2MB
+	}
+
+	reverse_proxy nginx:80
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	log {
+		output file /data/log/api.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}
+
+# 管理后台。公网开放，仅登录保护。
+{$ADMIN_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy admin:80
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+
+	log {
+		output file /data/log/admin.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}

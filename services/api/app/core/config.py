@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     postgres_db: str | None = None
     docker_postgres_port: int = 15432
     docker_redis_port: int = 16379
+    database_pool_size: int = 10
+    database_max_overflow: int = 20
     cors_origins: str = "http://localhost:5173"
     jwt_secret: str | None = None
     jwt_access_token_minutes: int = 480
@@ -30,6 +32,11 @@ class Settings(BaseSettings):
     admin_initial_password: str | None = None
     wechat_app_id: str | None = None
     wechat_app_secret: str | None = None
+    wechat_template_teacher_new_appointment: str | None = None
+    wechat_template_teacher_appointment_cancelled: str | None = None
+    wechat_template_student_appointment_cancelled: str | None = None
+    wechat_template_appointment_next_day_reminder: str | None = None
+    wechat_template_field_map_json: str = "{}"
     douyin_app_id: str | None = None
     douyin_app_secret: str | None = None
     sentry_dsn: str | None = None
