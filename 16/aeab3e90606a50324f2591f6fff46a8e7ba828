@@ -1,0 +1,33 @@
+apps/admin/src/app/AdminAccountsPage.tsx
+  s_f702a9f364dc99::t_87645192c91114 21,45-109,130-131,170-175,227-230,323,531-545,551-554,558-591
+apps/admin/src/app/AppointmentsPage.tsx
+  s_f702a9f364dc99::t_a41906ff3b66ca 28-29,55-59,64-66,87,106-107,115,322-327
+apps/admin/src/app/DateRangeFilter.test.ts
+  s_f702a9f364dc99::t_8abb6b819d9581 1-47
+apps/admin/src/app/DateRangeFilter.tsx
+  s_f702a9f364dc99::t_0c7718e2cb9efe 1-96
+apps/admin/src/app/SchedulesPage.tsx
+  s_f702a9f364dc99::t_3d3cecbb1c946b 29-34,58-65,79,112-113,121,134-140,178,181-184,366-371,478
+apps/admin/src/app/dateRange.ts
+  s_f702a9f364dc99::t_915ba391e56fe0 1-71
+apps/admin/src/styles.scss
+  s_f702a9f364dc99::t_b420f2efca9770 435-454,459,1413,1419-1429
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "16aeab3e90606a50324f2591f6fff46a8e7ba828",
+  "prompts": {},
+  "sessions": {
+    "s_f702a9f364dc99": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a01c95-b7c0-7751-878a-44c4f901a588",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
