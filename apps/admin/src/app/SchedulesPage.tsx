@@ -7,7 +7,6 @@ import {
   Alert,
   App as AntdApp,
   Button,
-  Input,
   Popconfirm,
   Select,
   Table,
@@ -27,6 +26,12 @@ import {
 import { useState } from 'react'
 
 import { apiClient } from './api'
+import { DateRangeFilter } from './DateRangeFilter'
+import {
+  dateRangeWindow,
+  formatLocalDate,
+  presetDateRange,
+} from './dateRange'
 import { ScheduleFormModal } from './ScheduleFormModal'
 import { TeacherManagerModal } from './TeacherManagerModal'
 
@@ -42,27 +47,19 @@ const statusColors: Record<ScheduleStatus, string> = {
   cancelled: 'red',
 }
 
-function today(): string {
-  const current = new Date()
-  const local = new Date(current.getTime() - current.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 10)
-}
-
-function dayWindow(date: string): { startsFrom: string; startsBefore: string } {
-  const startsFrom = new Date(`${date}T00:00:00`)
-  const startsBefore = new Date(startsFrom)
-  startsBefore.setDate(startsBefore.getDate() + 1)
-  return {
-    startsFrom: startsFrom.toISOString(),
-    startsBefore: startsBefore.toISOString(),
-  }
-}
-
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat('zh-CN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
+  }).format(new Date(value))
+}
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
   }).format(new Date(value))
 }
 
@@ -79,7 +76,7 @@ function formatUpdatedAt(value: string): string {
 export function SchedulesPage() {
   const { message } = AntdApp.useApp()
   const [storeId, setStoreId] = useState<string>()
-  const [selectedDate, setSelectedDate] = useState(today)
+  const [dateRange, setDateRange] = useState(() => presetDateRange('this-week'))
   const [teacherId, setTeacherId] = useState<string>()
   const [status, setStatus] = useState<ScheduleStatus>()
   const [page, setPage] = useState(1)
@@ -112,7 +109,8 @@ export function SchedulesPage() {
     queryKey: [
       'admin-schedules',
       activeStoreId,
-      selectedDate,
+      dateRange.startDate,
+      dateRange.endDate,
       teacherId,
       status,
       page,
@@ -120,7 +118,7 @@ export function SchedulesPage() {
     ],
     queryFn: () =>
       apiClient.listAdminSchedules(activeStoreId!, {
-        ...dayWindow(selectedDate),
+        ...dateRangeWindow(dateRange),
         teacherId,
         status,
         page,
@@ -133,6 +131,13 @@ export function SchedulesPage() {
     storesQuery.data?.items.find((store) => store.id === activeStoreId) ?? null
   const teachers = teachersQuery.data?.items ?? []
   const products = productsQuery.data?.items ?? []
+  const currentDate = formatLocalDate(new Date())
+  const initialScheduleDate =
+    dateRange.endDate < currentDate
+      ? currentDate
+      : dateRange.startDate > currentDate
+        ? dateRange.startDate
+        : currentDate
 
   async function refreshSchedules() {
     await schedulesQuery.refetch()
@@ -170,11 +175,13 @@ export function SchedulesPage() {
     {
       title: '时间',
       key: 'time',
-      width: 150,
+      width: 170,
       render: (_, schedule) => (
         <div className="schedule-time-cell">
-          <strong>{formatTime(schedule.starts_at)}</strong>
-          <span>至 {formatTime(schedule.ends_at)}</span>
+          <strong>{formatDate(schedule.starts_at)}</strong>
+          <span>
+            {formatTime(schedule.starts_at)} - {formatTime(schedule.ends_at)}
+          </span>
         </div>
       ),
     },
@@ -356,16 +363,12 @@ export function SchedulesPage() {
             setPage(1)
           }}
         />
-        <Input
-          className="schedule-date-input"
-          type="date"
-          value={selectedDate}
-          aria-label="排课日期"
-          onChange={(event) => {
-            if (event.target.value) {
-              setSelectedDate(event.target.value)
-              setPage(1)
-            }
+        <DateRangeFilter
+          value={dateRange}
+          labelPrefix="排课"
+          onChange={(value) => {
+            setDateRange(value)
+            setPage(1)
           }}
         />
         <Select<string>
@@ -472,7 +475,7 @@ export function SchedulesPage() {
           <ScheduleFormModal
             open={isFormOpen}
             storeId={activeStoreId}
-            selectedDate={selectedDate}
+            selectedDate={initialScheduleDate}
             teachers={teachers}
             products={products}
             schedule={editingSchedule}

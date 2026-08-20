@@ -25,6 +25,8 @@ import {
 import { useState } from 'react'
 
 import { apiClient } from './api'
+import { DateRangeFilter } from './DateRangeFilter'
+import { dateRangeWindow, presetDateRange } from './dateRange'
 import { getAdminSession } from './session'
 
 const statusLabels: Record<AppointmentStatus, string> = {
@@ -49,29 +51,19 @@ interface AppointmentAction {
   idempotencyKey: string
 }
 
-function today(): string {
-  const current = new Date()
-  const local = new Date(current.getTime() - current.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 10)
-}
-
-function dayWindow(date: string): { startsFrom: string; startsBefore: string } {
-  const startsFrom = new Date(`${date}T00:00:00`)
-  const startsBefore = new Date(startsFrom)
-  startsBefore.setDate(startsBefore.getDate() + 1)
-  return {
-    startsFrom: startsFrom.toISOString(),
-    startsBefore: startsBefore.toISOString(),
-  }
-}
-
 function formatTimeWindow(startsAt: string, endsAt: string): string {
-  const formatter = new Intl.DateTimeFormat('zh-CN', {
+  const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+  })
+  const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   })
-  return `${formatter.format(new Date(startsAt))} - ${formatter.format(new Date(endsAt))}`
+  return `${dateFormatter.format(new Date(startsAt))} ${timeFormatter.format(
+    new Date(startsAt),
+  )} - ${timeFormatter.format(new Date(endsAt))}`
 }
 
 function actionLabel(kind: ActionKind): string {
@@ -92,7 +84,7 @@ export function AppointmentsPage() {
   const canSettle = permissions.includes('consumptions:manage')
   const canReverse = permissions.includes('consumptions:reverse')
   const [storeId, setStoreId] = useState<string>()
-  const [selectedDate, setSelectedDate] = useState(today)
+  const [dateRange, setDateRange] = useState(() => presetDateRange('this-week'))
   const [status, setStatus] = useState<AppointmentStatus>()
   const [keyword, setKeyword] = useState('')
   const [submittedKeyword, setSubmittedKeyword] = useState('')
@@ -111,7 +103,8 @@ export function AppointmentsPage() {
     queryKey: [
       'admin-appointments',
       activeStoreId,
-      selectedDate,
+      dateRange.startDate,
+      dateRange.endDate,
       status,
       submittedKeyword,
       page,
@@ -119,7 +112,7 @@ export function AppointmentsPage() {
     ],
     queryFn: () =>
       apiClient.listAdminAppointments(activeStoreId!, {
-        ...dayWindow(selectedDate),
+        ...dateRangeWindow(dateRange),
         status,
         keyword: submittedKeyword || undefined,
         page,
@@ -326,16 +319,12 @@ export function AppointmentsPage() {
             setPage(1)
           }}
         />
-        <Input
-          className="schedule-date-input"
-          type="date"
-          value={selectedDate}
-          aria-label="预约日期"
-          onChange={(event) => {
-            if (event.target.value) {
-              setSelectedDate(event.target.value)
-              setPage(1)
-            }
+        <DateRangeFilter
+          value={dateRange}
+          labelPrefix="预约"
+          onChange={(value) => {
+            setDateRange(value)
+            setPage(1)
           }}
         />
         <Select<AppointmentStatus>

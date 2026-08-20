@@ -18,6 +18,7 @@ import {
 } from 'antd'
 import type { TableProps } from 'antd'
 import {
+  Copy,
   KeyRound,
   Pencil,
   Plus,
@@ -41,6 +42,71 @@ interface PasswordFormValues {
   password: string
 }
 
+interface IssuedCredential {
+  username: string
+  password: string
+}
+
+const PASSWORD_CHARACTER_GROUPS = [
+  'ABCDEFGHJKLMNPQRSTUVWXYZ',
+  'abcdefghijkmnopqrstuvwxyz',
+  '23456789',
+  '!@#$%^&*',
+] as const
+
+function randomIndex(max: number): number {
+  const randomValue = new Uint32Array(1)
+  const limit = Math.floor(0x1_0000_0000 / max) * max
+  let value = 0
+  do {
+    crypto.getRandomValues(randomValue)
+    value = randomValue[0] ?? 0
+  } while (value >= limit)
+  return value % max
+}
+
+function generateTemporaryPassword(length = 16): string {
+  const allCharacters = PASSWORD_CHARACTER_GROUPS.join('')
+  const password = PASSWORD_CHARACTER_GROUPS.map(
+    (characters) => characters[randomIndex(characters.length)],
+  )
+
+  while (password.length < length) {
+    password.push(allCharacters[randomIndex(allCharacters.length)])
+  }
+  for (let index = password.length - 1; index > 0; index -= 1) {
+    const targetIndex = randomIndex(index + 1)
+    ;[password[index], password[targetIndex]] = [
+      password[targetIndex],
+      password[index],
+    ]
+  }
+  return password.join('')
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return
+    } catch {
+      // HTTP test environments may not grant Clipboard API access.
+    }
+  }
+
+  const textArea = document.createElement('textarea')
+  textArea.value = text
+  textArea.style.position = 'fixed'
+  textArea.style.opacity = '0'
+  document.body.append(textArea)
+  textArea.select()
+  const copied = document.execCommand('copy')
+  textArea.remove()
+  if (!copied) {
+    throw new Error('复制失败')
+  }
+}
+
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat('zh-CN', {
     dateStyle: 'medium',
@@ -61,6 +127,8 @@ export function AdminAccountsPage() {
   )
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [issuedCredential, setIssuedCredential] =
+    useState<IssuedCredential | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [accountForm] = Form.useForm<AccountFormValues>()
   const [passwordForm] = Form.useForm<PasswordFormValues>()
@@ -97,6 +165,12 @@ export function AdminAccountsPage() {
   function openEdit(account: AdminUserRead) {
     setEditingAccount(account)
     setIsAccountModalOpen(true)
+  }
+
+  function openResetPassword(account: AdminUserRead) {
+    setPasswordAccount(account)
+    passwordForm.setFieldsValue({ password: generateTemporaryPassword() })
+    setIsPasswordModalOpen(true)
   }
 
   async function submitAccount(values: AccountFormValues) {
@@ -150,6 +224,10 @@ export function AdminAccountsPage() {
     setUpdatingId(passwordAccount.id)
     try {
       await apiClient.resetAdminUserPassword(passwordAccount.id, values)
+      setIssuedCredential({
+        username: passwordAccount.username,
+        password: values.password,
+      })
       void message.success('登录密码已重置')
       setIsPasswordModalOpen(false)
       passwordForm.resetFields()
@@ -242,10 +320,7 @@ export function AdminAccountsPage() {
               type="text"
               icon={<KeyRound size={17} aria-hidden="true" />}
               aria-label={`重置${account.username}密码`}
-              onClick={() => {
-                setPasswordAccount(account)
-                setIsPasswordModalOpen(true)
-              }}
+              onClick={() => openResetPassword(account)}
             />
           </Tooltip>
           <Tooltip title={account.is_active ? '停用账号' : '启用账号'}>
@@ -453,14 +528,66 @@ export function AdminAccountsPage() {
           <Form.Item
             name="password"
             label="新密码"
+            extra={
+              <Button
+                type="link"
+                size="small"
+                icon={<RefreshCw size={14} aria-hidden="true" />}
+                onClick={() =>
+                  passwordForm.setFieldValue(
+                    'password',
+                    generateTemporaryPassword(),
+                  )
+                }
+              >
+                重新生成
+              </Button>
+            }
             rules={[
               { required: true, message: '请输入新密码' },
               { min: 12, message: '密码至少 12 位' },
             ]}
           >
-            <Input.Password placeholder="至少 12 位字符" />
+            <Input.Password
+              placeholder="至少 12 位字符"
+              autoComplete="new-password"
+            />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={`${issuedCredential?.username ?? ''} 的新密码`}
+        open={issuedCredential !== null}
+        okText="关闭"
+        cancelButtonProps={{ style: { display: 'none' } }}
+        destroyOnHidden
+        onOk={() => setIssuedCredential(null)}
+        onCancel={() => setIssuedCredential(null)}
+      >
+        <Input
+          value={issuedCredential?.password ?? ''}
+          readOnly
+          addonAfter={
+            <Button
+              type="text"
+              size="small"
+              icon={<Copy size={15} aria-hidden="true" />}
+              aria-label="复制新密码"
+              onClick={async () => {
+                if (!issuedCredential) {
+                  return
+                }
+                try {
+                  await copyText(issuedCredential.password)
+                  void message.success('密码已复制')
+                } catch {
+                  void message.error('密码复制失败')
+                }
+              }}
+            />
+          }
+        />
       </Modal>
     </section>
   )

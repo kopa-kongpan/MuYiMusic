@@ -432,12 +432,31 @@ select {
   flex-wrap: wrap;
 }
 
-.schedule-date-input {
-  width: 170px;
+.date-range-filter {
+  display: flex;
+  flex: 1 1 560px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.date-range-inputs {
+  display: grid;
+  flex: 1 1 300px;
+  grid-template-columns: minmax(130px, 1fr) auto minmax(130px, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.date-range-inputs > span {
+  color: #75817b;
+  font-size: 12px;
 }
 
 .appointment-toolbar {
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .appointment-keyword {
@@ -1391,10 +1410,21 @@ select {
     gap: 0;
   }
 
-  .schedule-date-input,
+  .date-range-filter,
   .schedule-toolbar .status-filter {
     flex: 1 1 140px;
     width: auto;
+  }
+
+  .date-range-filter {
+    align-items: stretch;
+    flex-basis: 100%;
+    flex-direction: column;
+  }
+
+  .date-range-inputs {
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .teacher-form-grid {
