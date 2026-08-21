@@ -607,6 +607,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/users/{user_id}/course-entitlements/{entitlement_id}/lessons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Entitlement Lessons */
+        patch: operations["update_entitlement_lessons_api_v1_admin_stores__store_id__users__user_id__course_entitlements__entitlement_id__lessons_patch"];
+        trace?: never;
+    };
     "/api/v1/app/auth/login": {
         parameters: {
             query?: never;
@@ -1610,6 +1627,16 @@ export interface components {
             quantity: number;
             /** Idempotency Key */
             idempotency_key: string;
+        };
+        /**
+         * EntitlementLessonUpdateRequest
+         * @description 管理员修正课程权益的剩余课时。
+         */
+        EntitlementLessonUpdateRequest: {
+            /** Remaining Lessons */
+            remaining_lessons: number;
+            /** Reason */
+            reason: string;
         };
         /**
          * EntitlementStatus
@@ -4327,6 +4354,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_entitlement_lessons_api_v1_admin_stores__store_id__users__user_id__course_entitlements__entitlement_id__lessons_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                user_id: string;
+                entitlement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntitlementLessonUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseEntitlementRead"];
                 };
             };
             /** @description Validation Error */

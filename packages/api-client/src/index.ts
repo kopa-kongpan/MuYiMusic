@@ -41,6 +41,10 @@ export type CourseEntitlementListResponse =
   components['schemas']['CourseEntitlementListResponse']
 export type CourseEntitlementRead =
   components['schemas']['CourseEntitlementRead']
+export type EntitlementGrantRequest =
+  components['schemas']['EntitlementGrantRequest']
+export type EntitlementLessonUpdateRequest =
+  components['schemas']['EntitlementLessonUpdateRequest']
 export type EntitlementStatus = components['schemas']['EntitlementStatus']
 export type EntitlementVideoChapterRead =
   components['schemas']['EntitlementVideoChapterRead']
@@ -726,6 +730,33 @@ export function createApiClient(options: ApiClientOptions = {}) {
             page_size: query.pageSize,
           },
         ),
+      )
+    },
+    grantAdminUserEntitlement(
+      storeId: string,
+      userId: string,
+      payload: EntitlementGrantRequest,
+    ) {
+      return request<OrderRead>(
+        `/api/v1/admin/stores/${storeId}/users/${userId}/entitlements`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+      )
+    },
+    updateAdminUserEntitlementLessons(
+      storeId: string,
+      userId: string,
+      entitlementId: string,
+      payload: EntitlementLessonUpdateRequest,
+    ) {
+      return request<CourseEntitlementRead>(
+        `/api/v1/admin/stores/${storeId}/users/${userId}/course-entitlements/${entitlementId}/lessons`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        },
       )
     },
     getAdminProduct(storeId: string, productId: string) {

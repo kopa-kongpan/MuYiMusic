@@ -132,6 +132,27 @@ class UserRepository:
         rows = list((await self.session.execute(statement)).tuples().all())
         return rows, total
 
+    async def get_entitlement_for_update(
+        self,
+        *,
+        entitlement_id: UUID,
+        user_id: UUID,
+        store_id: UUID,
+    ) -> CourseEntitlement | None:
+        statement = (
+            select(CourseEntitlement)
+            .where(
+                CourseEntitlement.id == entitlement_id,
+                CourseEntitlement.user_id == user_id,
+                CourseEntitlement.store_id == store_id,
+            )
+            .options(
+                selectinload(CourseEntitlement.product).selectinload(Product.videos)
+            )
+            .with_for_update()
+        )
+        return (await self.session.scalars(statement)).one_or_none()
+
     async def list_users_for_store(
         self,
         *,

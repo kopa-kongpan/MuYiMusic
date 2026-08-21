@@ -12,18 +12,28 @@ from app.models.user import EntitlementStatus, OrderStatus
 from app.providers.miniapp_identity import get_miniapp_identity_provider
 from app.schemas.user import (
     CourseEntitlementListResponse,
+    CourseEntitlementRead,
     EntitlementGrantRequest,
+    EntitlementLessonUpdateRequest,
     OrderListResponse,
     OrderRead,
     UserAdminListResponse,
 )
-from app.services.user_service import UserResourceNotFoundError, UserService
+from app.services.user_service import (
+    InvalidEntitlementAdjustmentError,
+    UserResourceNotFoundError,
+    UserService,
+)
 
 router = APIRouter(prefix="/stores/{store_id}/users", tags=["admin-users"])
 UserReader = Annotated[AdminUser, Depends(require_permission("users:read"))]
 GrantManager = Annotated[
     AdminUser,
     Depends(require_permission("products:manage")),
+]
+LessonManager = Annotated[
+    AdminUser,
+    Depends(require_permission("consumptions:manage")),
 ]
 
 
@@ -129,3 +139,29 @@ async def grant_entitlement(
         )
     except UserResourceNotFoundError as error:
         raise HTTPException(status_code=404, detail="用户或商品不存在") from error
+
+
+@router.patch(
+    "/{user_id}/course-entitlements/{entitlement_id}/lessons",
+    response_model=CourseEntitlementRead,
+)
+async def update_entitlement_lessons(
+    store_id: UUID,
+    user_id: UUID,
+    entitlement_id: UUID,
+    payload: EntitlementLessonUpdateRequest,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_admin: LessonManager,
+) -> CourseEntitlementRead:
+    try:
+        return await service(session).update_entitlement_lessons(
+            store_id=store_id,
+            user_id=user_id,
+            entitlement_id=entitlement_id,
+            payload=payload,
+            admin_user=current_admin,
+        )
+    except UserResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="课程权益不存在") from error
+    except InvalidEntitlementAdjustmentError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error

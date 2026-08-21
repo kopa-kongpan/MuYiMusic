@@ -125,6 +125,13 @@ class EntitlementGrantRequest(BaseModel):
     idempotency_key: str = Field(min_length=8, max_length=128)
 
 
+class EntitlementLessonUpdateRequest(BaseModel):
+    """管理员修正课程权益的剩余课时。"""
+
+    remaining_lessons: int = Field(ge=0, le=9999)
+    reason: str = Field(min_length=1, max_length=500)
+
+
 class UserAdminRead(BaseModel):
     id: UUID
     nickname: str

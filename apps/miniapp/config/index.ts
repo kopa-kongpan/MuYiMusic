@@ -15,7 +15,7 @@ const config: UserConfigExport = {
   compiler: 'webpack5',
   defineConstants: {
     MUYIMUSIC_API_BASE_URL: JSON.stringify(
-      process.env.TARO_APP_API_BASE_URL ?? 'http://127.0.0.1:8001',
+      process.env.TARO_APP_API_BASE_URL ?? 'https://muyimusic.net',
     ),
     MUYIMUSIC_WECHAT_TEMPLATE_STUDENT_CANCELLED: JSON.stringify(
       process.env.TARO_APP_WECHAT_TEMPLATE_STUDENT_CANCELLED ?? '',

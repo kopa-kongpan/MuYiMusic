@@ -15,7 +15,15 @@ from app.core.database import get_engine, get_session
 from app.core.security import hash_password
 from app.main import app
 from app.models.admin import AdminUser, Permission, Role
-from app.models.product import Category, Product, ProductImage, ProductSku, ProductStatus, ProductType, ProductVideo
+from app.models.audit import AuditLog
+from app.models.product import (
+    Category,
+    Product,
+    ProductSku,
+    ProductStatus,
+    ProductType,
+    ProductVideo,
+)
 from app.models.store import Store
 from app.models.user import (
     CourseEntitlement,
@@ -386,6 +394,126 @@ async def test_h5_local_identity_is_rejected_outside_local_environment() -> None
         )
 
 
+async def test_admin_can_adjust_course_entitlement_lessons_with_audit() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        try:
+            permission = await session.scalar(
+                select(Permission).where(Permission.code == "consumptions:manage")
+            )
+            assert permission is not None
+            store = make_store("课时调整测试门店")
+            role = Role(code=f"lesson-manager-{uuid4()}", name="课时管理")
+            role.permissions.append(permission)
+            manager = AdminUser(
+                username=f"lesson-manager-{uuid4().hex}",
+                password_hash=hash_password("test-password-2026"),
+            )
+            manager.roles.append(role)
+            manager.stores.append(store)
+            session.add(manager)
+            await session.flush()
+            user = User(nickname="课时调整学员")
+            now = datetime.now(UTC)
+            course_entitlement = CourseEntitlement(
+                user=user,
+                store_id=store.id,
+                course_name="钢琴进阶课",
+                product_type=ProductType.COURSE,
+                total_lessons=10,
+                remaining_lessons=7,
+                reserved_lessons=2,
+                valid_from=now,
+                expires_at=now + timedelta(days=180),
+                status=EntitlementStatus.ACTIVE,
+            )
+            video_entitlement = CourseEntitlement(
+                user=user,
+                store_id=store.id,
+                course_name="乐理视频课",
+                product_type=ProductType.VIDEO,
+                total_lessons=0,
+                remaining_lessons=0,
+                reserved_lessons=0,
+                valid_from=now,
+                expires_at=now + timedelta(days=180),
+                status=EntitlementStatus.ACTIVE,
+            )
+            session.add_all((course_entitlement, video_entitlement))
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                token = await login_admin(
+                    client,
+                    manager.username,
+                    "test-password-2026",
+                )
+                headers = {"Authorization": f"Bearer {token}"}
+                base_url = (
+                    f"/api/v1/admin/stores/{store.id}/users/{user.id}/"
+                    "course-entitlements"
+                )
+                adjusted = await client.patch(
+                    f"{base_url}/{course_entitlement.id}/lessons",
+                    headers=headers,
+                    json={
+                        "remaining_lessons": 9,
+                        "reason": "补赠两节课",
+                    },
+                )
+                assert adjusted.status_code == 200
+                payload = adjusted.json()
+                assert payload["remaining_lessons"] == 9
+                assert payload["total_lessons"] == 12
+                assert payload["reserved_lessons"] == 2
+                assert payload["status"] == "active"
+
+                audit_log = await session.scalar(
+                    select(AuditLog).where(
+                        AuditLog.action == "entitlement.lessons_adjust",
+                        AuditLog.resource_id == str(course_entitlement.id),
+                    )
+                )
+                assert audit_log is not None
+                assert audit_log.details["previous_remaining_lessons"] == 7
+                assert audit_log.details["new_remaining_lessons"] == 9
+                assert audit_log.details["reason"] == "补赠两节课"
+
+                below_reserved = await client.patch(
+                    f"{base_url}/{course_entitlement.id}/lessons",
+                    headers=headers,
+                    json={"remaining_lessons": 1, "reason": "错误修正"},
+                )
+                assert below_reserved.status_code == 409
+                assert "已预约锁定" in below_reserved.json()["message"]
+
+                video_adjustment = await client.patch(
+                    f"{base_url}/{video_entitlement.id}/lessons",
+                    headers=headers,
+                    json={"remaining_lessons": 1, "reason": "错误修正"},
+                )
+                assert video_adjustment.status_code == 409
+                assert "视频课程" in video_adjustment.json()["message"]
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()
+
+
 async def test_grant_video_course_entitlement_and_watch_chapters() -> None:
     async with get_engine().connect() as connection:
         transaction = await connection.begin()
@@ -430,9 +558,7 @@ async def test_grant_video_course_entitlement_and_watch_chapters() -> None:
                 name="钢琴教学视频课",
                 summary="全套钢琴教学",
                 details="从零开始学钢琴",
-                cover_object_key=(
-                    f"muyimusic/stores/{store.id}/products/cover.jpg"
-                ),
+                cover_object_key=(f"muyimusic/stores/{store.id}/products/cover.jpg"),
                 product_type=ProductType.VIDEO,
                 status=ProductStatus.PUBLISHED,
                 published_at=datetime.now(UTC),

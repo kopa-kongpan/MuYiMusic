@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings
 from app.core.security import create_access_token
 from app.models.admin import AdminUser
-from app.models.product import ProductStatus
+from app.models.product import ProductStatus, ProductType
 from app.models.user import (
     CourseEntitlement,
     EntitlementStatus,
@@ -21,6 +21,7 @@ from app.models.user import (
 )
 from app.providers.miniapp_identity import MiniAppIdentityProvider
 from app.providers.object_storage import ObjectStorageProvider
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.store_repository import StoreRepository
 from app.repositories.user_repository import UserRepository
@@ -28,6 +29,7 @@ from app.schemas.user import (
     CourseEntitlementListResponse,
     CourseEntitlementRead,
     EntitlementGrantRequest,
+    EntitlementLessonUpdateRequest,
     EntitlementVideoChapterRead,
     OrderItemRead,
     OrderListResponse,
@@ -39,6 +41,7 @@ from app.schemas.user import (
     UserProfileUpdate,
     UserTokenResponse,
 )
+from app.services.entitlement_service import sync_entitlement_status
 from app.services.store_service import can_access_store
 
 
@@ -47,6 +50,10 @@ class UserDisabledError(Exception):
 
 
 class UserResourceNotFoundError(Exception):
+    pass
+
+
+class InvalidEntitlementAdjustmentError(Exception):
     pass
 
 
@@ -81,6 +88,7 @@ class UserService:
         self.identity_provider = identity_provider
         self.storage = storage
         self.repository = UserRepository(session)
+        self.audit_repository = AuditRepository(session)
         self.store_repository = StoreRepository(session)
         self.product_repository = ProductRepository(session)
 
@@ -303,6 +311,58 @@ class UserService:
         store = await self.store_repository.get(store_id)
         store_name = store.name if store is not None else ""
         return self._to_order_read(order, store_name)
+
+    async def update_entitlement_lessons(
+        self,
+        *,
+        store_id: UUID,
+        user_id: UUID,
+        entitlement_id: UUID,
+        payload: EntitlementLessonUpdateRequest,
+        admin_user: AdminUser,
+    ) -> CourseEntitlementRead:
+        await self._require_store_access(store_id, admin_user)
+        entitlement = await self.repository.get_entitlement_for_update(
+            entitlement_id=entitlement_id,
+            user_id=user_id,
+            store_id=store_id,
+        )
+        if entitlement is None:
+            raise UserResourceNotFoundError
+        if entitlement.product_type != ProductType.COURSE:
+            raise InvalidEntitlementAdjustmentError("视频课程不支持调整课时")
+        if payload.remaining_lessons < entitlement.reserved_lessons:
+            raise InvalidEntitlementAdjustmentError(
+                f"剩余课时不能少于已预约锁定的 {entitlement.reserved_lessons} 课时"
+            )
+
+        previous_total = entitlement.total_lessons
+        previous_remaining = entitlement.remaining_lessons
+        consumed_lessons = previous_total - previous_remaining
+        entitlement.remaining_lessons = payload.remaining_lessons
+        entitlement.total_lessons = consumed_lessons + payload.remaining_lessons
+        sync_entitlement_status(entitlement, datetime.now(UTC))
+        self.audit_repository.add(
+            admin_user_id=admin_user.id,
+            action="entitlement.lessons_adjust",
+            resource_type="course_entitlement",
+            resource_id=str(entitlement.id),
+            details={
+                "user_id": str(user_id),
+                "store_id": str(store_id),
+                "previous_total_lessons": previous_total,
+                "previous_remaining_lessons": previous_remaining,
+                "new_total_lessons": entitlement.total_lessons,
+                "new_remaining_lessons": entitlement.remaining_lessons,
+                "reserved_lessons": entitlement.reserved_lessons,
+                "reason": payload.reason,
+            },
+        )
+        await self.session.commit()
+        store = await self.store_repository.get(store_id)
+        if store is None:
+            raise UserResourceNotFoundError
+        return self._to_entitlement_read(entitlement, store.name)
 
     @staticmethod
     def _order_no(now: datetime) -> str:
