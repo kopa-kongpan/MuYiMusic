@@ -1,0 +1,43 @@
+.env.example
+  s_f702a9f364dc99::t_dc5057ebbd226e 27-29
+apps/admin/src/app/UsersPage.tsx
+  s_f702a9f364dc99::t_c168fbbdfcc87e 6,11-25,28,31,39-49,98-100,109-119,168-180,193-273,341,343-362,423-431,450-470,483,610,618,634-758
+apps/miniapp/config/index.ts
+  s_f702a9f364dc99::t_14815779b8051e 18
+docs/第一版门店闭环说明.md
+  s_f702a9f364dc99::t_e0a6b56e77c154 99,101
+docs/腾讯云生产部署说明.md
+  s_f702a9f364dc99::t_19f6e6d199cae9 266,272,275-277
+packages/api-client/src/generated/schema.ts
+  s_f702a9f364dc99::t_c4ae68cefb92e4 610-626,1631-1640,4370-4406
+packages/api-client/src/index.ts
+  s_f702a9f364dc99::t_60db5d7cfeae43 44-47,735-761
+services/api/app/api/v1/admin/users.py
+  s_f702a9f364dc99::t_c241ffa0fda07f 15,17,22-26,34-37,142-167
+services/api/app/repositories/user_repository.py
+  s_f702a9f364dc99::t_a24bf4ca58b822 135-155
+services/api/app/schemas/user.py
+  s_f702a9f364dc99::t_72ef797ec1d8a5 128-134
+services/api/app/services/user_service.py
+  s_f702a9f364dc99::t_33389976d267ac 10,24,32,44,56-59,91,315-366
+services/api/tests/test_user_api.py
+  s_f702a9f364dc99::t_a5653e579d8cc1 18-26,397-516,561
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b9e056223aefc776850012f002ce5f98355665dc",
+  "prompts": {},
+  "sessions": {
+    "s_f702a9f364dc99": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a01c95-b7c0-7751-878a-44c4f901a588",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
