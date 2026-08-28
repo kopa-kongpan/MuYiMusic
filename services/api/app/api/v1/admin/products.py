@@ -19,9 +19,14 @@ from app.schemas.product import (
     ProductRead,
     ProductStatusUpdate,
     ProductUpdate,
+    VideoCourseCreate,
+    VideoCourseListResponse,
+    VideoCourseRead,
+    VideoCourseUpdate,
 )
 from app.services.product_service import (
     DuplicateCategoryError,
+    DuplicateVideoCourseError,
     InvalidCategoryOrderError,
     InvalidProductError,
     ProductResourceNotFoundError,
@@ -116,6 +121,100 @@ async def update_category(
         raise HTTPException(status_code=404, detail="分类不存在") from error
     except DuplicateCategoryError as error:
         raise HTTPException(status_code=409, detail="分类名称已存在") from error
+
+
+@router.get("/video-courses", response_model=VideoCourseListResponse)
+async def list_video_courses(
+    store_id: UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    storage: StorageDependency,
+    current_admin: ProductManager,
+    keyword: Annotated[str | None, Query(max_length=128)] = None,
+    category_id: UUID | None = None,
+    is_active: bool | None = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> VideoCourseListResponse:
+    try:
+        return await ProductService(session, storage).list_video_courses_admin(
+            store_id=store_id,
+            admin_user=current_admin,
+            keyword=keyword,
+            category_id=category_id,
+            is_active=is_active,
+            page=page,
+            page_size=page_size,
+        )
+    except ProductResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="门店不存在") from error
+
+
+@router.post(
+    "/video-courses",
+    response_model=VideoCourseRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_video_course(
+    store_id: UUID,
+    payload: VideoCourseCreate,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    storage: StorageDependency,
+    current_admin: ProductManager,
+) -> VideoCourseRead:
+    try:
+        return await ProductService(session, storage).create_video_course(
+            store_id=store_id,
+            payload=payload,
+            admin_user=current_admin,
+        )
+    except ProductResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="门店或分类不存在") from error
+    except DuplicateVideoCourseError as error:
+        raise HTTPException(status_code=409, detail="视频课程名称已存在") from error
+    except InvalidProductError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@router.get("/video-courses/{video_course_id}", response_model=VideoCourseRead)
+async def get_video_course(
+    store_id: UUID,
+    video_course_id: UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    storage: StorageDependency,
+    current_admin: ProductManager,
+) -> VideoCourseRead:
+    try:
+        return await ProductService(session, storage).get_video_course_admin(
+            store_id=store_id,
+            video_course_id=video_course_id,
+            admin_user=current_admin,
+        )
+    except ProductResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="视频课程不存在") from error
+
+
+@router.patch("/video-courses/{video_course_id}", response_model=VideoCourseRead)
+async def update_video_course(
+    store_id: UUID,
+    video_course_id: UUID,
+    payload: VideoCourseUpdate,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    storage: StorageDependency,
+    current_admin: ProductManager,
+) -> VideoCourseRead:
+    try:
+        return await ProductService(session, storage).update_video_course(
+            store_id=store_id,
+            video_course_id=video_course_id,
+            payload=payload,
+            admin_user=current_admin,
+        )
+    except ProductResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="视频课程或分类不存在") from error
+    except DuplicateVideoCourseError as error:
+        raise HTTPException(status_code=409, detail="视频课程名称已存在") from error
+    except InvalidProductError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @router.get("/products", response_model=ProductAdminListResponse)

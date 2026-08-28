@@ -7,7 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings
 from app.core.security import create_access_token
 from app.models.admin import AdminUser
-from app.models.product import ProductStatus, ProductType
+from app.models.product import (
+    ProductStatus,
+    ProductType,
+    VideoCourseAccessMode,
+)
 from app.models.user import (
     CourseEntitlement,
     EntitlementStatus,
@@ -204,6 +208,9 @@ class UserService:
             page=page,
             page_size=page_size,
         )
+        now = datetime.now(UTC)
+        for entitlement, _ in rows:
+            sync_entitlement_status(entitlement, now)
         return CourseEntitlementListResponse(
             items=[
                 self._to_entitlement_read(entitlement, store_name)
@@ -273,7 +280,7 @@ class UserService:
             total_amount_cents=sku.price_cents * payload.quantity,
             lesson_count=sku.lesson_count,
             validity_days=sku.validity_days,
-            product_type=product.product_type,
+            product_type=ProductType.COURSE,
         )
         order.items.append(item)
         expires_at = (
@@ -286,7 +293,7 @@ class UserService:
             product_id=product.id,
             product_sku_id=sku.id,
             course_name=product.name,
-            product_type=product.product_type,
+            product_type=ProductType.COURSE,
             total_lessons=sku.lesson_count,
             remaining_lessons=sku.lesson_count,
             reserved_lessons=0,
@@ -329,8 +336,6 @@ class UserService:
         )
         if entitlement is None:
             raise UserResourceNotFoundError
-        if entitlement.product_type != ProductType.COURSE:
-            raise InvalidEntitlementAdjustmentError("视频课程不支持调整课时")
         if payload.remaining_lessons < entitlement.reserved_lessons:
             raise InvalidEntitlementAdjustmentError(
                 f"剩余课时不能少于已预约锁定的 {entitlement.reserved_lessons} 课时"
@@ -495,23 +500,35 @@ class UserService:
     ) -> CourseEntitlementRead:
         product = entitlement.product
         video_chapters = []
-        if product is not None:
-            for video in product.videos:
-                if not video.is_active:
+        can_watch = entitlement.status == EntitlementStatus.ACTIVE
+        if product is not None and can_watch:
+            for binding in product.video_course_bindings:
+                if not binding.video_course.is_active:
                     continue
-                video_chapters.append(
-                    EntitlementVideoChapterRead(
-                        id=video.id,
-                        title=video.title,
-                        duration_seconds=video.duration_seconds,
-                        sort_order=video.sort_order,
-                        video_url=(
-                            self.storage.presigned_get_url(video.object_key)
-                            if self.storage is not None
-                            else None
-                        ),
-                    )
+                lessons = (
+                    binding.video_course.lessons
+                    if binding.access_mode == VideoCourseAccessMode.ALL
+                    else binding.selected_lessons
                 )
+                for lesson in lessons:
+                    if not lesson.is_active:
+                        continue
+                    video_chapters.append(
+                        EntitlementVideoChapterRead(
+                            id=lesson.id,
+                            video_course_id=binding.video_course_id,
+                            video_course_name=binding.video_course.name,
+                            lesson_number=lesson.lesson_number,
+                            title=lesson.title,
+                            duration_seconds=lesson.duration_seconds,
+                            sort_order=lesson.lesson_number,
+                            video_url=(
+                                self.storage.presigned_get_url(lesson.object_key)
+                                if self.storage is not None
+                                else None
+                            ),
+                        )
+                    )
         return CourseEntitlementRead(
             id=entitlement.id,
             user_id=entitlement.user_id,

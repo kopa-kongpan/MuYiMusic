@@ -3,6 +3,7 @@ import type { MenuProps } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   BookOpen,
+  Clapperboard,
   CalendarDays,
   ClipboardCheck,
   LayoutDashboard,
@@ -24,6 +25,7 @@ const pageNames: Record<string, string> = {
   appointments: '预约与消课',
   notifications: '消息投递',
   products: '课程商品',
+  'video-courses': '视频课程',
   schedules: '排课管理',
   'store-content': '首页内容',
   franchise: '加盟合作',
@@ -48,7 +50,9 @@ export function AdminShell() {
     navigate('/login', { replace: true })
   }
 
-  const selectedMenuKey = location.pathname.startsWith('/store-content')
+  const selectedMenuKey = location.pathname.startsWith('/video-courses')
+    ? 'video-courses'
+    : location.pathname.startsWith('/store-content')
     ? 'store-content'
     : location.pathname.startsWith('/franchise')
       ? 'franchise'
@@ -93,6 +97,11 @@ export function AdminShell() {
             key: 'products',
             icon: <BookOpen size={18} aria-hidden="true" />,
             label: '课程商品',
+          },
+          {
+            key: 'video-courses',
+            icon: <Clapperboard size={18} aria-hidden="true" />,
+            label: '视频课程',
           },
         ]
       : []),

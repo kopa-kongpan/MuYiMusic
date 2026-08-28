@@ -87,6 +87,21 @@ export type ProductStatus = components['schemas']['ProductStatus']
 export type ProductStatusUpdate = components['schemas']['ProductStatusUpdate']
 export type ProductType = components['schemas']['ProductType']
 export type ProductUpdate = components['schemas']['ProductUpdate']
+export type ProductVideoCourseBindingRead =
+  components['schemas']['ProductVideoCourseBindingRead']
+export type ProductVideoCourseBindingWrite =
+  components['schemas']['ProductVideoCourseBindingWrite']
+export type VideoCourseAccessMode =
+  components['schemas']['VideoCourseAccessMode']
+export type VideoCourseCreate = components['schemas']['VideoCourseCreate']
+export type VideoCourseLessonRead =
+  components['schemas']['VideoCourseLessonRead']
+export type VideoCourseLessonWrite =
+  components['schemas']['VideoCourseLessonWrite']
+export type VideoCourseListResponse =
+  components['schemas']['VideoCourseListResponse']
+export type VideoCourseRead = components['schemas']['VideoCourseRead']
+export type VideoCourseUpdate = components['schemas']['VideoCourseUpdate']
 export type PurchaseValidationRequest =
   components['schemas']['PurchaseValidationRequest']
 export type PurchaseValidationResponse =
@@ -189,6 +204,14 @@ export interface AdminProductQuery {
   keyword?: string
   categoryId?: string
   status?: ProductStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface AdminVideoCourseQuery {
+  keyword?: string
+  categoryId?: string
+  isActive?: boolean
   page?: number
   pageSize?: number
 }
@@ -542,6 +565,42 @@ export function createApiClient(options: ApiClientOptions = {}) {
           page: query.page,
           page_size: query.pageSize,
         }),
+      )
+    },
+    listAdminVideoCourses(
+      storeId: string,
+      query: AdminVideoCourseQuery = {},
+    ) {
+      return request<VideoCourseListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/video-courses`, {
+          keyword: query.keyword,
+          category_id: query.categoryId,
+          is_active:
+            query.isActive === undefined ? undefined : String(query.isActive),
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    getAdminVideoCourse(storeId: string, videoCourseId: string) {
+      return request<VideoCourseRead>(
+        `/api/v1/admin/stores/${storeId}/video-courses/${videoCourseId}`,
+      )
+    },
+    createVideoCourse(storeId: string, payload: VideoCourseCreate) {
+      return request<VideoCourseRead>(
+        `/api/v1/admin/stores/${storeId}/video-courses`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      )
+    },
+    updateVideoCourse(
+      storeId: string,
+      videoCourseId: string,
+      payload: VideoCourseUpdate,
+    ) {
+      return request<VideoCourseRead>(
+        `/api/v1/admin/stores/${storeId}/video-courses/${videoCourseId}`,
+        { method: 'PATCH', body: JSON.stringify(payload) },
       )
     },
     listAdminTeachers(storeId: string, query: AdminTeacherQuery = {}) {

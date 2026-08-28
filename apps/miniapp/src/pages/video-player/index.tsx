@@ -51,7 +51,7 @@ export default function VideoPlayerPage() {
       }
       const active = entitlement.video_chapters ?? []
       if (!active.length) {
-        throw new Error('该课程暂无可用章节')
+        throw new Error('该课程暂无可用视频课时')
       }
       setChapters(active)
       setCourseName(entitlement.course_name)
@@ -71,7 +71,7 @@ export default function VideoPlayerPage() {
     return (
       <View className="player-state">
         <Text className="player-state-title">请先登录</Text>
-        <Text className="player-state-copy">登录后可观看已购视频课程</Text>
+        <Text className="player-state-copy">登录后可观看已购课程的配套视频</Text>
         <Button
           className="player-state-button"
           size="mini"
@@ -89,7 +89,7 @@ export default function VideoPlayerPage() {
   if (isLoading) {
     return (
       <View className="player-state">
-        <Text className="player-state-title">正在加载章节</Text>
+        <Text className="player-state-title">正在加载视频课时</Text>
         <Text className="player-state-copy">请稍候</Text>
       </View>
     )
@@ -129,11 +129,12 @@ export default function VideoPlayerPage() {
       <View className="player-info">
         <Text className="player-course">{courseName}</Text>
         <Text className="player-current">
-          第 {currentIndex + 1} 章 · {current.title}
+          {current.video_course_name} · 第 {current.lesson_number} 课时 ·{' '}
+          {current.title}
         </Text>
       </View>
       <View className="player-chapters">
-        <Text className="player-chapters-title">章节列表</Text>
+        <Text className="player-chapters-title">视频课时列表</Text>
         {chapters.map((chapter, index) => (
           <View
             className={`player-chapter${index === currentIndex ? ' player-chapter--active' : ''}`}

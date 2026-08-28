@@ -211,9 +211,7 @@ export default function CourseDetailPage() {
               <View>
                 <Text>{sku.name}</Text>
                 <Text>
-                  {product.product_type === 'video'
-                    ? `${sku.validity_days} 天观看权益`
-                    : `${sku.lesson_count} 课时 · ${sku.validity_days} 天有效`}
+                  {sku.lesson_count} 课时 · {sku.validity_days} 天有效
                 </Text>
               </View>
               <Text>{formatMoney(sku.price_cents)}</Text>
@@ -244,16 +242,19 @@ export default function CourseDetailPage() {
         </View>
       </View>
 
-      {product.product_type === 'video' && product.video_chapters.length > 0 ? (
+      {product.video_chapters.length > 0 ? (
         <View className="detail-section">
           <Text className="detail-section-title">
-            视频章节（{product.video_chapters.length}）
+            配套视频课时（{product.video_chapters.length}）
           </Text>
           <View className="detail-chapters">
             {product.video_chapters.map((chapter, index) => (
               <View className="detail-chapter" key={chapter.id}>
                 <Text className="detail-chapter-index">{index + 1}</Text>
-                <Text className="detail-chapter-title">{chapter.title}</Text>
+                <Text className="detail-chapter-title">
+                  {chapter.video_course_name} · 第 {chapter.lesson_number} 课时 ·{' '}
+                  {chapter.title}
+                </Text>
                 <Text className="detail-chapter-duration">
                   {formatDuration(chapter.duration_seconds)}
                 </Text>
@@ -261,7 +262,7 @@ export default function CourseDetailPage() {
             ))}
           </View>
           <Text className="detail-chapter-notice">
-            购买后可在「我的 - 我的课程」中观看视频
+            购买并获得有效课程权益后，可在「我的 - 我的课程」中观看
           </Text>
         </View>
       ) : null}

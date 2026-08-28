@@ -22,8 +22,12 @@ from app.models.product import (
     ProductSku,
     ProductStatus,
     ProductType,
-    ProductVideo,
+    ProductVideoCourseBinding,
+    VideoCourse,
+    VideoCourseAccessMode,
+    VideoCourseLesson,
 )
+from app.models.product import VideoCourseLesson as ProductVideo
 from app.models.store import Store
 from app.models.user import (
     CourseEntitlement,
@@ -437,19 +441,7 @@ async def test_admin_can_adjust_course_entitlement_lessons_with_audit() -> None:
                 expires_at=now + timedelta(days=180),
                 status=EntitlementStatus.ACTIVE,
             )
-            video_entitlement = CourseEntitlement(
-                user=user,
-                store_id=store.id,
-                course_name="乐理视频课",
-                product_type=ProductType.VIDEO,
-                total_lessons=0,
-                remaining_lessons=0,
-                reserved_lessons=0,
-                valid_from=now,
-                expires_at=now + timedelta(days=180),
-                status=EntitlementStatus.ACTIVE,
-            )
-            session.add_all((course_entitlement, video_entitlement))
+            session.add(course_entitlement)
             await session.flush()
 
             transport = ASGITransport(app=app)
@@ -501,13 +493,6 @@ async def test_admin_can_adjust_course_entitlement_lessons_with_audit() -> None:
                 assert below_reserved.status_code == 409
                 assert "已预约锁定" in below_reserved.json()["message"]
 
-                video_adjustment = await client.patch(
-                    f"{base_url}/{video_entitlement.id}/lessons",
-                    headers=headers,
-                    json={"remaining_lessons": 1, "reason": "错误修正"},
-                )
-                assert video_adjustment.status_code == 409
-                assert "视频课程" in video_adjustment.json()["message"]
         finally:
             app.dependency_overrides.clear()
             await session.close()
@@ -515,6 +500,7 @@ async def test_admin_can_adjust_course_entitlement_lessons_with_audit() -> None:
 
 
 async def test_grant_video_course_entitlement_and_watch_chapters() -> None:
+    pytest.skip("旧视频商品权益模型已由线下课程配套视频模型替代")
     async with get_engine().connect() as connection:
         transaction = await connection.begin()
         session = AsyncSession(
@@ -720,6 +706,156 @@ async def test_grant_video_course_entitlement_and_watch_chapters() -> None:
                     json={**payload, "idempotency_key": f"grant-{uuid4().hex}"},
                 )
                 assert forbidden.status_code == 403
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()
+
+
+async def test_offline_course_entitlement_opens_selected_video_lessons() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        try:
+            manage_permission = await session.scalar(
+                select(Permission).where(Permission.code == "products:manage")
+            )
+            assert manage_permission is not None
+            store = make_store("线下课程配套视频门店")
+            role = Role(code=f"binding-manager-{uuid4()}", name="配套视频管理")
+            role.permissions.append(manage_permission)
+            manager = AdminUser(
+                username=f"binding-manager-{uuid4().hex}",
+                password_hash=hash_password("test-password-2026"),
+            )
+            manager.roles.append(role)
+            manager.stores.append(store)
+            category = Category(store=store, name="钢琴课程", is_enabled=True)
+            video_course = VideoCourse(
+                store=store,
+                category=category,
+                name="钢琴配套练习",
+                summary="配套练习视频",
+                is_active=True,
+            )
+            lessons = [
+                VideoCourseLesson(
+                    lesson_number=number,
+                    title=f"第 {number} 课练习",
+                    object_key=(
+                        f"muyimusic/stores/{store.id}/products/videos/"
+                        f"lesson-{number}.mp4"
+                    ),
+                    duration_seconds=number * 60,
+                )
+                for number in range(1, 4)
+            ]
+            video_course.lessons.extend(lessons)
+            product = Product(
+                store=store,
+                category=category,
+                name="线下钢琴十课时",
+                summary="线下教学配套视频",
+                details="",
+                cover_object_key=(f"muyimusic/stores/{store.id}/products/cover.jpg"),
+                product_type=ProductType.COURSE,
+                status=ProductStatus.PUBLISHED,
+                published_at=datetime.now(UTC),
+            )
+            sku = ProductSku(
+                name="10 课时",
+                price_cents=19900,
+                lesson_count=10,
+                validity_days=365,
+            )
+            product.skus.append(sku)
+            binding = ProductVideoCourseBinding(
+                video_course=video_course,
+                access_mode=VideoCourseAccessMode.SELECTED,
+            )
+            binding.selected_lessons.extend((lessons[0], lessons[2]))
+            product.video_course_bindings.append(binding)
+            session.add_all((manager, category, video_course, product))
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                login = await login_h5(
+                    client,
+                    f"h5-binding-student-{uuid4().hex}",
+                    "配套视频学员",
+                )
+                user_headers = {"Authorization": f"Bearer {login['access_token']}"}
+                manager_token = await login_admin(
+                    client,
+                    manager.username,
+                    "test-password-2026",
+                )
+                granted = await client.post(
+                    (
+                        f"/api/v1/admin/stores/{store.id}/users/"
+                        f"{login['user']['id']}/entitlements"
+                    ),
+                    headers={"Authorization": f"Bearer {manager_token}"},
+                    json={
+                        "product_id": str(product.id),
+                        "sku_id": str(sku.id),
+                        "quantity": 1,
+                        "idempotency_key": f"grant-{uuid4().hex}",
+                    },
+                )
+                assert granted.status_code == 201
+                assert granted.json()["items"][0]["product_type"] == "course"
+                assert granted.json()["items"][0]["lesson_count"] == 10
+
+                mine = await client.get(
+                    "/api/v1/app/me/course-entitlements",
+                    headers=user_headers,
+                    params={"store_id": str(store.id)},
+                )
+                assert mine.status_code == 200
+                entitlement = mine.json()["items"][0]
+                assert entitlement["product_type"] == "course"
+                assert entitlement["total_lessons"] == 10
+                assert [
+                    chapter["lesson_number"]
+                    for chapter in entitlement["video_chapters"]
+                ] == [1, 3]
+                assert all(
+                    chapter["video_course_name"] == "钢琴配套练习"
+                    for chapter in entitlement["video_chapters"]
+                )
+
+                saved_entitlement = await session.scalar(
+                    select(CourseEntitlement).where(
+                        CourseEntitlement.user_id == login["user"]["id"]
+                    )
+                )
+                assert saved_entitlement is not None
+                saved_entitlement.valid_from = datetime.now(UTC) - timedelta(days=2)
+                saved_entitlement.expires_at = datetime.now(UTC) - timedelta(days=1)
+                await session.flush()
+                expired = await client.get(
+                    "/api/v1/app/me/course-entitlements",
+                    headers=user_headers,
+                    params={"store_id": str(store.id)},
+                )
+                assert expired.status_code == 200
+                expired_entitlement = expired.json()["items"][0]
+                assert expired_entitlement["status"] == "expired"
+                assert expired_entitlement["video_chapters"] == []
         finally:
             app.dependency_overrides.clear()
             await session.close()

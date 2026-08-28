@@ -5,7 +5,6 @@ from sqlalchemy import exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.product import Product
 from app.models.store import Store
 from app.models.user import (
     CourseEntitlement,
@@ -16,6 +15,7 @@ from app.models.user import (
     ProviderAccount,
     User,
 )
+from app.repositories.product_repository import ProductRepository
 
 
 class UserRepository:
@@ -122,7 +122,9 @@ class UserRepository:
             select(CourseEntitlement, Store.name)
             .join(Store, Store.id == CourseEntitlement.store_id)
             .options(
-                selectinload(CourseEntitlement.product).selectinload(Product.videos)
+                selectinload(CourseEntitlement.product).options(
+                    *ProductRepository.product_load_options()
+                )
             )
             .where(*filters)
             .order_by(CourseEntitlement.created_at.desc(), CourseEntitlement.id.desc())
@@ -147,7 +149,9 @@ class UserRepository:
                 CourseEntitlement.store_id == store_id,
             )
             .options(
-                selectinload(CourseEntitlement.product).selectinload(Product.videos)
+                selectinload(CourseEntitlement.product).options(
+                    *ProductRepository.product_load_options()
+                )
             )
             .with_for_update()
         )

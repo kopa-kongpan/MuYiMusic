@@ -29,6 +29,9 @@ from app.models.product import (
     ProductImage,
     ProductSku,
     ProductStatus,
+    ProductVideoCourseBinding,
+    VideoCourse,
+    VideoCourseLesson,
 )
 from app.models.schedule import ClassSchedule, ScheduleStatus, Teacher
 from app.models.store import Store, StoreStatus
@@ -83,6 +86,7 @@ __all__ = [
     "ProductImage",
     "ProductSku",
     "ProductStatus",
+    "ProductVideoCourseBinding",
     "ProviderAccount",
     "Role",
     "ScheduleStatus",
@@ -95,5 +99,7 @@ __all__ = [
     "TeacherBindCode",
     "User",
     "UserStatus",
+    "VideoCourse",
+    "VideoCourseLesson",
     "admin_user_stores",
 ]

@@ -79,9 +79,12 @@ class OrderListResponse(BaseModel):
 
 
 class EntitlementVideoChapterRead(BaseModel):
-    """已购权益下的视频章节：持有效权益时可获得播放地址。"""
+    """已购线下课程绑定的视频课时，持有效权益时可获得播放地址。"""
 
     id: UUID
+    video_course_id: UUID
+    video_course_name: str
+    lesson_number: int
     title: str
     duration_seconds: int | None
     sort_order: int

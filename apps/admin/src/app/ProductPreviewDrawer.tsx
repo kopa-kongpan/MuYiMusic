@@ -16,15 +16,6 @@ function formatMoney(priceCents: number): string {
   }).format(priceCents / 100)
 }
 
-function formatDuration(seconds: number | null): string {
-  if (!seconds) {
-    return '时长未知'
-  }
-  const minutes = Math.floor(seconds / 60)
-  const rest = seconds % 60
-  return rest ? `${minutes}分${rest}秒` : `${minutes}分钟`
-}
-
 export function ProductPreviewDrawer({
   open,
   store,
@@ -47,9 +38,7 @@ export function ProductPreviewDrawer({
               <h2>{product.name}</h2>
               <span>{store?.name ?? '当前门店'} · {product.category_name}</span>
             </div>
-            <Tag color={product.product_type === 'video' ? 'blue' : 'default'}>
-              {product.product_type === 'video' ? '视频课程' : '线下课时课'}
-            </Tag>
+            <Tag>线下课时课程</Tag>
           </div>
           <p className="product-preview-summary">{product.summary || '暂无摘要'}</p>
           <div className="product-preview-skus">
@@ -58,9 +47,7 @@ export function ProductPreviewDrawer({
                 <div>
                   <strong>{sku.name}</strong>
                   <span>
-                    {product.product_type === 'video'
-                      ? '观看权益 · '
-                      : `${sku.lesson_count} 课时 · `}
+                    {sku.lesson_count} 课时 ·{' '}
                     {sku.validity_days} 天有效
                   </span>
                 </div>
@@ -68,15 +55,15 @@ export function ProductPreviewDrawer({
               </div>
             ))}
           </div>
-          {product.product_type === 'video' && product.videos.length > 0 ? (
+          {product.video_course_bindings.length > 0 ? (
             <section className="product-preview-chapters">
-              <h3>视频章节（{product.videos.filter((video) => video.is_active).length}）</h3>
+              <h3>配套视频课时（{product.video_course_bindings.reduce((count, binding) => count + binding.lesson_count, 0)}）</h3>
               <ul>
-                {product.videos.map((video) => (
-                  <li key={video.id} className={video.is_active ? '' : 'chapter-disabled'}>
+                {product.video_course_bindings.map((binding) => (
+                  <li key={binding.id}>
                     <PlayCircle size={16} aria-hidden="true" />
-                    <span>{video.title}</span>
-                    <em>{formatDuration(video.duration_seconds)}</em>
+                    <span>{binding.video_course_name}</span>
+                    <em>{binding.access_mode === 'all' ? '全部课时' : `指定 ${binding.lesson_count} 课时`}</em>
                   </li>
                 ))}
               </ul>

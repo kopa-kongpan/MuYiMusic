@@ -395,6 +395,7 @@ async def test_course_product_requires_manage_permission() -> None:
 
 
 async def test_video_course_lifecycle_and_public_chapter_preview() -> None:
+    pytest.skip("旧商品内嵌视频模型已由独立视频课程绑定模型替代")
     async with get_engine().connect() as connection:
         transaction = await connection.begin()
         session = AsyncSession(
@@ -696,6 +697,250 @@ async def test_video_course_lifecycle_and_public_chapter_preview() -> None:
                     f"/api/v1/app/stores/{store.id}/products/{product_id}"
                 )
                 assert len(public_after.json()["video_chapters"]) == 2
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()
+
+
+async def test_video_course_bindings_all_selected_and_store_isolation() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        try:
+            permission = await session.scalar(
+                select(Permission).where(Permission.code == "products:manage")
+            )
+            assert permission is not None
+            role = Role(code=f"binding-operator-{uuid4()}", name="视频绑定运营")
+            role.permissions.append(permission)
+            password = "test-password-2026"
+            admin = AdminUser(
+                username=f"binding-admin-{uuid4().hex}",
+                password_hash=hash_password(password),
+            )
+            admin.roles.append(role)
+            store = make_store("配套视频门店")
+            other_store = make_store("其他配套视频门店")
+            admin.stores.extend((store, other_store))
+            session.add(admin)
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                login = await client.post(
+                    "/api/v1/admin/auth/login",
+                    json={"username": admin.username, "password": password},
+                )
+                headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+                category = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/categories",
+                    headers=headers,
+                    json={"name": "钢琴课程"},
+                )
+                other_category = await client.post(
+                    f"/api/v1/admin/stores/{other_store.id}/categories",
+                    headers=headers,
+                    json={"name": "异地课程"},
+                )
+                assert category.status_code == 201
+                assert other_category.status_code == 201
+                category_id = category.json()["id"]
+                prefix = f"muyimusic/stores/{store.id}/products/videos/"
+
+                wrong_key = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/video-courses",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "错误视频课程",
+                        "lessons": [
+                            {
+                                "lesson_number": 1,
+                                "title": "错误课时",
+                                "object_key": "other/videos/lesson.mp4",
+                            }
+                        ],
+                    },
+                )
+                assert wrong_key.status_code == 422
+
+                created = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/video-courses",
+                    headers=headers,
+                    json={
+                        "category_id": category_id,
+                        "name": "钢琴启蒙配套视频",
+                        "summary": "三节配套练习",
+                        "lessons": [
+                            {
+                                "lesson_number": number,
+                                "title": f"第 {number} 课",
+                                "object_key": f"{prefix}lesson-{number}.mp4",
+                                "duration_seconds": number * 60,
+                            }
+                            for number in range(1, 4)
+                        ],
+                    },
+                )
+                assert created.status_code == 201
+                video_course = created.json()
+                assert len(video_course["lessons"]) == 3
+                lesson_ids = [lesson["id"] for lesson in video_course["lessons"]]
+
+                other_course = await client.post(
+                    f"/api/v1/admin/stores/{other_store.id}/video-courses",
+                    headers=headers,
+                    json={
+                        "category_id": other_category.json()["id"],
+                        "name": "异地视频课程",
+                        "lessons": [
+                            {
+                                "lesson_number": 1,
+                                "title": "异地课时",
+                                "object_key": (
+                                    f"muyimusic/stores/{other_store.id}/products/"
+                                    "videos/lesson.mp4"
+                                ),
+                            }
+                        ],
+                    },
+                )
+                assert other_course.status_code == 201
+
+                product_base = {
+                    "category_id": category_id,
+                    "cover_object_key": (
+                        f"muyimusic/stores/{store.id}/products/cover.jpg"
+                    ),
+                    "skus": [
+                        {
+                            "name": "10 课时",
+                            "price_cents": 10000,
+                            "lesson_count": 10,
+                            "validity_days": 180,
+                        }
+                    ],
+                }
+                all_product = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        **product_base,
+                        "name": "开放全部视频的线下课",
+                        "video_course_bindings": [
+                            {
+                                "video_course_id": video_course["id"],
+                                "access_mode": "all",
+                            }
+                        ],
+                    },
+                )
+                assert all_product.status_code == 201
+                assert all_product.json()["product_type"] == "course"
+                assert (
+                    all_product.json()["video_course_bindings"][0]["lesson_count"] == 3
+                )
+                all_product_id = all_product.json()["id"]
+                narrowed_product = await client.patch(
+                    f"/api/v1/admin/stores/{store.id}/products/{all_product_id}",
+                    headers=headers,
+                    json={
+                        "video_course_bindings": [
+                            {
+                                "video_course_id": video_course["id"],
+                                "access_mode": "selected",
+                                "lesson_ids": [lesson_ids[1]],
+                            }
+                        ]
+                    },
+                )
+                assert narrowed_product.status_code == 200
+                narrowed_binding = narrowed_product.json()["video_course_bindings"][0]
+                assert narrowed_binding["access_mode"] == "selected"
+                assert narrowed_binding["lesson_count"] == 1
+                assert narrowed_binding["lesson_ids"] == [lesson_ids[1]]
+
+                selected_product = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        **product_base,
+                        "name": "开放指定视频的线下课",
+                        "video_course_bindings": [
+                            {
+                                "video_course_id": video_course["id"],
+                                "access_mode": "selected",
+                                "lesson_ids": [lesson_ids[0], lesson_ids[2]],
+                            }
+                        ],
+                    },
+                )
+                assert selected_product.status_code == 201
+                selected_id = selected_product.json()["id"]
+                assert (
+                    selected_product.json()["video_course_bindings"][0]["lesson_count"]
+                    == 2
+                )
+
+                invalid_lesson = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        **product_base,
+                        "name": "绑定错误课时",
+                        "video_course_bindings": [
+                            {
+                                "video_course_id": video_course["id"],
+                                "access_mode": "selected",
+                                "lesson_ids": [str(uuid4())],
+                            }
+                        ],
+                    },
+                )
+                assert invalid_lesson.status_code == 422
+
+                cross_store = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products",
+                    headers=headers,
+                    json={
+                        **product_base,
+                        "name": "跨门店绑定",
+                        "video_course_bindings": [
+                            {
+                                "video_course_id": other_course.json()["id"],
+                                "access_mode": "all",
+                            }
+                        ],
+                    },
+                )
+                assert cross_store.status_code == 404
+
+                published = await client.post(
+                    f"/api/v1/admin/stores/{store.id}/products/{selected_id}/status",
+                    headers=headers,
+                    json={"status": "published"},
+                )
+                assert published.status_code == 200
+                public = await client.get(
+                    f"/api/v1/app/stores/{store.id}/products/{selected_id}"
+                )
+                assert public.status_code == 200
+                chapters = public.json()["video_chapters"]
+                assert [chapter["lesson_number"] for chapter in chapters] == [1, 3]
+                assert all("video_url" not in chapter for chapter in chapters)
         finally:
             app.dependency_overrides.clear()
             await session.close()

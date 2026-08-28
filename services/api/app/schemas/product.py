@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.models.product import ProductStatus, ProductType
+from app.models.product import ProductStatus, ProductType, VideoCourseAccessMode
 
 
 def validate_sale_window(
@@ -99,15 +99,96 @@ class ProductImageWrite(BaseModel):
     sort_order: int = Field(default=0, ge=0, le=9999)
 
 
-class ProductVideoWrite(BaseModel):
+class VideoCourseLessonWrite(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     id: UUID | None = None
+    lesson_number: int = Field(ge=1, le=10000)
     title: str = Field(min_length=1, max_length=128)
     object_key: str = Field(min_length=1, max_length=1024)
     duration_seconds: int | None = Field(default=None, ge=1, le=604800)
-    sort_order: int = Field(default=0, ge=0, le=9999)
     is_active: bool = True
+
+
+class VideoCourseCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    category_id: UUID
+    name: str = Field(min_length=1, max_length=128)
+    summary: str = Field(default="", max_length=300)
+    is_active: bool = True
+    lessons: list[VideoCourseLessonWrite] = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_lessons(self) -> "VideoCourseCreate":
+        if any(lesson.id is not None for lesson in self.lessons):
+            raise ValueError("新视频课程的课时不能预设编号")
+        validate_video_course_lessons(self.lessons)
+        if self.is_active and not any(lesson.is_active for lesson in self.lessons):
+            raise ValueError("启用的视频课程至少需要一个启用课时")
+        return self
+
+
+class VideoCourseUpdate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    category_id: UUID | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=128)
+    summary: str | None = Field(default=None, max_length=300)
+    is_active: bool | None = None
+    lessons: list[VideoCourseLessonWrite] | None = Field(
+        default=None,
+        min_length=1,
+        max_length=1000,
+    )
+
+    @field_validator(
+        "category_id",
+        "name",
+        "summary",
+        "is_active",
+        "lessons",
+        mode="before",
+    )
+    @classmethod
+    def reject_explicit_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("视频课程必填字段不能设置为 null")
+        return value
+
+    @model_validator(mode="after")
+    def validate_lessons(self) -> "VideoCourseUpdate":
+        if self.lessons is not None:
+            validate_video_course_lessons(self.lessons)
+        return self
+
+
+def validate_video_course_lessons(lessons: list[VideoCourseLessonWrite]) -> None:
+    lesson_ids = [lesson.id for lesson in lessons if lesson.id is not None]
+    if len(lesson_ids) != len(set(lesson_ids)):
+        raise ValueError("视频课时编号不能重复")
+    lesson_numbers = [lesson.lesson_number for lesson in lessons]
+    if len(lesson_numbers) != len(set(lesson_numbers)):
+        raise ValueError("视频课时序号不能重复")
+    object_keys = [lesson.object_key for lesson in lessons]
+    if len(object_keys) != len(set(object_keys)):
+        raise ValueError("视频课时不能包含重复视频文件")
+
+
+class ProductVideoCourseBindingWrite(BaseModel):
+    video_course_id: UUID
+    access_mode: VideoCourseAccessMode = VideoCourseAccessMode.ALL
+    lesson_ids: list[UUID] = Field(default_factory=list, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_access_mode(self) -> "ProductVideoCourseBindingWrite":
+        if len(self.lesson_ids) != len(set(self.lesson_ids)):
+            raise ValueError("绑定的视频课时不能重复")
+        if self.access_mode == VideoCourseAccessMode.ALL and self.lesson_ids:
+            raise ValueError("开放全部课时时不能指定课时")
+        if self.access_mode == VideoCourseAccessMode.SELECTED and not self.lesson_ids:
+            raise ValueError("按课时开放时至少选择一个课时")
+        return self
 
 
 class ProductCreate(BaseModel):
@@ -119,13 +200,15 @@ class ProductCreate(BaseModel):
     details: str = Field(default="", max_length=50000)
     notes: str | None = Field(default=None, max_length=5000)
     cover_object_key: str = Field(min_length=1, max_length=1024)
-    product_type: ProductType = ProductType.COURSE
     sale_starts_at: datetime | None = None
     sale_ends_at: datetime | None = None
     sort_order: int = Field(default=0, ge=0, le=9999)
     skus: list[ProductSkuWrite] = Field(min_length=1, max_length=100)
     images: list[ProductImageWrite] = Field(default_factory=list, max_length=20)
-    videos: list[ProductVideoWrite] = Field(default_factory=list, max_length=100)
+    video_course_bindings: list[ProductVideoCourseBindingWrite] = Field(
+        default_factory=list,
+        max_length=100,
+    )
 
     @model_validator(mode="after")
     def validate_product(self) -> "ProductCreate":
@@ -134,20 +217,14 @@ class ProductCreate(BaseModel):
             raise ValueError("新商品的 SKU 不能预设编号")
         if len({image.object_key for image in self.images}) != len(self.images):
             raise ValueError("商品图集不能包含重复图片")
-        self.validate_product_type()
+        if any(sku.lesson_count == 0 for sku in self.skus):
+            raise ValueError("每个课程规格都必须设置线下课时数")
+        binding_ids = [
+            binding.video_course_id for binding in self.video_course_bindings
+        ]
+        if len(binding_ids) != len(set(binding_ids)):
+            raise ValueError("同一视频课程不能重复绑定")
         return self
-
-    def validate_product_type(self) -> None:
-        if self.product_type == ProductType.COURSE:
-            if any(sku.lesson_count == 0 for sku in self.skus):
-                raise ValueError("线下课时课的每个 SKU 必须设置课时数")
-            if self.videos:
-                raise ValueError("线下课时课不能关联视频章节")
-        elif any(sku.lesson_count != 0 for sku in self.skus):
-            raise ValueError("视频课程的所有 SKU 课时数必须为 0")
-        keys = [video.object_key for video in self.videos]
-        if len(keys) != len(set(keys)):
-            raise ValueError("视频章节不能包含重复视频文件")
 
 
 class ProductUpdate(BaseModel):
@@ -159,7 +236,6 @@ class ProductUpdate(BaseModel):
     details: str | None = Field(default=None, max_length=50000)
     notes: str | None = Field(default=None, max_length=5000)
     cover_object_key: str | None = Field(default=None, min_length=1, max_length=1024)
-    product_type: ProductType | None = None
     sale_starts_at: datetime | None = None
     sale_ends_at: datetime | None = None
     sort_order: int | None = Field(default=None, ge=0, le=9999)
@@ -169,7 +245,10 @@ class ProductUpdate(BaseModel):
         max_length=100,
     )
     images: list[ProductImageWrite] | None = Field(default=None, max_length=20)
-    videos: list[ProductVideoWrite] | None = Field(default=None, max_length=100)
+    video_course_bindings: list[ProductVideoCourseBindingWrite] | None = Field(
+        default=None,
+        max_length=100,
+    )
 
     @field_validator(
         "category_id",
@@ -177,11 +256,10 @@ class ProductUpdate(BaseModel):
         "summary",
         "details",
         "cover_object_key",
-        "product_type",
         "sort_order",
         "skus",
         "images",
-        "videos",
+        "video_course_bindings",
         mode="before",
     )
     @classmethod
@@ -192,23 +270,20 @@ class ProductUpdate(BaseModel):
 
     @model_validator(mode="after")
     def validate_unique_resources(self) -> "ProductUpdate":
-        if self.product_type == ProductType.COURSE and self.videos:
-            raise ValueError("线下课时课不能关联视频章节")
         if self.skus is not None:
             ids = [sku.id for sku in self.skus if sku.id is not None]
             if len(ids) != len(set(ids)):
                 raise ValueError("SKU 编号不能重复")
+            if any(sku.lesson_count == 0 for sku in self.skus):
+                raise ValueError("每个课程规格都必须设置线下课时数")
         if self.images is not None:
             keys = [image.object_key for image in self.images]
             if len(keys) != len(set(keys)):
                 raise ValueError("商品图集不能包含重复图片")
-        if self.videos is not None:
-            ids = [video.id for video in self.videos if video.id is not None]
+        if self.video_course_bindings is not None:
+            ids = [binding.video_course_id for binding in self.video_course_bindings]
             if len(ids) != len(set(ids)):
-                raise ValueError("视频章节编号不能重复")
-            keys = [video.object_key for video in self.videos]
-            if len(keys) != len(set(keys)):
-                raise ValueError("视频章节不能包含重复视频文件")
+                raise ValueError("同一视频课程不能重复绑定")
         return self
 
 
@@ -231,14 +306,43 @@ class ProductImageRead(BaseModel):
     sort_order: int
 
 
-class ProductVideoRead(BaseModel):
+class VideoCourseLessonRead(BaseModel):
     id: UUID
+    lesson_number: int
     title: str
     object_key: str
     video_url: str | None
     duration_seconds: int | None
-    sort_order: int
     is_active: bool
+
+
+class VideoCourseRead(BaseModel):
+    id: UUID
+    store_id: UUID
+    category_id: UUID
+    category_name: str
+    name: str
+    summary: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    lessons: list[VideoCourseLessonRead]
+
+
+class VideoCourseListResponse(BaseModel):
+    items: list[VideoCourseRead]
+    total: int
+    page: int
+    page_size: int
+
+
+class ProductVideoCourseBindingRead(BaseModel):
+    id: UUID
+    video_course_id: UUID
+    video_course_name: str
+    access_mode: VideoCourseAccessMode
+    lesson_ids: list[UUID]
+    lesson_count: int
 
 
 class ProductRead(BaseModel):
@@ -263,7 +367,7 @@ class ProductRead(BaseModel):
     updated_at: datetime
     skus: list[ProductSkuRead]
     images: list[ProductImageRead]
-    videos: list[ProductVideoRead]
+    video_course_bindings: list[ProductVideoCourseBindingRead]
 
 
 class ProductAdminListResponse(BaseModel):
@@ -304,9 +408,12 @@ class ProductPublicListResponse(BaseModel):
 
 
 class ProductVideoChapterPreview(BaseModel):
-    """公开详情中的视频章节预览：只暴露元信息，不暴露播放地址。"""
+    """公开详情中的配套视频课时预览，不暴露播放地址。"""
 
     id: UUID
+    video_course_id: UUID
+    video_course_name: str
+    lesson_number: int
     title: str
     duration_seconds: int | None
     sort_order: int

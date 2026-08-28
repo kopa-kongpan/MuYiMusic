@@ -454,8 +454,7 @@ export function UsersPage() {
             key: 'actions',
             fixed: 'right' as const,
             width: 72,
-            render: (_: unknown, entitlement: CourseEntitlementRead) =>
-              entitlement.product_type === 'course' ? (
+            render: (_: unknown, entitlement: CourseEntitlementRead) => (
                 <Tooltip title="调整课时">
                   <Button
                     type="text"
@@ -464,7 +463,7 @@ export function UsersPage() {
                     onClick={() => openLessonAdjustment(entitlement)}
                   />
                 </Tooltip>
-              ) : null,
+              ),
           },
         ]
       : []),

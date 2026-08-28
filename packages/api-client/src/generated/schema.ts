@@ -313,6 +313,42 @@ export interface paths {
         patch: operations["update_category_api_v1_admin_stores__store_id__categories__category_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/video-courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Video Courses */
+        get: operations["list_video_courses_api_v1_admin_stores__store_id__video_courses_get"];
+        put?: never;
+        /** Create Video Course */
+        post: operations["create_video_course_api_v1_admin_stores__store_id__video_courses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/video-courses/{video_course_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Video Course */
+        get: operations["get_video_course_api_v1_admin_stores__store_id__video_courses__video_course_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Video Course */
+        patch: operations["update_video_course_api_v1_admin_stores__store_id__video_courses__video_course_id__patch"];
+        trace?: never;
+    };
     "/api/v1/admin/stores/{store_id}/products": {
         parameters: {
             query?: never;
@@ -1680,7 +1716,7 @@ export interface components {
         EntitlementStatus: "active" | "exhausted" | "expired";
         /**
          * EntitlementVideoChapterRead
-         * @description 已购权益下的视频章节：持有效权益时可获得播放地址。
+         * @description 已购线下课程绑定的视频课时，持有效权益时可获得播放地址。
          */
         EntitlementVideoChapterRead: {
             /**
@@ -1688,6 +1724,15 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Video Course Id
+             * Format: uuid
+             */
+            video_course_id: string;
+            /** Video Course Name */
+            video_course_name: string;
+            /** Lesson Number */
+            lesson_number: number;
             /** Title */
             title: string;
             /** Duration Seconds */
@@ -2010,8 +2055,6 @@ export interface components {
             notes?: string | null;
             /** Cover Object Key */
             cover_object_key: string;
-            /** @default course */
-            product_type: components["schemas"]["ProductType"];
             /** Sale Starts At */
             sale_starts_at?: string | null;
             /** Sale Ends At */
@@ -2025,8 +2068,8 @@ export interface components {
             skus: components["schemas"]["ProductSkuWrite"][];
             /** Images */
             images?: components["schemas"]["ProductImageWrite"][];
-            /** Videos */
-            videos?: components["schemas"]["ProductVideoWrite"][];
+            /** Video Course Bindings */
+            video_course_bindings?: components["schemas"]["ProductVideoCourseBindingWrite"][];
         };
         /** ProductImageRead */
         ProductImageRead: {
@@ -2201,8 +2244,8 @@ export interface components {
             skus: components["schemas"]["ProductSkuRead"][];
             /** Images */
             images: components["schemas"]["ProductImageRead"][];
-            /** Videos */
-            videos: components["schemas"]["ProductVideoRead"][];
+            /** Video Course Bindings */
+            video_course_bindings: components["schemas"]["ProductVideoCourseBindingRead"][];
         };
         /** ProductSkuRead */
         ProductSkuRead: {
@@ -2280,7 +2323,6 @@ export interface components {
             notes?: string | null;
             /** Cover Object Key */
             cover_object_key?: string | null;
-            product_type?: components["schemas"]["ProductType"] | null;
             /** Sale Starts At */
             sale_starts_at?: string | null;
             /** Sale Ends At */
@@ -2291,12 +2333,12 @@ export interface components {
             skus?: components["schemas"]["ProductSkuWrite"][] | null;
             /** Images */
             images?: components["schemas"]["ProductImageWrite"][] | null;
-            /** Videos */
-            videos?: components["schemas"]["ProductVideoWrite"][] | null;
+            /** Video Course Bindings */
+            video_course_bindings?: components["schemas"]["ProductVideoCourseBindingWrite"][] | null;
         };
         /**
          * ProductVideoChapterPreview
-         * @description 公开详情中的视频章节预览：只暴露元信息，不暴露播放地址。
+         * @description 公开详情中的配套视频课时预览，不暴露播放地址。
          */
         ProductVideoChapterPreview: {
             /**
@@ -2304,6 +2346,15 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Video Course Id
+             * Format: uuid
+             */
+            video_course_id: string;
+            /** Video Course Name */
+            video_course_name: string;
+            /** Lesson Number */
+            lesson_number: number;
             /** Title */
             title: string;
             /** Duration Seconds */
@@ -2311,46 +2362,37 @@ export interface components {
             /** Sort Order */
             sort_order: number;
         };
-        /** ProductVideoRead */
-        ProductVideoRead: {
+        /** ProductVideoCourseBindingRead */
+        ProductVideoCourseBindingRead: {
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Title */
-            title: string;
-            /** Object Key */
-            object_key: string;
-            /** Video Url */
-            video_url: string | null;
-            /** Duration Seconds */
-            duration_seconds: number | null;
-            /** Sort Order */
-            sort_order: number;
-            /** Is Active */
-            is_active: boolean;
+            /**
+             * Video Course Id
+             * Format: uuid
+             */
+            video_course_id: string;
+            /** Video Course Name */
+            video_course_name: string;
+            access_mode: components["schemas"]["VideoCourseAccessMode"];
+            /** Lesson Ids */
+            lesson_ids: string[];
+            /** Lesson Count */
+            lesson_count: number;
         };
-        /** ProductVideoWrite */
-        ProductVideoWrite: {
-            /** Id */
-            id?: string | null;
-            /** Title */
-            title: string;
-            /** Object Key */
-            object_key: string;
-            /** Duration Seconds */
-            duration_seconds?: number | null;
+        /** ProductVideoCourseBindingWrite */
+        ProductVideoCourseBindingWrite: {
             /**
-             * Sort Order
-             * @default 0
+             * Video Course Id
+             * Format: uuid
              */
-            sort_order: number;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
+            video_course_id: string;
+            /** @default all */
+            access_mode: components["schemas"]["VideoCourseAccessMode"];
+            /** Lesson Ids */
+            lesson_ids?: string[];
         };
         /** PurchaseValidationRequest */
         PurchaseValidationRequest: {
@@ -3000,6 +3042,133 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VideoCourseAccessMode
+         * @enum {string}
+         */
+        VideoCourseAccessMode: "all" | "selected";
+        /** VideoCourseCreate */
+        VideoCourseCreate: {
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Lessons */
+            lessons: components["schemas"]["VideoCourseLessonWrite"][];
+        };
+        /** VideoCourseLessonRead */
+        VideoCourseLessonRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lesson Number */
+            lesson_number: number;
+            /** Title */
+            title: string;
+            /** Object Key */
+            object_key: string;
+            /** Video Url */
+            video_url: string | null;
+            /** Duration Seconds */
+            duration_seconds: number | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** VideoCourseLessonWrite */
+        VideoCourseLessonWrite: {
+            /** Id */
+            id?: string | null;
+            /** Lesson Number */
+            lesson_number: number;
+            /** Title */
+            title: string;
+            /** Object Key */
+            object_key: string;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** VideoCourseListResponse */
+        VideoCourseListResponse: {
+            /** Items */
+            items: components["schemas"]["VideoCourseRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** VideoCourseRead */
+        VideoCourseRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Category Name */
+            category_name: string;
+            /** Name */
+            name: string;
+            /** Summary */
+            summary: string;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Lessons */
+            lessons: components["schemas"]["VideoCourseLessonRead"][];
+        };
+        /** VideoCourseUpdate */
+        VideoCourseUpdate: {
+            /** Category Id */
+            category_id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Lessons */
+            lessons?: components["schemas"]["VideoCourseLessonWrite"][] | null;
         };
     };
     responses: never;
@@ -3695,6 +3864,146 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_video_courses_api_v1_admin_stores__store_id__video_courses_get: {
+        parameters: {
+            query?: {
+                keyword?: string | null;
+                category_id?: string | null;
+                is_active?: boolean | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCourseListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_video_course_api_v1_admin_stores__store_id__video_courses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoCourseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCourseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_video_course_api_v1_admin_stores__store_id__video_courses__video_course_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                video_course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCourseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_video_course_api_v1_admin_stores__store_id__video_courses__video_course_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                video_course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoCourseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoCourseRead"];
                 };
             };
             /** @description Validation Error */

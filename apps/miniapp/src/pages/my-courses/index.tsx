@@ -110,10 +110,17 @@ export default function MyCoursesPage() {
               </Text>
             </View>
             <Text className="record-card-meta">{course.store_name}</Text>
-            {course.product_type === 'video' ? (
+            <View className="record-course-progress">
+              <Text>可用 / 锁定 / 总剩余</Text>
+              <Text>
+                {course.available_lessons} / {course.reserved_lessons} /{' '}
+                {course.remaining_lessons}
+              </Text>
+            </View>
+            {(course.video_chapters?.length ?? 0) > 0 ? (
               <View className="record-course-chapters">
                 <Text className="record-course-chapters-heading">
-                  视频课程 · 共 {course.video_chapters?.length ?? 0} 个章节
+                  配套视频 · 共 {course.video_chapters?.length ?? 0} 个课时
                 </Text>
                 {(course.video_chapters ?? []).map((chapter, index) => (
                   <View
@@ -122,22 +129,17 @@ export default function MyCoursesPage() {
                     onClick={() => openChapter(course.id, index)}
                   >
                     <Text className="record-chapter-index">{index + 1}</Text>
-                    <Text className="record-chapter-title">{chapter.title}</Text>
+                    <Text className="record-chapter-title">
+                      {chapter.video_course_name} · 第 {chapter.lesson_number} 课时 ·{' '}
+                      {chapter.title}
+                    </Text>
                     <Text className="record-chapter-duration">
                       {formatDuration(chapter.duration_seconds)}
                     </Text>
                   </View>
                 ))}
               </View>
-            ) : (
-              <View className="record-course-progress">
-                <Text>可用 / 锁定 / 总剩余</Text>
-                <Text>
-                  {course.available_lessons} / {course.reserved_lessons} /{' '}
-                  {course.remaining_lessons}
-                </Text>
-              </View>
-            )}
+            ) : null}
             <Text className="record-card-meta">
               有效期：{formatDate(course.valid_from)} 至 {formatDate(course.expires_at)}
             </Text>

@@ -11,6 +11,7 @@ import { SchedulesPage } from './SchedulesPage'
 import { StoreContentPage } from './StoreContentPage'
 import { StoresPage } from './StoresPage'
 import { UsersPage } from './UsersPage'
+import { VideoCoursesPage } from './VideoCoursesPage'
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: 'store-content', element: <StoreContentPage /> },
       { path: 'franchise', element: <FranchisePage /> },
       { path: 'products', element: <ProductsPage /> },
+      { path: 'video-courses', element: <VideoCoursesPage /> },
       { path: 'schedules', element: <SchedulesPage /> },
       { path: 'appointments', element: <AppointmentsPage /> },
       { path: 'notifications', element: <NotificationDeliveriesPage /> },

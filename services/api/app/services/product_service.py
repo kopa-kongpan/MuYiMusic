@@ -12,7 +12,10 @@ from app.models.product import (
     ProductSku,
     ProductStatus,
     ProductType,
-    ProductVideo,
+    ProductVideoCourseBinding,
+    VideoCourse,
+    VideoCourseAccessMode,
+    VideoCourseLesson,
 )
 from app.models.store import StoreStatus
 from app.providers.object_storage import ObjectStorageProvider
@@ -37,9 +40,14 @@ from app.schemas.product import (
     ProductStatusUpdate,
     ProductUpdate,
     ProductVideoChapterPreview,
-    ProductVideoRead,
+    ProductVideoCourseBindingRead,
     PurchaseValidationRequest,
     PurchaseValidationResponse,
+    VideoCourseCreate,
+    VideoCourseLessonRead,
+    VideoCourseListResponse,
+    VideoCourseRead,
+    VideoCourseUpdate,
     validate_sale_window,
 )
 from app.services.store_service import can_access_store
@@ -58,6 +66,10 @@ class InvalidProductError(Exception):
 
 
 class DuplicateCategoryError(Exception):
+    pass
+
+
+class DuplicateVideoCourseError(Exception):
     pass
 
 
@@ -110,6 +122,14 @@ def product_snapshot(product: Product) -> dict[str, Any]:
         "images": [
             {"object_key": image.object_key, "sort_order": image.sort_order}
             for image in product.images
+        ],
+        "video_course_bindings": [
+            {
+                "video_course_id": str(binding.video_course_id),
+                "access_mode": binding.access_mode.value,
+                "lesson_ids": [str(lesson.id) for lesson in binding.selected_lessons],
+            }
+            for binding in product.video_course_bindings
         ],
     }
 
@@ -253,6 +273,142 @@ class ProductService:
         ordered = await self.repository.list_categories(store_id)
         return [CategoryRead.model_validate(category) for category in ordered]
 
+    async def list_video_courses_admin(
+        self,
+        *,
+        store_id: UUID,
+        admin_user: AdminUser,
+        keyword: str | None,
+        category_id: UUID | None,
+        is_active: bool | None,
+        page: int,
+        page_size: int,
+    ) -> VideoCourseListResponse:
+        await self._require_store_access(store_id, admin_user)
+        items, total = await self.repository.list_video_courses(
+            store_id=store_id,
+            keyword=keyword,
+            category_id=category_id,
+            is_active=is_active,
+            page=page,
+            page_size=page_size,
+        )
+        return VideoCourseListResponse(
+            items=[self._to_video_course_read(item) for item in items],
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def get_video_course_admin(
+        self,
+        *,
+        store_id: UUID,
+        video_course_id: UUID,
+        admin_user: AdminUser,
+    ) -> VideoCourseRead:
+        await self._require_store_access(store_id, admin_user)
+        return self._to_video_course_read(
+            await self._require_video_course(store_id, video_course_id)
+        )
+
+    async def create_video_course(
+        self,
+        *,
+        store_id: UUID,
+        payload: VideoCourseCreate,
+        admin_user: AdminUser,
+    ) -> VideoCourseRead:
+        await self._require_store_access(store_id, admin_user)
+        category = await self._require_category(store_id, payload.category_id)
+        if await self.repository.get_video_course_by_name(store_id, payload.name):
+            raise DuplicateVideoCourseError
+        self._validate_video_lesson_keys(
+            store_id,
+            [lesson.object_key for lesson in payload.lessons],
+        )
+        video_course = VideoCourse(
+            store_id=store_id,
+            category=category,
+            name=payload.name,
+            summary=payload.summary,
+            is_active=payload.is_active,
+        )
+        video_course.lessons.extend(
+            VideoCourseLesson(**lesson.model_dump(exclude={"id"}))
+            for lesson in payload.lessons
+        )
+        try:
+            self.repository.add_video_course(video_course)
+            await self.session.flush()
+            self.audit_repository.add(
+                admin_user_id=admin_user.id,
+                action="video_course.create",
+                resource_type="video_course",
+                resource_id=str(video_course.id),
+                details={"name": video_course.name},
+            )
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
+        saved = await self.repository.get_video_course(video_course.id)
+        assert saved is not None
+        return self._to_video_course_read(saved)
+
+    async def update_video_course(
+        self,
+        *,
+        store_id: UUID,
+        video_course_id: UUID,
+        payload: VideoCourseUpdate,
+        admin_user: AdminUser,
+    ) -> VideoCourseRead:
+        await self._require_store_access(store_id, admin_user)
+        video_course = await self._require_video_course(store_id, video_course_id)
+        changes = payload.model_dump(exclude_unset=True, exclude={"lessons"})
+        if payload.category_id is not None:
+            video_course.category = await self._require_category(
+                store_id,
+                payload.category_id,
+            )
+            changes.pop("category_id", None)
+        if payload.name is not None:
+            duplicate = await self.repository.get_video_course_by_name(
+                store_id,
+                payload.name,
+            )
+            if duplicate is not None and duplicate.id != video_course.id:
+                raise DuplicateVideoCourseError
+        for field, value in changes.items():
+            setattr(video_course, field, value)
+        if payload.lessons is not None:
+            self._validate_video_lesson_keys(
+                store_id,
+                [lesson.object_key for lesson in payload.lessons],
+            )
+            self._sync_video_course_lessons(video_course, payload.lessons)
+        if video_course.is_active and not any(
+            lesson.is_active for lesson in video_course.lessons
+        ):
+            raise InvalidProductError("启用的视频课程至少需要一个启用课时")
+        try:
+            await self.session.flush()
+            self.audit_repository.add(
+                admin_user_id=admin_user.id,
+                action="video_course.update",
+                resource_type="video_course",
+                resource_id=str(video_course.id),
+                details={"name": video_course.name},
+            )
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
+        saved = await self.repository.get_video_course(video_course.id)
+        assert saved is not None
+        return self._to_video_course_read(saved)
+
     async def list_products_admin(
         self,
         *,
@@ -303,7 +459,10 @@ class ProductService:
             store_id,
             payload.cover_object_key,
             [image.object_key for image in payload.images],
-            [video.object_key for video in payload.videos],
+        )
+        bindings = await self._build_video_course_bindings(
+            store_id,
+            payload.video_course_bindings,
         )
         product = Product(
             store_id=store_id,
@@ -313,7 +472,7 @@ class ProductService:
             details=payload.details,
             notes=payload.notes,
             cover_object_key=payload.cover_object_key,
-            product_type=payload.product_type,
+            product_type=ProductType.COURSE,
             sale_starts_at=payload.sale_starts_at,
             sale_ends_at=payload.sale_ends_at,
             sort_order=payload.sort_order,
@@ -325,9 +484,7 @@ class ProductService:
         product.images.extend(
             ProductImage(**image.model_dump()) for image in payload.images
         )
-        product.videos.extend(
-            ProductVideo(**video.model_dump()) for video in payload.videos
-        )
+        product.video_course_bindings.extend(bindings)
         try:
             self.repository.add_product(product)
             details = {"after": product_snapshot(product)}
@@ -361,7 +518,7 @@ class ProductService:
             raise InvalidProductError("已归档商品不能再修改")
         changes = payload.model_dump(
             exclude_unset=True,
-            exclude={"skus", "images", "videos"},
+            exclude={"skus", "images", "video_course_bindings"},
         )
         category = product.category
         if payload.category_id is not None:
@@ -378,34 +535,32 @@ class ProductService:
             if payload.images is not None
             else [image.object_key for image in product.images]
         )
-        video_keys = (
-            [video.object_key for video in payload.videos]
-            if payload.videos is not None
-            else [video.object_key for video in product.videos]
-        )
-        self._validate_media_keys(store_id, cover_key, image_keys, video_keys)
+        self._validate_media_keys(store_id, cover_key, image_keys)
         before = product_snapshot(product)
-        for field, value in changes.items():
-            if field == "category_id":
-                product.category = category
-            else:
-                setattr(product, field, value)
-        if payload.skus is not None:
-            self._sync_skus(product, payload.skus)
-        if payload.images is not None:
-            product.images.clear()
-            product.images.extend(
-                ProductImage(**image.model_dump()) for image in payload.images
-            )
-        if payload.videos is not None:
-            self._sync_videos(product, payload.videos)
-        if product.product_type == ProductType.COURSE and any(
-            video.is_active for video in product.videos
-        ):
-            raise InvalidProductError("线下课时课不能关联视频章节")
-        if product.status == ProductStatus.PUBLISHED:
-            self._validate_publishable(product)
         try:
+            for field, value in changes.items():
+                if field == "category_id":
+                    product.category = category
+                else:
+                    setattr(product, field, value)
+            if payload.skus is not None:
+                self._sync_skus(product, payload.skus)
+            if payload.images is not None:
+                product.images.clear()
+                product.images.extend(
+                    ProductImage(**image.model_dump()) for image in payload.images
+                )
+            if payload.video_course_bindings is not None:
+                product.video_course_bindings.clear()
+                await self.session.flush()
+                bindings = await self._build_video_course_bindings(
+                    store_id,
+                    payload.video_course_bindings,
+                )
+                product.video_course_bindings.extend(bindings)
+            product.product_type = ProductType.COURSE
+            if product.status == ProductStatus.PUBLISHED:
+                self._validate_publishable(product)
             details = {"before": before, "after": product_snapshot(product)}
             await self.session.flush()
             self.audit_repository.add(
@@ -580,12 +735,21 @@ class ProductService:
             raise ProductResourceNotFoundError
         return product
 
+    async def _require_video_course(
+        self,
+        store_id: UUID,
+        video_course_id: UUID,
+    ) -> VideoCourse:
+        video_course = await self.repository.get_video_course(video_course_id)
+        if video_course is None or video_course.store_id != store_id:
+            raise ProductResourceNotFoundError
+        return video_course
+
     def _validate_media_keys(
         self,
         store_id: UUID,
         cover_key: str,
         image_keys: list[str],
-        video_keys: list[str],
     ) -> None:
         if not self.storage.is_product_object_key(store_id, cover_key):
             raise InvalidProductError("商品封面不属于当前门店")
@@ -593,11 +757,17 @@ class ProductService:
             not self.storage.is_product_object_key(store_id, key) for key in image_keys
         ):
             raise InvalidProductError("商品图集包含不属于当前门店的图片")
+
+    def _validate_video_lesson_keys(
+        self,
+        store_id: UUID,
+        video_keys: list[str],
+    ) -> None:
         if any(
             not self.storage.is_product_video_object_key(store_id, key)
             for key in video_keys
         ):
-            raise InvalidProductError("视频章节包含不属于当前门店的视频文件")
+            raise InvalidProductError("视频课时包含不属于当前门店的视频文件")
 
     def _sync_skus(self, product: Product, payload_skus: list[Any]) -> None:
         existing = {sku.id: sku for sku in product.skus}
@@ -616,22 +786,59 @@ class ProductService:
                 for field, value in values.items():
                     setattr(target, field, value)
 
-    def _sync_videos(self, product: Product, payload_videos: list[Any]) -> None:
-        existing = {video.id: video for video in product.videos}
-        submitted_ids = {video.id for video in payload_videos if video.id is not None}
-        if any(video_id not in existing for video_id in submitted_ids):
-            raise InvalidProductError("视频章节不属于当前商品")
-        for video in product.videos:
-            if video.id not in submitted_ids:
-                video.is_active = False
-        for item in payload_videos:
+    def _sync_video_course_lessons(
+        self,
+        video_course: VideoCourse,
+        payload_lessons: list[Any],
+    ) -> None:
+        existing = {lesson.id: lesson for lesson in video_course.lessons}
+        submitted_ids = {
+            lesson.id for lesson in payload_lessons if lesson.id is not None
+        }
+        if any(lesson_id not in existing for lesson_id in submitted_ids):
+            raise InvalidProductError("视频课时不属于当前视频课程")
+        for lesson in video_course.lessons:
+            if lesson.id not in submitted_ids:
+                lesson.is_active = False
+        for item in payload_lessons:
             values = item.model_dump(exclude={"id"})
             if item.id is None:
-                product.videos.append(ProductVideo(**values))
+                video_course.lessons.append(VideoCourseLesson(**values))
             else:
                 target = existing[item.id]
                 for field, value in values.items():
                     setattr(target, field, value)
+
+    async def _build_video_course_bindings(
+        self,
+        store_id: UUID,
+        payload_bindings: list[Any],
+    ) -> list[ProductVideoCourseBinding]:
+        resolved = [
+            (item, await self._require_video_course(store_id, item.video_course_id))
+            for item in payload_bindings
+        ]
+        bindings: list[ProductVideoCourseBinding] = []
+        for item, video_course in resolved:
+            if not video_course.is_active:
+                raise InvalidProductError("只能绑定已启用的视频课程")
+            lessons: list[VideoCourseLesson] = []
+            if item.access_mode == VideoCourseAccessMode.SELECTED:
+                lessons = [
+                    lesson
+                    for lesson in video_course.lessons
+                    if lesson.id in set(item.lesson_ids) and lesson.is_active
+                ]
+                if len(lessons) != len(item.lesson_ids):
+                    raise InvalidProductError("所选视频课时无效或不属于该视频课程")
+            binding = ProductVideoCourseBinding(
+                video_course=video_course,
+                access_mode=item.access_mode,
+            )
+            if lessons:
+                binding.selected_lessons.extend(lessons)
+            bindings.append(binding)
+        return bindings
 
     def _validate_publishable(self, product: Product) -> None:
         try:
@@ -642,21 +849,12 @@ class ProductService:
             raise InvalidProductError("启用商品分类后才能发布")
         if not any(sku.is_active for sku in product.skus):
             raise InvalidProductError("至少需要一个启用的课程规格")
-        if product.product_type == ProductType.COURSE:
-            if any(sku.lesson_count == 0 for sku in product.skus if sku.is_active):
-                raise InvalidProductError("线下课时课的启用规格必须设置课时数")
-            if any(video.is_active for video in product.videos):
-                raise InvalidProductError("线下课时课不能关联视频章节")
-        else:
-            if any(sku.lesson_count != 0 for sku in product.skus if sku.is_active):
-                raise InvalidProductError("视频课程的启用规格课时数必须为 0")
-            if not any(video.is_active for video in product.videos):
-                raise InvalidProductError("视频课程至少需要一个启用的视频章节")
+        if any(sku.lesson_count == 0 for sku in product.skus if sku.is_active):
+            raise InvalidProductError("启用的课程规格必须设置线下课时数")
         self._validate_media_keys(
             product.store_id,
             product.cover_object_key,
             [image.object_key for image in product.images],
-            [video.object_key for video in product.videos if video.is_active],
         )
 
     @staticmethod
@@ -700,7 +898,10 @@ class ProductService:
             updated_at=product.updated_at,
             skus=[ProductSkuRead.model_validate(sku) for sku in product.skus],
             images=[self._to_image_read(image) for image in product.images],
-            videos=[self._to_video_read(video) for video in product.videos],
+            video_course_bindings=[
+                self._to_binding_read(binding)
+                for binding in product.video_course_bindings
+            ],
         )
 
     def _to_public_list_item(self, product: Product) -> ProductPublicListItem:
@@ -718,7 +919,7 @@ class ProductService:
             summary=product.summary,
             cover_url=self.storage.media_url(product.cover_object_key),
             product_type=product.product_type,
-            video_chapter_count=sum(1 for video in product.videos if video.is_active),
+            video_chapter_count=len(self._bound_video_lessons(product)),
             default_sku_id=default_sku.id,
             default_sku_name=default_sku.name,
             lesson_count=default_sku.lesson_count,
@@ -749,27 +950,86 @@ class ProductService:
                 if sku.is_active
             ],
             images=[self._to_image_read(image) for image in product.images],
-            video_chapters=[
-                ProductVideoChapterPreview(
-                    id=video.id,
-                    title=video.title,
-                    duration_seconds=video.duration_seconds,
-                    sort_order=video.sort_order,
+            video_chapters=self._public_video_previews(product),
+        )
+
+    def _to_video_course_read(self, video_course: VideoCourse) -> VideoCourseRead:
+        return VideoCourseRead(
+            id=video_course.id,
+            store_id=video_course.store_id,
+            category_id=video_course.category_id,
+            category_name=video_course.category.name,
+            name=video_course.name,
+            summary=video_course.summary,
+            is_active=video_course.is_active,
+            created_at=video_course.created_at,
+            updated_at=video_course.updated_at,
+            lessons=[
+                VideoCourseLessonRead(
+                    id=lesson.id,
+                    lesson_number=lesson.lesson_number,
+                    title=lesson.title,
+                    object_key=lesson.object_key,
+                    video_url=self.storage.presigned_get_url(lesson.object_key),
+                    duration_seconds=lesson.duration_seconds,
+                    is_active=lesson.is_active,
                 )
-                for video in product.videos
-                if video.is_active
+                for lesson in video_course.lessons
             ],
         )
 
-    def _to_video_read(self, video: ProductVideo) -> ProductVideoRead:
-        return ProductVideoRead(
-            id=video.id,
-            title=video.title,
-            object_key=video.object_key,
-            video_url=self.storage.presigned_get_url(video.object_key),
-            duration_seconds=video.duration_seconds,
-            sort_order=video.sort_order,
-            is_active=video.is_active,
+    @staticmethod
+    def _binding_lessons(
+        binding: ProductVideoCourseBinding,
+    ) -> list[VideoCourseLesson]:
+        if not binding.video_course.is_active:
+            return []
+        candidates = (
+            binding.video_course.lessons
+            if binding.access_mode == VideoCourseAccessMode.ALL
+            else binding.selected_lessons
+        )
+        return [lesson for lesson in candidates if lesson.is_active]
+
+    def _bound_video_lessons(
+        self,
+        product: Product,
+    ) -> list[tuple[ProductVideoCourseBinding, VideoCourseLesson]]:
+        return [
+            (binding, lesson)
+            for binding in product.video_course_bindings
+            for lesson in self._binding_lessons(binding)
+        ]
+
+    def _public_video_previews(
+        self,
+        product: Product,
+    ) -> list[ProductVideoChapterPreview]:
+        return [
+            ProductVideoChapterPreview(
+                id=lesson.id,
+                video_course_id=binding.video_course_id,
+                video_course_name=binding.video_course.name,
+                lesson_number=lesson.lesson_number,
+                title=lesson.title,
+                duration_seconds=lesson.duration_seconds,
+                sort_order=lesson.lesson_number,
+            )
+            for binding, lesson in self._bound_video_lessons(product)
+        ]
+
+    def _to_binding_read(
+        self,
+        binding: ProductVideoCourseBinding,
+    ) -> ProductVideoCourseBindingRead:
+        lessons = self._binding_lessons(binding)
+        return ProductVideoCourseBindingRead(
+            id=binding.id,
+            video_course_id=binding.video_course_id,
+            video_course_name=binding.video_course.name,
+            access_mode=binding.access_mode,
+            lesson_ids=[lesson.id for lesson in binding.selected_lessons],
+            lesson_count=len(lessons),
         )
 
     def _to_image_read(self, image: ProductImage) -> ProductImageRead:
