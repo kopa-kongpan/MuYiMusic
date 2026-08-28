@@ -1,0 +1,77 @@
+apps/admin/src/app/AdminShell.tsx
+  s_1da998797e8ed6::t_13c54847d7ceb8 6,28,53-55,101-105
+apps/admin/src/app/ProductFormModal.tsx
+  s_1da998797e8ed6::t_83c14445081b48 6,8,21,45-48,62,102-113,145-149,174,269,325-327,460,515-582,584-614
+apps/admin/src/app/ProductPreviewDrawer.tsx
+  s_1da998797e8ed6::t_e8bcadcaa4b2c9 41,50,58,60,62-63,65-66
+apps/admin/src/app/ProductsPage.tsx
+  s_1da998797e8ed6::t_65ce44c3fd510e 224-230
+apps/admin/src/app/UsersPage.tsx
+  s_1da998797e8ed6::t_2970e36957dffa 457,466
+apps/admin/src/app/VideoCourseFormModal.tsx
+  s_1da998797e8ed6::t_718e30e8206436 1-307
+apps/admin/src/app/VideoCoursesPage.tsx
+  s_1da998797e8ed6::t_a8455ee46699f7 1-249
+apps/admin/src/app/router.tsx
+  s_1da998797e8ed6::t_2a7a5193889f10 14,30
+apps/miniapp/src/pages/course-detail/index.tsx
+  s_1da998797e8ed6::t_c2807c59c78ae0 214,245,248,254-257,265
+apps/miniapp/src/pages/my-courses/index.tsx
+  s_1da998797e8ed6::t_67027ed30ef316 113-120,123,132-135,142
+apps/miniapp/src/pages/video-player/index.tsx
+  s_1da998797e8ed6::t_b46bbb4acebea2 54,74,92,132-133,137
+docs/文档索引.md
+  s_1da998797e8ed6::t_5374a96f7393c9 20,23
+docs/第一阶段需求规格.md
+  s_1da998797e8ed6::t_485af0b57040bb 130,159,191-192,220-221,273-274,283
+docs/第八版视频课程说明.md
+  s_1da998797e8ed6::t_e07f1034e2340b 10-12
+docs/第十版配套视频课程说明.md
+  s_1da998797e8ed6::t_db4f94416ad22e 1-46
+packages/api-client/src/generated/schema.ts
+  s_1da998797e8ed6::t_f7c174834a811a 316-351,1719,1727-1735,2071-2072,2247-2248,2336-2337,2341,2349-2357,2365-2366,2373-2374,2376-2386,2388-2389,2391-2395,3046-3172,3880-4019
+packages/api-client/src/index.ts
+  s_1da998797e8ed6::t_0a613e1dc47f63 90-104,211-218,570-605
+services/api/app/api/v1/admin/products.py
+  s_1da998797e8ed6::t_802d12c7590375 22-25,29,126-219
+services/api/app/models/__init__.py
+  s_1da998797e8ed6::t_4e53b4acc20862 32-34,89,102-103
+services/api/app/models/product.py
+  s_1da998797e8ed6::t_350b5fe1451632 9,15,17,40-60,88,156,160,212-213,215,219-232,235-276,295-339
+services/api/app/repositories/product_repository.py
+  s_1da998797e8ed6::t_9a1d62972251e5 2,9-16,63-76,80,111,180,190-251
+services/api/app/repositories/user_repository.py
+  s_1da998797e8ed6::t_a4cb2a708d9423 18,125-127,152-154
+services/api/app/schemas/product.py
+  s_1da998797e8ed6::t_baeba1201971ad 7,102,106,113-193,208-211,220-226,248-251,262,277-278,283-284,286,309,311,319-347,370,411,414-416
+services/api/app/schemas/user.py
+  s_1da998797e8ed6::t_60d75aaa38608a 82,85-87
+services/api/app/services/product_service.py
+  s_1da998797e8ed6::t_e4b4562a582494 15-18,43,46-50,72-75,126-133,276-411,462-465,475,487,521,538,541-563,738-747,760-765,770,789-803,806,812-842,852-853,901-904,922,953-975,977,981-1032
+services/api/app/services/user_service.py
+  s_1da998797e8ed6::t_44e3fa84386e90 10-14,211-213,283,296,503-506,508-511,513-531
+services/api/migrations/versions/20260828_0013_video_course_bindings.py
+  s_1da998797e8ed6::t_46fc44b382003c 1-524
+services/api/tests/test_product_api.py
+  s_1da998797e8ed6::t_3a9d51a82fe341 398,704-947
+services/api/tests/test_user_api.py
+  s_1da998797e8ed6::t_853e9238ebae49 25-28,30,444,503,713-862
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0aee42007d2d8bfcc89dd22270572d837edd87c3",
+  "prompts": {},
+  "sessions": {
+    "s_1da998797e8ed6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03d48-8a47-7382-b9c8-5f1d3dcddad9",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
