@@ -1,0 +1,123 @@
+.env.example
+  s_1da998797e8ed6::t_74d73350af5ad9 21-22,47-54
+apps/admin/src/app/AdminShell.tsx
+  s_d3c70787113eec::t_02ed0e7286023a 9,29,53-54,83-87
+apps/admin/src/app/FranchisePage.tsx
+  s_d3c70787113eec::t_175986d69cb17c 1-104
+apps/admin/src/app/router.tsx
+  s_d3c70787113eec::t_a27c0b514358a8 6,27
+apps/admin/src/styles.scss
+  s_d3c70787113eec::t_7d47ce7dd44b1a 1435-1444
+apps/miniapp/config/index.ts
+  s_43cccb85627d1b::t_998f64bad223ca 3-5,16-25,29,44-46
+apps/miniapp/project.config.json
+  s_43cccb85627d1b::t_14614be99fb25e 5,7,10-38
+apps/miniapp/src/app.config.ts
+  s_d3c70787113eec::t_85b0f7359e95df 18,34
+apps/miniapp/src/pages/courses/index.scss
+  s_43cccb85627d1b::t_298bc78a749fc2 3-5,10-11,20,31-32,37,39-40,47-48,57-58,63-81,83-85,89-117,121-122,124,129-133,135-138,141-147,150-154,157-168,170-213,216-228,230-237,240-242,244-245,248-259,269-270,273-275,279-280,284-288,295-311,317-318,324-325,327-329,342-343,345,349-351,357-364,368-413,420-421,429,439,446,450-451,454-456,461-462,464-466,471,475-478,481,488,499
+apps/miniapp/src/pages/courses/index.tsx
+  s_43cccb85627d1b::t_f18d3731b72662 6,19-22,177-187,193,201-202,207,212,221-222,224-245,251-252,256,263-266,270-274,276-283,285,287-295,297-302,304-314,316-336,338-364,367-368,370,372
+apps/miniapp/src/pages/franchise/index.config.ts
+  s_d3c70787113eec::t_479e567e830982 1-4
+apps/miniapp/src/pages/franchise/index.scss
+  s_d3c70787113eec::t_80a0914af92c71 1-16
+apps/miniapp/src/pages/franchise/index.tsx
+  s_d3c70787113eec::t_ea98853a1afc12 1-65
+apps/miniapp/src/services/franchise.ts
+  s_d3c70787113eec::t_8516b04f256f10 1-16
+apps/miniapp/src/services/user.ts
+  s_43cccb85627d1b::t_99b12b47a59c52 17-20,43-47,52
+deploy/compose.local.yaml
+  s_1da998797e8ed6::t_d158579d882875 1-66
+docs/加盟合作页面说明.md
+  s_d3c70787113eec::t_09b9ed30bbe099 1-25
+docs/文档索引.md
+  s_d3c70787113eec::t_c782ec29c51483 21
+docs/本地容器部署说明.md
+  s_1da998797e8ed6::t_bb73f6010fca16 40-47
+docs/第一版门店闭环说明.md
+  s_43cccb85627d1b::t_b1b4a3273a6e00 99
+docs/第一阶段需求规格.md
+  s_1da998797e8ed6::t_81662406624a06 130-132,159,191-192,219,255,271-272,283-284,294
+docs/第九版消息通知功能说明.md
+  s_43cccb85627d1b::t_8276ea7e03684e 25-45
+docs/第八版视频课程说明.md
+  s_1da998797e8ed6::t_7ddd6c0dd2c63e 33,50-54,68,70
+package.json
+  s_1da998797e8ed6::t_d7534077a3e685 18-20
+packages/api-client/src/generated/schema.ts
+  s_43cccb85627d1b::t_bfa6d404492f64 41-58,662-678,1700-1786,3066-3131,4628-4658
+packages/api-client/src/index.ts
+  s_d3c70787113eec::t_4b41d62d89b1c7 49-52,483-493
+services/api/app/api/v1/admin/franchise.py
+  s_d3c70787113eec::t_2915ef51169f66 1-41
+services/api/app/api/v1/app/franchise.py
+  s_d3c70787113eec::t_ff393f5e7c05f8 1-22
+services/api/app/api/v1/router.py
+  s_d3c70787113eec::t_23cd328540695f 6,16,28,39
+services/api/app/models/__init__.py
+  s_d3c70787113eec::t_858d99ad3d9eb5 14,65
+services/api/app/models/audit.py
+  s_1da998797e8ed6::t_290c41679e75eb 21
+services/api/app/models/franchise.py
+  s_1da998797e8ed6::t_81803b75c8a21f 1-33
+services/api/app/providers/object_storage.py
+  s_1da998797e8ed6::t_0fa666378a592b 81
+services/api/app/providers/wechat_subscribe.py
+  s_43cccb85627d1b::t_88c3a9e8bda7b9 2-4,6,8,40,103-114,119-180
+services/api/app/repositories/franchise_repository.py
+  s_d3c70787113eec::t_5fe1f1a4b5e6d1 1-20
+services/api/app/schemas/franchise.py
+  s_d3c70787113eec::t_1fd889f7ce8370 1-38
+services/api/app/services/franchise_service.py
+  s_d3c70787113eec::t_046c9497f52509 1-101
+services/api/app/services/notification_service.py
+  s_43cccb85627d1b::t_7d4678dd5ff06b 68
+services/api/migrations/versions/20260825_0011_franchise_pages.py
+  s_1da998797e8ed6::t_15adb65bfc5e00 1-56
+services/api/migrations/versions/20260827_0012_audit_resource_id.py
+  s_1da998797e8ed6::t_11d22ddaae7d60 1-35
+services/api/tests/test_franchise_api.py
+  s_d3c70787113eec::t_c6e33b8e37db5d 1-99
+services/api/tests/test_object_storage.py
+  s_1da998797e8ed6::t_fbc339e8a237d3 38,126
+services/api/tests/test_store_content_api.py
+  s_1da998797e8ed6::t_74cc2d9483050e 11,18,237-322
+services/api/tests/test_wechat_subscribe.py
+  s_43cccb85627d1b::t_ee79a0c5bcc4b3 1-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2fd745e0f3135946ee8c41156352d2895899bbe8",
+  "prompts": {},
+  "sessions": {
+    "s_1da998797e8ed6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03d48-8a47-7382-b9c8-5f1d3dcddad9",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    },
+    "s_43cccb85627d1b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a02857-c788-7701-8481-91f9dc9f9c0d",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    },
+    "s_d3c70787113eec": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0390b-4a1d-7ad1-a530-3ba3124cde52",
+        "model": "unknown"
+      },
+      "human_author": "kongpan.moij <kongpan.moij@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
