@@ -33,6 +33,7 @@ services/api/.uv-cache/
 apps/miniapp/.temp/
 apps/miniapp/.rn_temp/
 apps/miniapp/.swc/
+apps/miniapp/project.private.config.json
 
 # Generated API contract
 services/api/openapi.json

@@ -35,6 +35,7 @@ def test_object_storage_creates_real_s3_presigned_put() -> None:
     assert ticket.object_key.startswith(f"muyimusic/stores/{store_id}/home/")
     assert ticket.object_key.endswith(".jpg")
     assert "X-Amz-Signature=" in ticket.upload_url
+    assert "X-Amz-Security-Token" not in ticket.upload_url
     assert ticket.headers["Content-Type"] == "image/jpeg"
     assert ticket.public_url == (f"https://media.example.com/{ticket.object_key}")
 
@@ -122,6 +123,7 @@ def test_object_storage_presigned_get_url_signs_get_requests() -> None:
     url = provider.presigned_get_url(ticket.object_key)
     assert url is not None
     assert "X-Amz-Signature=" in url
+    assert "X-Amz-Security-Token" not in url
     assert "get_object" not in url  # 签名 URL 不暴露操作名
 
     assert ticket.public_url == url

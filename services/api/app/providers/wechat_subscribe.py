@@ -1,6 +1,11 @@
 import json
+import re
+import string
+import unicodedata
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 from redis.asyncio import Redis
@@ -32,6 +37,7 @@ class WechatSubscribeMessage:
 
 class WechatSubscribeProvider:
     token_cache_key = "muyimusic:wechat:access_token"
+    local_timezone = ZoneInfo("Asia/Shanghai")
 
     def __init__(self, settings: Settings, redis: Redis) -> None:
         self.settings = settings
@@ -94,11 +100,83 @@ class WechatSubscribeProvider:
         result: dict[str, dict[str, str]] = {}
         for semantic_key, wechat_key in mapping.items():
             value = payload.get(semantic_key)
-            if isinstance(wechat_key, str) and value is not None:
-                result[wechat_key] = {"value": str(value)}
+            if not isinstance(semantic_key, str) or not isinstance(wechat_key, str):
+                raise WechatSubscribeNotConfiguredError
+            if value is None:
+                raise WechatSubscribeNotConfiguredError
+            formatted = self._format_template_value(
+                semantic_key=semantic_key,
+                wechat_key=wechat_key,
+                value=value,
+            )
+            if not formatted:
+                raise WechatSubscribeNotConfiguredError
+            result[wechat_key] = {"value": formatted}
         if not result:
             raise WechatSubscribeNotConfiguredError
         return result
+
+    def _format_template_value(
+        self,
+        *,
+        semantic_key: str,
+        wechat_key: str,
+        value: object,
+    ) -> str:
+        field_type = self._field_type(wechat_key)
+        if semantic_key == "starts_at":
+            local = self._local_datetime(value)
+            if field_type == "time":
+                return (
+                    f"{local.year}年{local.month}月{local.day}日 "
+                    f"{local.hour:02d}:{local.minute:02d}"
+                )
+            if field_type == "character_string":
+                return local.strftime("%Y-%m-%d %H:%M")
+
+        text = self._plain_text(value)
+        if field_type == "thing":
+            return text[:20]
+        if field_type == "name":
+            return self._name(text)
+        if field_type == "character_string":
+            allowed = string.ascii_letters + string.digits + string.punctuation + " "
+            return "".join(character for character in text if character in allowed)[:32]
+        return text
+
+    @staticmethod
+    def _field_type(wechat_key: str) -> str:
+        match = re.fullmatch(r"([a-z_]+)\d+", wechat_key)
+        if match is None:
+            raise WechatSubscribeNotConfiguredError
+        return match.group(1)
+
+    @classmethod
+    def _local_datetime(cls, value: object) -> datetime:
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError as error:
+            raise WechatSubscribeNotConfiguredError from error
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(cls.local_timezone)
+
+    @staticmethod
+    def _plain_text(value: object) -> str:
+        return " ".join(str(value).split())
+
+    @staticmethod
+    def _name(value: str) -> str:
+        cleaned = "".join(
+            character
+            for character in value
+            if not character.isdigit()
+            and not unicodedata.category(character).startswith("C")
+        ).strip()
+        if not cleaned:
+            return "微信用户"
+        contains_cjk = any("\u4e00" <= character <= "\u9fff" for character in cleaned)
+        return cleaned[: 10 if contains_cjk else 20]
 
     async def send(
         self,

@@ -17,7 +17,6 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
     op.execute(
         sa.text(
             """

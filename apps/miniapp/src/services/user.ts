@@ -14,6 +14,10 @@ import {
 } from '../store/user-session'
 
 const apiBaseUrl = MUYIMUSIC_API_BASE_URL.replace(/\/$/, '')
+const localMockLogin = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(
+  apiBaseUrl,
+)
+const localMockLoginCode = 'seed-local-user-0001-abcdefghijklmnop'
 
 interface ApiErrorResponse {
   message?: string
@@ -36,12 +40,16 @@ function requireSuccess<T>(
 
 export async function loginCurrentUser(): Promise<UserSession> {
   const adapter = getPlatformAdapter()
-  const loginResult = await adapter.login()
+  // 微信开发者工具访问本地 API 时复用后端已有的 local 身份提供器，
+  // 避免依赖尚未配置的线上 AppSecret；生产 HTTPS 构建仍走真实平台登录。
+  const loginResult = localMockLogin
+    ? { code: localMockLoginCode }
+    : await adapter.login()
   const response = await Taro.request<UserTokenResponse | ApiErrorResponse>({
     url: `${apiBaseUrl}/api/v1/app/auth/login`,
     method: 'POST',
     data: {
-      provider: adapter.name,
+      provider: localMockLogin ? 'h5' : adapter.name,
       code: loginResult.code,
     },
   })

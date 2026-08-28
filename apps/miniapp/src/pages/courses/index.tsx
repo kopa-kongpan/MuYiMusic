@@ -3,7 +3,7 @@ import type {
   ProductPublicListItem,
   ProductSort,
 } from '@muyimusic/api-client'
-import { Button, Image, Input, Picker, ScrollView, Text, View } from '@tarojs/components'
+import { Button, Image, Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { useState } from 'react'
 
@@ -16,12 +16,10 @@ import { addCartItem, cartQuantity } from '../../store/cart'
 import { readCurrentStore } from '../../store/current-store'
 import './index.scss'
 
-const sortOptions: Array<{ label: string; value: ProductSort }> = [
-  { label: '综合排序', value: 'comprehensive' },
-  { label: '销量优先', value: 'sales' },
-  { label: '最新上架', value: 'newest' },
-  { label: '价格从低到高', value: 'price_asc' },
-  { label: '价格从高到低', value: 'price_desc' },
+const primarySortOptions: Array<{ label: string; value: ProductSort }> = [
+  { label: '综合', value: 'comprehensive' },
+  { label: '销量', value: 'sales' },
+  { label: '新品', value: 'newest' },
 ]
 
 function formatMoney(priceCents: number): string {
@@ -176,16 +174,23 @@ export default function CoursesPage() {
   }
 
   const store = readCurrentStore()
-  const selectedSortIndex = Math.max(
-    0,
-    sortOptions.findIndex((option) => option.value === sort),
-  )
+  function selectSort(nextSort: ProductSort) {
+    setSort(nextSort)
+    void loadProducts({ nextSort })
+  }
+
+  function togglePriceSort() {
+    selectSort(sort === 'price_asc' ? 'price_desc' : 'price_asc')
+  }
+
+  const selectedCategoryName =
+    categories.find((category) => category.id === categoryId)?.name ?? '全部课程'
 
   return (
     <View className="courses-page">
       <View className="courses-header">
         <View>
-          <Text className="courses-title">课程</Text>
+          <Text className="courses-title">发现好课程</Text>
           <Text className="courses-store">{store?.name ?? '尚未选择门店'}</Text>
         </View>
         <Button
@@ -193,16 +198,18 @@ export default function CoursesPage() {
           size="mini"
           onClick={() => void Taro.navigateTo({ url: '/pages/cart/index' })}
         >
-          购物车{cartCount ? ` ${cartCount}` : ''}
+          <Text>购物车</Text>
+          {cartCount ? <Text className="cart-entry-count">{cartCount}</Text> : null}
         </Button>
       </View>
 
       <View className="course-search-row">
+        <View className="course-search-icon" aria-hidden="true" />
         <Input
           className="course-search-input"
           value={keywordInput}
           confirmType="search"
-          placeholder="搜索课程"
+          placeholder="请输入搜索关键词"
           onInput={(event) => setKeywordInput(event.detail.value)}
           onConfirm={search}
         />
@@ -211,134 +218,158 @@ export default function CoursesPage() {
         </Button>
       </View>
 
-      <ScrollView className="category-scroll" scrollX enhanced showScrollbar={false}>
-        <View className="category-tabs">
+      <View className="course-sort-bar">
+        {primarySortOptions.map((option) => (
           <View
-            className={`category-tab${categoryId ? '' : ' category-tab--active'}`}
+            className={`course-sort-option${sort === option.value ? ' course-sort-option--active' : ''}`}
+            key={option.value}
+            onClick={() => selectSort(option.value)}
+          >
+            {option.label}
+          </View>
+        ))}
+        <View
+          className={`course-sort-option${sort === 'price_asc' || sort === 'price_desc' ? ' course-sort-option--active' : ''}`}
+          onClick={togglePriceSort}
+        >
+          价格
+          <Text className="course-price-direction">
+            {sort === 'price_asc' ? '↑' : sort === 'price_desc' ? '↓' : '↕'}
+          </Text>
+        </View>
+      </View>
+
+      <View className="course-catalog">
+        <View className="course-category-rail">
+          <View
+            className={`course-category-item${categoryId ? '' : ' course-category-item--active'}`}
             onClick={() => {
               setCategoryId(undefined)
               void loadProducts({ nextCategoryId: undefined })
             }}
           >
-            全部
+            <View className="course-category-mark">全</View>
+            <Text>全部课程</Text>
           </View>
           {categories.map((category) => (
             <View
-              className={`category-tab${category.id === categoryId ? ' category-tab--active' : ''}`}
+              className={`course-category-item${category.id === categoryId ? ' course-category-item--active' : ''}`}
               key={category.id}
               onClick={() => {
                 setCategoryId(category.id)
                 void loadProducts({ nextCategoryId: category.id })
               }}
             >
-              {category.name}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-
-      <View className="course-result-bar">
-        <Text>{total} 门课程</Text>
-        <Picker
-          mode="selector"
-          range={sortOptions.map((option) => option.label)}
-          value={selectedSortIndex}
-          onChange={(event) => {
-            const next = sortOptions[Number(event.detail.value)]
-            if (next) {
-              setSort(next.value)
-              void loadProducts({ nextSort: next.value })
-            }
-          }}
-        >
-          <View className="sort-picker">{sortOptions[selectedSortIndex]?.label}</View>
-        </Picker>
-      </View>
-
-      {isLoading ? (
-        <View className="course-list">
-          {[0, 1, 2].map((item) => (
-            <View className="course-skeleton" key={item}>
-              <View />
-              <View><View /><View /><View /></View>
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      {!isLoading && errorMessage ? (
-        <View className="course-state course-state--error">
-          <Text className="course-state-title">暂时无法加载课程</Text>
-          <Text className="course-state-copy">{errorMessage}</Text>
-          <Button className="course-retry-button" size="mini" onClick={() => void loadCourses()}>
-            重试
-          </Button>
-        </View>
-      ) : null}
-
-      {!isLoading && !errorMessage && products.length === 0 ? (
-        <View className="course-state">
-          <Text className="course-state-title">暂无符合条件的课程</Text>
-          <Text className="course-state-copy">可更换分类或搜索词后查看</Text>
-        </View>
-      ) : null}
-
-      {!isLoading && !errorMessage && products.length ? (
-        <View className="course-list">
-          {products.map((product) => (
-            <View
-              className="course-item"
-              key={product.id}
-              hoverClass="course-item--pressed"
-              onClick={() =>
-                void Taro.navigateTo({
-                  url: `/pages/course-detail/index?id=${product.id}`,
-                })
-              }
-            >
-              {product.cover_url && !failedImages.has(product.id) ? (
-                <Image
-                  className="course-cover"
-                  src={product.cover_url}
-                  mode="aspectFill"
-                  onError={() =>
-                    setFailedImages((current) => new Set(current).add(product.id))
-                  }
-                />
-              ) : (
-                <View className="course-cover course-cover--empty">课程</View>
-              )}
-              <View className="course-item-body">
-                <Text className="course-item-category">{product.category_name}</Text>
-                <Text className="course-item-name">{product.name}</Text>
-                <Text className="course-item-summary">
-                  {product.lesson_count} 课时 · {product.validity_days} 天有效
-                </Text>
-                <View className="course-item-meta">
-                  <View>
-                    <Text className="course-item-price">
-                      {formatMoney(product.min_price_cents)}
-                      {product.max_price_cents !== product.min_price_cents ? ' 起' : ''}
-                    </Text>
-                    <Text>已售 {product.sales_count}</Text>
-                  </View>
-                  <Button
-                    className="course-cart-button"
-                    size="mini"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      void addProductToCart(product)
-                    }}
-                  >
-                    加入购物车
-                  </Button>
-                </View>
+              <View className="course-category-mark">
+                {category.name.slice(0, 1)}
               </View>
+              <Text>{category.name}</Text>
             </View>
           ))}
-          {isLoadingMore ? <Text className="course-loading-more">加载中</Text> : null}
         </View>
-      ) : null}
+        <View className="course-catalog-main">
+          <View className="course-result-heading">
+            <Text className="course-result-title">{selectedCategoryName}</Text>
+            <Text className="course-result-count">{total} 门</Text>
+          </View>
+
+          {isLoading ? (
+            <View className="course-list">
+              {[0, 1, 2].map((item) => (
+                <View className="course-skeleton" key={item}>
+                  <View />
+                  <View><View /><View /><View /></View>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {!isLoading && errorMessage ? (
+            <View className="course-state course-state--error">
+              <Text className="course-state-title">暂时无法加载课程</Text>
+              <Text className="course-state-copy">{errorMessage}</Text>
+              <Button className="course-retry-button" size="mini" onClick={() => void loadCourses()}>
+                重试
+              </Button>
+            </View>
+          ) : null}
+
+          {!isLoading && !errorMessage && products.length === 0 ? (
+            <View className="course-state">
+              <Text className="course-state-title">暂无符合条件的课程</Text>
+              <Text className="course-state-copy">可更换分类或搜索词后查看</Text>
+            </View>
+          ) : null}
+
+          {!isLoading && !errorMessage && products.length ? (
+            <View className="course-list">
+              {products.map((product) => (
+                <View
+                  className="course-item"
+                  key={product.id}
+                  hoverClass="course-item--pressed"
+                  onClick={() =>
+                    void Taro.navigateTo({
+                      url: `/pages/course-detail/index?id=${product.id}`,
+                    })
+                  }
+                >
+                  {product.cover_url && !failedImages.has(product.id) ? (
+                    <Image
+                      className="course-cover"
+                      src={product.cover_url}
+                      mode="aspectFill"
+                      onError={() =>
+                        setFailedImages((current) => new Set(current).add(product.id))
+                      }
+                    />
+                  ) : (
+                    <View className="course-cover course-cover--empty">
+                      <Text>{product.category_name.slice(0, 1)}</Text>
+                      <Text>MUYI MUSIC</Text>
+                    </View>
+                  )}
+                  <View className="course-item-body">
+                    <Text className="course-item-category">{product.category_name}</Text>
+                    <Text className="course-item-name">{product.name}</Text>
+                    <Text className="course-item-summary">
+                      {product.lesson_count} 课时 · {product.validity_days} 天有效
+                    </Text>
+                    <View className="course-item-meta">
+                      <View>
+                        <Text className="course-item-price">
+                          {formatMoney(product.min_price_cents)}
+                          {product.max_price_cents !== product.min_price_cents ? ' 起' : ''}
+                        </Text>
+                        <Text className="course-item-sales">已售 {product.sales_count}</Text>
+                      </View>
+                      <View
+                        className="course-cart-hit-area"
+                        hoverClass="course-cart-hit-area--pressed"
+                        role="button"
+                        aria-label={`将${product.name}加入购物车`}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void addProductToCart(product)
+                        }}
+                      >
+                        <View className="course-cart-button">
+                          <Image
+                          className="course-cart-button-icon"
+                          src="/assets/icons/cart.png"
+                          mode="aspectFit"
+                        />
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))}
+              {isLoadingMore ? <Text className="course-loading-more">加载中</Text> : null}
+            </View>
+          ) : null}
+        </View>
+      </View>
     </View>
   )
 }

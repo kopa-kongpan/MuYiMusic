@@ -1,0 +1,66 @@
+x-local-object-storage: &local-object-storage
+  OBJECT_STORAGE_PROVIDER: s3
+  OBJECT_STORAGE_ENDPOINT: http://localhost:${MINIO_API_PORT:-19000}
+  OBJECT_STORAGE_REGION: ${MINIO_REGION:-us-east-1}
+  OBJECT_STORAGE_BUCKET: ${MINIO_BUCKET:-muyimusic-local}
+  OBJECT_STORAGE_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-muyimusic-local}
+  OBJECT_STORAGE_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-muyimusic-local-secret-2026}
+  OBJECT_STORAGE_PUBLIC_BASE_URL: ""
+  OBJECT_STORAGE_ADDRESSING_STYLE: path
+
+services:
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-muyimusic-local}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-muyimusic-local-secret-2026}
+      MINIO_API_CORS_ALLOW_ORIGIN: >-
+        http://localhost:5173,http://127.0.0.1:5173,http://localhost:10086,http://127.0.0.1:10086
+    ports:
+      - "${MINIO_API_PORT:-19000}:9000"
+      - "${MINIO_CONSOLE_PORT:-19001}:9001"
+    volumes:
+      - minio-local-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-muyimusic-local}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-muyimusic-local-secret-2026}
+      MINIO_BUCKET: ${MINIO_BUCKET:-muyimusic-local}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+        mc mb --ignore-existing "local/$${MINIO_BUCKET}" &&
+        mc anonymous set none "local/$${MINIO_BUCKET}"
+    restart: "no"
+
+  migrate:
+    environment: *local-object-storage
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+
+  bootstrap:
+    environment: *local-object-storage
+
+  api:
+    environment: *local-object-storage
+
+  worker:
+    environment: *local-object-storage
+
+volumes:
+  minio-local-data:

@@ -65,6 +65,7 @@ class NotificationService:
                 "starts_at": appointment.schedule.starts_at.isoformat(),
                 "teacher_name": appointment.schedule.teacher.name,
                 "student_name": appointment.user.nickname,
+                "note": "请提前安排时间",
             },
         )
         self.session.add(notification)

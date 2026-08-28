@@ -46,6 +46,10 @@ export type EntitlementGrantRequest =
 export type EntitlementLessonUpdateRequest =
   components['schemas']['EntitlementLessonUpdateRequest']
 export type EntitlementStatus = components['schemas']['EntitlementStatus']
+export type FranchisePagePublicRead =
+  components['schemas']['FranchisePagePublicRead']
+export type FranchisePageRead = components['schemas']['FranchisePageRead']
+export type FranchisePageUpdate = components['schemas']['FranchisePageUpdate']
 export type EntitlementVideoChapterRead =
   components['schemas']['EntitlementVideoChapterRead']
 export type IdentityProvider = components['schemas']['IdentityProvider']
@@ -474,6 +478,17 @@ export function createApiClient(options: ApiClientOptions = {}) {
           method: 'PUT',
           body: JSON.stringify(payload),
         },
+      )
+    },
+    getFranchisePage(storeId: string) {
+      return request<FranchisePageRead | null>(
+        `/api/v1/admin/stores/${storeId}/franchise`,
+      )
+    },
+    updateFranchisePage(storeId: string, payload: FranchisePageUpdate) {
+      return request<FranchisePageRead>(
+        `/api/v1/admin/stores/${storeId}/franchise`,
+        { method: 'PUT', body: JSON.stringify(payload) },
       )
     },
     createUploadTicket(payload: UploadTicketRequest) {

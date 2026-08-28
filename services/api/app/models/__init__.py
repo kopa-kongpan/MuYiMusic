@@ -11,6 +11,7 @@ from app.models.appointment import (
     LessonConsumption,
 )
 from app.models.audit import AuditLog
+from app.models.franchise import FranchisePage
 from app.models.notification import (
     Notification,
     NotificationChannel,
@@ -61,6 +62,7 @@ __all__ = [
     "ConsumptionKind",
     "ConsumptionStatus",
     "EntitlementStatus",
+    "FranchisePage",
     "AuditLog",
     "Base",
     "Category",

@@ -8,12 +8,14 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import Settings
 from app.core.database import get_engine, get_session
 from app.core.security import hash_password
 from app.main import app
 from app.models.admin import AdminUser, Permission, Role
 from app.models.audit import AuditLog
 from app.models.store import Store
+from app.providers.object_storage import ObjectStorageProvider, get_object_storage
 
 pytestmark = pytest.mark.asyncio
 
@@ -226,6 +228,92 @@ async def test_store_home_content_lifecycle_and_store_isolation() -> None:
                 )
             )
             assert reorder_audit_count == 1
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()
+
+
+async def test_upload_ticket_records_full_object_key_in_audit_log() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        storage = ObjectStorageProvider(
+            Settings(
+                _env_file=None,
+                object_storage_provider="s3",
+                object_storage_endpoint="https://s3.example.com",
+                object_storage_region="us-east-1",
+                object_storage_bucket="music-assets",
+                object_storage_access_key_id="test-access-key",
+                object_storage_secret_access_key="test-secret-key",
+                object_storage_addressing_style="path",
+            )
+        )
+        app.dependency_overrides[get_session] = override_session
+        app.dependency_overrides[get_object_storage] = lambda: storage
+        try:
+            permission = await session.scalar(
+                select(Permission).where(Permission.code == "products:manage")
+            )
+            assert permission is not None
+            role = Role(code=f"upload-operator-{uuid4()}", name="媒体上传运营")
+            role.permissions.append(permission)
+            password = "test-password-2026"
+            admin = AdminUser(
+                username=f"upload-admin-{uuid4().hex}",
+                password_hash=hash_password(password),
+            )
+            admin.roles.append(role)
+            store = make_store("视频上传审计门店")
+            admin.stores.append(store)
+            session.add(admin)
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                login_response = await client.post(
+                    "/api/v1/admin/auth/login",
+                    json={"username": admin.username, "password": password},
+                )
+                assert login_response.status_code == 200
+                headers = {
+                    "Authorization": (f"Bearer {login_response.json()['access_token']}")
+                }
+                upload_response = await client.post(
+                    "/api/v1/admin/media/upload-tickets",
+                    headers=headers,
+                    json={
+                        "store_id": str(store.id),
+                        "file_name": "第一章.mp4",
+                        "content_type": "video/mp4",
+                        "file_size": 1024,
+                        "purpose": "product_video",
+                    },
+                )
+                assert upload_response.status_code == 201
+                object_key = upload_response.json()["object_key"]
+                assert len(object_key) > 64
+
+            audit_log = await session.scalar(
+                select(AuditLog).where(
+                    AuditLog.action == "media.upload_ticket.create",
+                    AuditLog.resource_id == object_key,
+                )
+            )
+            assert audit_log is not None
+            assert audit_log.details["purpose"] == "product_video"
         finally:
             app.dependency_overrides.clear()
             await session.close()

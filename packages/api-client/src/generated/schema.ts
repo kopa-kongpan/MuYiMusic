@@ -38,6 +38,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/franchise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Franchise Page */
+        get: operations["get_franchise_page_api_v1_admin_stores__store_id__franchise_get"];
+        /** Update Franchise Page */
+        put: operations["update_franchise_page_api_v1_admin_stores__store_id__franchise_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/stores/{store_id}/appointments": {
         parameters: {
             query?: never;
@@ -635,6 +653,23 @@ export interface paths {
         put?: never;
         /** Login */
         post: operations["login_api_v1_app_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/stores/{store_id}/franchise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Franchise Page */
+        get: operations["get_franchise_page_api_v1_app_stores__store_id__franchise_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1661,6 +1696,93 @@ export interface components {
             sort_order: number;
             /** Video Url */
             video_url: string | null;
+        };
+        /** FranchisePagePublicRead */
+        FranchisePagePublicRead: {
+            /** Title */
+            title: string;
+            /** Introduction */
+            introduction: string;
+            /** Advantages */
+            advantages: string;
+            /** Support Policy */
+            support_policy: string;
+            /** Application Process */
+            application_process: string;
+            /** Contact Name */
+            contact_name: string;
+            /** Contact Phone */
+            contact_phone: string;
+            /** Contact Wechat */
+            contact_wechat: string | null;
+        };
+        /** FranchisePageRead */
+        FranchisePageRead: {
+            /** Title */
+            title: string;
+            /** Introduction */
+            introduction: string;
+            /** Advantages */
+            advantages: string;
+            /** Support Policy */
+            support_policy: string;
+            /** Application Process */
+            application_process: string;
+            /** Contact Name */
+            contact_name: string;
+            /** Contact Phone */
+            contact_phone: string;
+            /** Contact Wechat */
+            contact_wechat?: string | null;
+            /**
+             * Is Published
+             * @default false
+             */
+            is_published: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** FranchisePageUpdate */
+        FranchisePageUpdate: {
+            /** Title */
+            title: string;
+            /** Introduction */
+            introduction: string;
+            /** Advantages */
+            advantages: string;
+            /** Support Policy */
+            support_policy: string;
+            /** Application Process */
+            application_process: string;
+            /** Contact Name */
+            contact_name: string;
+            /** Contact Phone */
+            contact_phone: string;
+            /** Contact Wechat */
+            contact_wechat?: string | null;
+            /**
+             * Is Published
+             * @default false
+             */
+            is_published: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2928,6 +3050,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_franchise_page_api_v1_admin_stores__store_id__franchise_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchisePageRead"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_franchise_page_api_v1_admin_stores__store_id__franchise_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FranchisePageUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchisePageRead"];
                 };
             };
             /** @description Validation Error */
@@ -4424,6 +4612,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_franchise_page_api_v1_app_stores__store_id__franchise_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchisePagePublicRead"];
                 };
             };
             /** @description Validation Error */

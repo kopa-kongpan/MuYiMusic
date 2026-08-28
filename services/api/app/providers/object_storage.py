@@ -78,7 +78,7 @@ class ObjectStorageProvider:
                 region_name=self.settings.object_storage_region,
                 aws_access_key_id=self.settings.object_storage_access_key_id,
                 aws_secret_access_key=self.settings.object_storage_secret_access_key,
-                aws_session_token=self.settings.object_storage_session_token,
+                aws_session_token=(self.settings.object_storage_session_token or None),
                 config=Config(
                     signature_version="s3v4",
                     s3={

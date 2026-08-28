@@ -15,6 +15,7 @@ export default defineAppConfig({
     'pages/teacher-portal/index',
     'pages/video-player/index',
     'pages/webview/index',
+    'pages/franchise/index',
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -30,6 +31,7 @@ export default defineAppConfig({
     list: [
       { pagePath: 'pages/home/index', text: '首页' },
       { pagePath: 'pages/courses/index', text: '课程' },
+      { pagePath: 'pages/franchise/index', text: '加盟合作' },
       { pagePath: 'pages/booking/index', text: '预约' },
       { pagePath: 'pages/me/index', text: '我的' },
     ],

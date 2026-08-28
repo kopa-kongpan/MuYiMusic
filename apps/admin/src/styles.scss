@@ -1432,6 +1432,16 @@ select {
   }
 }
 
+.franchise-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 760px) {
+  .franchise-contact-grid { grid-template-columns: 1fr; gap: 0; }
+}
+
 @media (max-width: 420px) {
   .page-heading {
     align-items: stretch;

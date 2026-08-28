@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   LayoutDashboard,
+  Handshake,
   LogOut,
   Music2,
   Send,
@@ -25,6 +26,7 @@ const pageNames: Record<string, string> = {
   products: '课程商品',
   schedules: '排课管理',
   'store-content': '首页内容',
+  franchise: '加盟合作',
   stores: '门店管理',
   users: '用户与权益',
   'admin-accounts': '运营账号',
@@ -48,6 +50,8 @@ export function AdminShell() {
 
   const selectedMenuKey = location.pathname.startsWith('/store-content')
     ? 'store-content'
+    : location.pathname.startsWith('/franchise')
+      ? 'franchise'
     : location.pathname.startsWith('/products')
       ? 'products'
       : location.pathname.startsWith('/schedules')
@@ -75,6 +79,11 @@ export function AdminShell() {
             key: 'store-content',
             icon: <LayoutDashboard size={18} aria-hidden="true" />,
             label: '首页内容',
+          },
+          {
+            key: 'franchise',
+            icon: <Handshake size={18} aria-hidden="true" />,
+            label: '加盟合作',
           },
         ]
       : []),
