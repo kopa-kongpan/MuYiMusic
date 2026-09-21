@@ -2,7 +2,17 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Table, func
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    Table,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -53,11 +63,20 @@ admin_user_stores = Table(
         ForeignKey("stores.id", ondelete="CASCADE"),
         primary_key=True,
     ),
+    # Index 必须放在它引用的 Column 之后，否则建表时列还不存在。
+    # 这条索引迁移里已有，模型不声明的话 autogenerate 会 drop 掉。
+    Index("ix_admin_user_stores_store_id", "store_id"),
 )
 
 
 class AdminUser(Base):
     __tablename__ = "admin_users"
+    # 建表迁移里有一条独立命名的唯一约束（20260803_0001 的
+    # sa.UniqueConstraint("username")），和下面 username 列上的
+    # unique=True 各自生成了一个唯一索引。这里如实声明，否则
+    # autogenerate 会判定它「已被移除」并生成 drop_constraint。
+    # 两者语义重复，可在后续单独的清理迁移里去掉一个。
+    __table_args__ = (UniqueConstraint("username", name="admin_users_username_key"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)

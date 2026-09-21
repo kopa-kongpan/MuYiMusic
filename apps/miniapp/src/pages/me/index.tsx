@@ -1,7 +1,8 @@
-import { Button, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
 import { loginCurrentUser } from '../../services/user'
 import { listNotifications } from '../../services/notifications'
 import { consumeLoginReturn } from '../../store/login-return'
@@ -13,13 +14,20 @@ import {
 } from '../../store/user-session'
 import './index.scss'
 
-const entries = [
+interface MeEntry {
+  mark: string
+  title: string
+  url: string
+  icon?: string
+}
+
+const entries: MeEntry[] = [
   { mark: '单', title: '我的订单', url: '/pages/my-orders/index' },
-  { mark: '课', title: '我的课程', url: '/pages/my-courses/index' },
-  { mark: '表', title: '我的课表', url: '/pages/schedule/index' },
+  { mark: '课', title: '我的课程', url: '/pages/my-courses/index', icon: appIcons.headphones },
+  { mark: '表', title: '我的课表', url: '/pages/schedule/index', icon: appIcons.myCourses },
   { mark: '约', title: '我的预约', url: '/pages/my-bookings/index' },
   { mark: '信', title: '我的消息', url: '/pages/notifications/index' },
-  { mark: '师', title: '教师工作台', url: '/pages/teacher-portal/index' },
+  { mark: '师', title: '教师工作台', url: '/pages/teacher-portal/index', icon: appIcons.teacher },
 ]
 
 export default function MePage() {
@@ -113,7 +121,11 @@ export default function MePage() {
                 hoverClass="me-entry--pressed"
                 onClick={() => void Taro.navigateTo({ url: entry.url })}
               >
-                <View className="me-entry-mark">{entry.mark}</View>
+                {entry.icon ? (
+                  <Image className="me-entry-icon" src={entry.icon} mode="aspectFill" />
+                ) : (
+                  <View className="me-entry-mark">{entry.mark}</View>
+                )}
                 <Text>{entry.title}</Text>
                 {entry.url === '/pages/notifications/index' && unreadCount > 0 ? (
                   <Text className="me-entry-badge">
@@ -130,7 +142,7 @@ export default function MePage() {
         </>
       ) : (
         <View className="me-login-card">
-          <View className="me-login-mark">我</View>
+          <Image className="me-login-mark" src={appIcons.profile} mode="aspectFill" />
           <Text className="me-login-title">登录后查看学习记录</Text>
           <Text className="me-login-copy">订单与课程权益仅对本人可见</Text>
           <Button

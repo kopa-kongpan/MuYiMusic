@@ -2,9 +2,10 @@
   "name": "muyimusic",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@11.15.1",
+  "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=20.19.0",
+    "pnpm": ">=9.0.0"
   },
   "scripts": {
     "dev:admin": "pnpm --filter @muyimusic/admin dev",
@@ -21,6 +22,29 @@
     "lint": "pnpm --recursive --if-present run lint",
     "typecheck": "pnpm --recursive --if-present run typecheck",
     "test": "pnpm --recursive --if-present run test",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/admin/**/*.{js,jsx,ts,tsx}": [
+      "cd apps/admin && eslint --fix"
+    ],
+    "apps/miniapp/**/*.{js,jsx,ts,tsx}": [
+      "cd apps/miniapp && eslint --fix"
+    ],
+    "packages/api-client/**/*.{js,jsx,ts,tsx}": [
+      "cd packages/api-client && eslint --fix"
+    ],
+    "packages/shared/**/*.{js,jsx,ts,tsx}": [
+      "cd packages/shared && eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
+    "prettier": "^3.9.8"
   }
 }

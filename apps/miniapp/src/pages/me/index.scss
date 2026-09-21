@@ -73,7 +73,6 @@
 }
 
 .me-avatar,
-.me-login-mark,
 .me-entry-mark {
   display: flex;
   align-items: center;
@@ -90,6 +89,14 @@
   border-radius: 50%;
   box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
   font-size: 31rpx;
+}
+
+.me-login-mark,
+.me-entry-icon {
+  display: block;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 4rpx 10rpx rgba(7, 57, 84, 0.22);
 }
 
 .me-profile-copy {
@@ -165,6 +172,12 @@
   font-size: 21rpx;
 }
 
+.me-entry-icon {
+  width: 54rpx;
+  height: 54rpx;
+  flex: 0 0 54rpx;
+}
+
 .me-entry > text {
   font-size: 25rpx;
   font-weight: 600;
@@ -197,9 +210,7 @@
   width: 76rpx;
   height: 76rpx;
   margin-bottom: 22rpx;
-  border-radius: 22rpx;
-  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
-  font-size: 29rpx;
+  box-shadow: 0 6rpx 14rpx rgba(7, 57, 84, 0.24);
 }
 
 .me-login-title {

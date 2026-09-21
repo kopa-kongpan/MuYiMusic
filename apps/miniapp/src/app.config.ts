@@ -29,11 +29,36 @@ export default defineAppConfig({
     backgroundColor: '#ffffff',
     borderStyle: 'white',
     list: [
-      { pagePath: 'pages/home/index', text: '首页' },
-      { pagePath: 'pages/courses/index', text: '课程' },
-      { pagePath: 'pages/franchise/index', text: '加盟合作' },
-      { pagePath: 'pages/booking/index', text: '预约' },
-      { pagePath: 'pages/me/index', text: '我的' },
+      {
+        pagePath: 'pages/home/index',
+        text: '首页',
+        iconPath: 'assets/icons/muyi/home-deer.png',
+        selectedIconPath: 'assets/icons/muyi/home-deer.png',
+      },
+      {
+        pagePath: 'pages/courses/index',
+        text: '课程',
+        iconPath: 'assets/icons/muyi/course-note.png',
+        selectedIconPath: 'assets/icons/muyi/course-note.png',
+      },
+      {
+        pagePath: 'pages/franchise/index',
+        text: '加盟合作',
+        iconPath: 'assets/icons/muyi/franchise-deer.png',
+        selectedIconPath: 'assets/icons/muyi/franchise-deer.png',
+      },
+      {
+        pagePath: 'pages/booking/index',
+        text: '预约',
+        iconPath: 'assets/icons/muyi/schedule.png',
+        selectedIconPath: 'assets/icons/muyi/schedule.png',
+      },
+      {
+        pagePath: 'pages/me/index',
+        text: '我的',
+        iconPath: 'assets/icons/muyi/profile.png',
+        selectedIconPath: 'assets/icons/muyi/profile.png',
+      },
     ],
   },
 })

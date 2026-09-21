@@ -20,6 +20,14 @@ const config: UserConfigExport = {
         from: 'src/assets/icons/cart.png',
         to: `${outputRoot}/assets/icons/cart.png`,
       },
+      {
+        from: 'src/assets/icons/muyi',
+        to: `${outputRoot}/assets/icons/muyi`,
+      },
+      {
+        from: 'src/assets/franchise',
+        to: `${outputRoot}/assets/franchise`,
+      },
     ],
     options: {},
   },

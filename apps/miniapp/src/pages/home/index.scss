@@ -28,17 +28,13 @@
 }
 
 .home-brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   flex: 0 0 auto;
   width: 54rpx;
   height: 54rpx;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1d8166, #0d4a3b);
-  border-radius: 14rpx;
-  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
-  font-size: 25rpx;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 6rpx 14rpx rgba(7, 57, 84, 0.24);
 }
 
 .change-store-button,

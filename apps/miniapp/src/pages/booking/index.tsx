@@ -1,8 +1,9 @@
 import type { SchedulePublicRead } from '@muyimusic/api-client'
-import { Button, ScrollView, Text, View } from '@tarojs/components'
+import { Button, Image, ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useRef, useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
 import { createAppointment } from '../../services/appointments'
 import { updateNotificationSubscription } from '../../services/notifications'
 import { getPlatformAdapter } from '../../platform'
@@ -228,7 +229,7 @@ export default function BookingPage() {
 
       {!isLoading && !errorMessage && schedules.length === 0 ? (
         <View className="booking-state">
-          <View className="booking-state-mark">约</View>
+          <Image className="booking-state-mark" src={appIcons.schedule} mode="aspectFill" />
           <Text className="booking-state-title">当天暂无可约时段</Text>
           <Text className="booking-state-copy">请选择其他日期，或等待门店开放新排课</Text>
         </View>

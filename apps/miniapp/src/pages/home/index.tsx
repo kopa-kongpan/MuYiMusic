@@ -3,6 +3,7 @@ import { Button, Image, Text, Video, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useRef, useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
 import { getStoreHome } from '../../services/store-home'
 import { readCurrentStore, saveCurrentStore } from '../../store/current-store'
 import './index.scss'
@@ -88,7 +89,7 @@ export default function StoreHomePage() {
     <View className="home-page">
       <View className="home-topbar">
         <View className="home-brand">
-          <View className="home-brand-mark">M</View>
+          <Image className="home-brand-mark" src={appIcons.home} mode="aspectFill" />
           <Text>慕义音乐</Text>
         </View>
         <Button

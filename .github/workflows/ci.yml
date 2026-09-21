@@ -4,14 +4,20 @@ on:
   push:
   pull_request:
 
+# 同一分支上只保留最新一次运行，旧的自动取消，避免连续推送时排队浪费额度。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # 不写死版本号，让 corepack 读 package.json 的 packageManager 字段，
+      # 免得这里和根 package.json 各说一套（之前就固定在 11.15.1，
+      # 而 package.json 已经是 9.15.0）。
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11.15.1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -27,6 +33,43 @@ jobs:
     defaults:
       run:
         working-directory: services/api
+
+    # 后端测试直连真实 Postgres：CHECK 约束、SELECT ... FOR UPDATE、
+    # 事务隔离这些行为换成内存库就测不出来了。61 个用例里有 49 个需要它，
+    # 没有这个 service 容器整个 job 必然失败。
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: muyimusic
+          POSTGRES_PASSWORD: muyimusic-ci
+          POSTGRES_DB: muyimusic
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U muyimusic -d muyimusic"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://muyimusic:muyimusic-ci@localhost:5432/muyimusic
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else
+      ADMIN_INITIAL_PASSWORD: ci-bootstrap-password
+      # h5 登录通道只在 app_env == "local" 时开放（见 miniapp_identity._exchange_local），
+      # 测试里的学员登录全走这条路。这里若填 ci，所有需要学员身份的用例都会 503。
+      APP_ENV: local
+
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -34,13 +77,89 @@ jobs:
           version: "0.9.x"
           enable-cache: true
       - run: uv sync --frozen --dev
+
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy app
-      - run: uv run pytest
+
+      # 建表 + 播种权限和角色。测试里的 make_platform_admin() 复用库里
+      # 已存在的 platform_admin 角色记录（code 有唯一约束，不能重建），
+      # 所以 bootstrap 必须在 pytest 之前跑。
+      - run: uv run alembic upgrade head
+      - run: uv run python -m scripts.bootstrap_admin
+
+      - run: uv run pytest --cov --cov-report=term-missing --cov-report=xml
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: services/api/coverage.xml
+          if-no-files-found: warn
+
+  # 迁移必须能在干净库上从零跑到头，并且可回滚。
+  # 平时只在已有库上 upgrade head，很容易在某个 downgrade 里留下断点。
+  migrations:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: muyimusic
+          POSTGRES_PASSWORD: muyimusic-ci
+          POSTGRES_DB: muyimusic_migrations
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U muyimusic -d muyimusic_migrations"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://muyimusic:muyimusic-ci@localhost:5432/muyimusic_migrations
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.x"
+          enable-cache: true
+      - run: uv sync --frozen --dev
+      - run: uv run alembic upgrade head
+      - run: uv run alembic downgrade base
+      - run: uv run alembic upgrade head
 
   compose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: docker compose --env-file .env.example -f deploy/compose.yaml config
+
+  # 依赖漏洞扫描。失败不阻塞合并（漏洞往往在传递依赖里，
+  # 修不动也不该卡住业务），但结果要能在 PR 里看到。
+  audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.x"
+      # 导出成文件再扫，不用 <(...) 进程替换：Actions 的默认 shell 下
+      # 它的行为不稳定，而且失败时看不到导出本身是否成功。
+      - name: pip-audit (backend)
+        working-directory: services/api
+        run: |
+          uv export --frozen --no-dev --no-emit-project > /tmp/requirements-ci.txt
+          uvx pip-audit --disable-pip -r /tmp/requirements-ci.txt

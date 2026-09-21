@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -27,6 +27,9 @@ class ContentJumpType(StrEnum):
 
 class StoreContentBlock(Base):
     __tablename__ = "store_content_blocks"
+    __table_args__ = (
+        Index("ix_store_content_blocks_public", "store_id", "status", "sort_order"),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     store_id: Mapped[UUID] = mapped_column(

@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: conda run --no-capture-output -n muyimusic ruff check --fix
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: ruff-format
+        name: ruff format
+        entry: conda run --no-capture-output -n muyimusic ruff format
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        entry: conda run --no-capture-output -n muyimusic mypy app
+        language: system
+        types: [python]
+        pass_filenames: false

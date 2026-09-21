@@ -25,6 +25,8 @@ dev = [
     "mypy>=1.17,<2",
     "pytest>=8.4,<9",
     "pytest-asyncio>=1.1,<2",
+    "pytest-cov>=6.0,<7",
+    "httpx>=0.28,<1",
     "ruff>=0.12,<1",
 ]
 
@@ -36,6 +38,26 @@ addopts = "-q"
 asyncio_default_test_loop_scope = "session"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+# 覆盖率通过显式命令开启，不写进 addopts：
+#   pytest --cov --cov-report=term-missing
+# 放进 addopts 会让单文件调试也跑覆盖率，并在未装 pytest-cov 时直接报错。
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ["app/main.py", "*/__init__.py"]
+# SQLAlchemy 的 asyncio 层靠 greenlet 切换执行上下文。不声明这一项，
+# 覆盖率会在每个 await 进入 greenlet 后丢掉追踪，把实际跑过的业务分支
+# 全报成 missing（appointment_service 会从 ~90% 被误报成 20%）。
+concurrency = ["greenlet", "thread"]
+
+[tool.coverage.report]
+skip_empty = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]
 
 [tool.ruff]
 line-length = 88

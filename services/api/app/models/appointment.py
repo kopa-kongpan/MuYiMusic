@@ -53,6 +53,42 @@ class ConsumptionStatus(StrEnum):
 class Appointment(Base):
     __tablename__ = "appointments"
     __table_args__ = (
+        # 下面两条复合索引在 20260805_0006 迁移里就已建好，这里必须同步声明，
+        # 否则 autogenerate 会把它们当成「已移除」而生成 drop_index。
+        Index(
+            "ix_appointments_user_status_created",
+            "user_id",
+            "status",
+            "created_at",
+        ),
+        Index(
+            "ix_appointments_store_schedule_status",
+            "store_id",
+            "schedule_id",
+            "status",
+        ),
+        # 管理端列表页（list_admin）：按门店 + 状态筛，
+        # 再 created_at DESC, id DESC 分页。
+        #
+        # 没有这条索引时，查 completed（占全表 96%）只能用 store_id 单列索引
+        # 捞出该门店全部 4.4 万行、回表 5414 个块，再排序取 20 条。
+        #
+        # 列顺序刻意和 ORDER BY 完全一致（含 DESC），这样连排序步骤都省掉，
+        # 索引扫描读满 LIMIT 就停；INCLUDE 带上 schedule_id 让分页的
+        # count(*) 能走 Index Only Scan（Heap Fetches: 0）。
+        #
+        # 实测（21.7 万行 / 109MB，各跑 3 次取区间）：
+        #   列表    9.7~10.3ms → 0.13~0.31ms
+        #   count(*) 11.1~13.8ms → 8.4ms（仍需聚合 4.2 万条匹配行，但不再回表）
+        # 索引体积 18MB。
+        Index(
+            "ix_appointments_store_status_created",
+            "store_id",
+            "status",
+            text("created_at DESC"),
+            text("id DESC"),
+            postgresql_include=("schedule_id",),
+        ),
         UniqueConstraint(
             "user_id",
             "booking_idempotency_key",

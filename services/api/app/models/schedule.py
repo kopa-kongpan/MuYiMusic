@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -28,6 +29,7 @@ class ScheduleStatus(StrEnum):
 class Teacher(Base):
     __tablename__ = "teachers"
     __table_args__ = (
+        Index("ix_teachers_store_active_order", "store_id", "is_active", "sort_order"),
         UniqueConstraint("store_id", "name", name="uq_teachers_store_name"),
         CheckConstraint("sort_order >= 0", name="ck_teachers_sort_order"),
     )
@@ -62,6 +64,8 @@ class Teacher(Base):
 class ClassSchedule(Base):
     __tablename__ = "class_schedules"
     __table_args__ = (
+        Index("ix_schedules_store_start_status", "store_id", "starts_at", "status"),
+        Index("ix_schedules_teacher_time", "teacher_id", "starts_at", "ends_at"),
         CheckConstraint("ends_at > starts_at", name="ck_schedules_time_window"),
         CheckConstraint("capacity > 0", name="ck_schedules_capacity"),
         CheckConstraint(

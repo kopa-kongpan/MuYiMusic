@@ -12,6 +12,10 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+# pytest-cov 的产物：`coverage/` 只匹配目录，匹配不到这两个文件。
+# CI 里跑的是 --cov-report=xml，不忽略就会被提交进来。
+.coverage
+coverage.xml
 .venv/
 services/api/.venv/
 services/api/.uv-cache/

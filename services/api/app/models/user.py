@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -121,6 +122,7 @@ class ProviderAccount(Base):
 class Order(Base):
     __tablename__ = "orders"
     __table_args__ = (
+        Index("ix_orders_user_store_created", "user_id", "store_id", "created_at"),
         CheckConstraint("total_amount_cents >= 0", name="ck_orders_total_amount"),
         UniqueConstraint(
             "user_id",
@@ -219,6 +221,7 @@ class OrderItem(Base):
 class CourseEntitlement(Base):
     __tablename__ = "course_entitlements"
     __table_args__ = (
+        Index("ix_entitlements_user_store_status", "user_id", "store_id", "status"),
         CheckConstraint("total_lessons >= 0", name="ck_entitlements_total_lessons"),
         CheckConstraint(
             "remaining_lessons >= 0 AND remaining_lessons <= total_lessons",

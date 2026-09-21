@@ -1,8 +1,9 @@
 import type { StorePublicRead } from '@muyimusic/api-client'
-import { Button, Input, Text, View } from '@tarojs/components'
+import { Button, Image, Input, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
 import { listPublicStores } from '../../services/stores'
 import { readCurrentStore, saveCurrentStore } from '../../store/current-store'
 import './index.scss'
@@ -116,7 +117,7 @@ export default function StoreSelectionPage() {
     <View className="store-page">
       <View className="store-header">
         <View className="brand-lockup">
-          <View className="brand-mark">M</View>
+          <Image className="brand-mark" src={appIcons.home} mode="aspectFill" />
           <View>
             <Text className="brand-name">MuYiMusic</Text>
             <Text className="brand-subtitle">慕义音乐</Text>

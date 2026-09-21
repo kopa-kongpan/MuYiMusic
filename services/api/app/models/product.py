@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Table,
@@ -60,6 +61,11 @@ product_video_course_binding_lessons = Table(
 
 class Category(Base):
     __tablename__ = "categories"
+    # 迁移里已有的复合索引，必须在模型里同步声明，否则 autogenerate 会 drop 掉。
+    __table_args__ = (
+        Index("ix_categories_store_public", "store_id", "is_enabled", "sort_order"),
+        UniqueConstraint("store_id", "name", name="uq_categories_store_name"),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     store_id: Mapped[UUID] = mapped_column(
@@ -90,6 +96,7 @@ class Category(Base):
 
 class Product(Base):
     __tablename__ = "products"
+    __table_args__ = (Index("ix_products_public", "store_id", "status", "sort_order"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     store_id: Mapped[UUID] = mapped_column(
