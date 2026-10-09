@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 
 const CART_KEY_PREFIX = 'muyimusic.cart.'
+const CHECKOUT_KEY_PREFIX = 'muyimusic.checkout.'
 
 export interface CartItem {
   productId: string
@@ -70,4 +71,34 @@ export function removeCartItem(storeId: string, skuId: string): CartItem[] {
 
 export function cartQuantity(storeId: string): number {
   return readCart(storeId).reduce((total, item) => total + item.quantity, 0)
+}
+
+export function checkoutIdempotencyKey(
+  storeId: string,
+  items: readonly CartItem[],
+): string {
+  const fingerprint = items
+    .map((item) => `${item.productId}:${item.skuId}:${item.quantity}`)
+    .sort()
+    .join('|')
+  const storageKey = `${CHECKOUT_KEY_PREFIX}${storeId}`
+  try {
+    const current = Taro.getStorageSync<{
+      fingerprint: string
+      idempotencyKey: string
+    } | null>(storageKey)
+    if (current?.fingerprint === fingerprint && current.idempotencyKey) {
+      return current.idempotencyKey
+    }
+  } catch {
+    // 存储不可用时仍可生成本次页面生命周期内有效的键。
+  }
+  const idempotencyKey = `checkout-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`
+  Taro.setStorageSync(storageKey, { fingerprint, idempotencyKey })
+  return idempotencyKey
+}
+
+export function clearCart(storeId: string): void {
+  Taro.removeStorageSync(cartKey(storeId))
+  Taro.removeStorageSync(`${CHECKOUT_KEY_PREFIX}${storeId}`)
 }

@@ -23,6 +23,7 @@ from app.models.notification import (
     TeacherAccount,
     TeacherBindCode,
 )
+from app.models.payment import Payment, PaymentProvider, PaymentStatus
 from app.models.product import (
     Category,
     Product,
@@ -82,6 +83,9 @@ __all__ = [
     "Order",
     "OrderItem",
     "OrderStatus",
+    "Payment",
+    "PaymentProvider",
+    "PaymentStatus",
     "Product",
     "ProductImage",
     "ProductSku",

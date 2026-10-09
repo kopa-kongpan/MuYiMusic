@@ -900,6 +900,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Order */
+        post: operations["create_order_api_v1_app_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/orders/{order_id}/payments/wechat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Wechat Payment */
+        post: operations["create_wechat_payment_api_v1_app_orders__order_id__payments_wechat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/orders/{order_id}/payments/wechat/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Query Wechat Payment */
+        post: operations["query_wechat_payment_api_v1_app_orders__order_id__payments_wechat_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/stores/{store_id}/home": {
         parameters: {
             query?: never;
@@ -1115,6 +1166,23 @@ export interface paths {
         put?: never;
         /** Mark Teacher Notification Read */
         post: operations["mark_teacher_notification_read_api_v1_app_teacher__teacher_id__notifications__notification_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/wechat-pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Wechat Pay Webhook */
+        post: operations["wechat_pay_webhook_api_v1_webhooks_wechat_pay_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1941,6 +2009,31 @@ export interface components {
             /** Unread Count */
             unread_count: number;
         };
+        /** OrderCreate */
+        OrderCreate: {
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** Items */
+            items: components["schemas"]["OrderItemCreate"][];
+        };
+        /** OrderItemCreate */
+        OrderItemCreate: {
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Quantity */
+            quantity: number;
+        };
         /** OrderItemRead */
         OrderItemRead: {
             /**
@@ -1978,6 +2071,16 @@ export interface components {
             page: number;
             /** Page Size */
             page_size: number;
+        };
+        /** OrderPaymentStatusResponse */
+        OrderPaymentStatusResponse: {
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            order_status: components["schemas"]["OrderStatus"];
+            payment_status: components["schemas"]["PaymentStatus"] | null;
         };
         /** OrderRead */
         OrderRead: {
@@ -2021,6 +2124,11 @@ export interface components {
          * @enum {string}
          */
         OrderStatus: "pending" | "confirmed" | "cancelled";
+        /**
+         * PaymentStatus
+         * @enum {string}
+         */
+        PaymentStatus: "pending" | "succeeded" | "closed" | "failed" | "refunded";
         /** ProductAdminListResponse */
         ProductAdminListResponse: {
             /** Items */
@@ -3169,6 +3277,33 @@ export interface components {
             is_active?: boolean | null;
             /** Lessons */
             lessons?: components["schemas"]["VideoCourseLessonWrite"][] | null;
+        };
+        /** WechatPaymentParameters */
+        WechatPaymentParameters: {
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /**
+             * Payment Id
+             * Format: uuid
+             */
+            payment_id: string;
+            /** Timestamp */
+            timeStamp: string;
+            /** Noncestr */
+            nonceStr: string;
+            /** Package */
+            package: string;
+            /**
+             * Signtype
+             * @default RSA
+             * @constant
+             */
+            signType: "RSA";
+            /** Paysign */
+            paySign: string;
         };
     };
     responses: never;
@@ -5326,6 +5461,103 @@ export interface operations {
             };
         };
     };
+    create_order_api_v1_app_orders_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_wechat_payment_api_v1_app_orders__order_id__payments_wechat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WechatPaymentParameters"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    query_wechat_payment_api_v1_app_orders__order_id__payments_wechat_query_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPaymentStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_store_home_api_v1_app_stores__store_id__home_get: {
         parameters: {
             query?: never;
@@ -5752,6 +5984,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wechat_pay_webhook_api_v1_webhooks_wechat_pay_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
         };

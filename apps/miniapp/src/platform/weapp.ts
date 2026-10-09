@@ -14,6 +14,22 @@ export const weappAdapter = {
     }
     return { code: result.code }
   },
+  async requestPayment(parameters: Readonly<Record<string, unknown>>) {
+    const requestPayment = Taro.requestPayment as unknown as (options: {
+      timeStamp: string
+      nonceStr: string
+      package: string
+      signType: 'RSA'
+      paySign: string
+    }) => Promise<unknown>
+    await requestPayment({
+      timeStamp: String(parameters.timeStamp),
+      nonceStr: String(parameters.nonceStr),
+      package: String(parameters.package),
+      signType: 'RSA',
+      paySign: String(parameters.paySign),
+    })
+  },
   async subscribeMessage(templateIds: readonly string[]) {
     if (templateIds.length === 0) return {}
     const requestSubscribeMessage = Taro.requestSubscribeMessage as unknown as (

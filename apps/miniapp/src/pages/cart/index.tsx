@@ -2,14 +2,24 @@ import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { getPlatformAdapter } from '../../platform'
 import { validateCoursePurchase } from '../../services/courses'
 import {
+  createOrder,
+  createWechatPayment,
+  queryWechatPayment,
+} from '../../services/payments'
+import { loginCurrentUser } from '../../services/user'
+import {
   type CartItem,
+  checkoutIdempotencyKey,
+  clearCart,
   readCart,
   removeCartItem,
   updateCartItem,
 } from '../../store/cart'
 import { readCurrentStore } from '../../store/current-store'
+import { readUserSession } from '../../store/user-session'
 import './index.scss'
 
 function formatMoney(priceCents: number): string {
@@ -20,6 +30,7 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([])
   const [validatingSkuId, setValidatingSkuId] = useState<string | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isPaying, setIsPaying] = useState(false)
   const store = readCurrentStore()
 
   useDidShow(() => {
@@ -105,6 +116,65 @@ export default function CartPage() {
       })
     } finally {
       setIsRefreshing(false)
+    }
+  }
+
+  async function pay() {
+    if (!store || items.length === 0 || isPaying) return
+    const adapter = getPlatformAdapter()
+    if (adapter.name !== 'weapp') {
+      await Taro.showToast({ title: '请在微信小程序中完成支付', icon: 'none' })
+      return
+    }
+    setIsPaying(true)
+    try {
+      if (!readUserSession()) await loginCurrentUser()
+      const order = await createOrder(
+        {
+          store_id: store.id,
+          items: items.map((item) => ({
+            product_id: item.productId,
+            sku_id: item.skuId,
+            quantity: item.quantity,
+          })),
+        },
+        checkoutIdempotencyKey(store.id, items),
+      )
+      const payment = await createWechatPayment(order.id)
+      await adapter.requestPayment(payment)
+      let confirmed = false
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        if (attempt > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+        const result = await queryWechatPayment(order.id)
+        if (result.order_status === 'confirmed') {
+          confirmed = true
+          break
+        }
+      }
+      if (confirmed) {
+        clearCart(store.id)
+        setItems([])
+        await Taro.showToast({ title: '支付成功', icon: 'success' })
+        await Taro.navigateTo({ url: '/pages/my-orders/index' })
+      } else {
+        await Taro.showModal({
+          title: '支付结果确认中',
+          content: '微信支付结果尚在同步，请稍后到“我的订单”查看。',
+          showCancel: false,
+        })
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error ?? '支付失败')
+      await Taro.showToast({
+        title: message.includes('cancel') ? '已取消支付' : message,
+        icon: 'none',
+        duration: 3000,
+      })
+    } finally {
+      setIsPaying(false)
     }
   }
 
@@ -209,11 +279,13 @@ export default function CartPage() {
             <Text>{formatMoney(totalPrice)}</Text>
           </View>
           <Button
-            className="cart-continue-button"
+            className="cart-pay-button"
             size="mini"
-            onClick={() => void Taro.switchTab({ url: '/pages/courses/index' })}
+            loading={isPaying}
+            disabled={isPaying}
+            onClick={() => void pay()}
           >
-            继续选课
+            立即支付
           </Button>
         </View>
       ) : null}

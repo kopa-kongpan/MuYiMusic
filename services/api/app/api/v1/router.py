@@ -16,6 +16,8 @@ from app.api.v1.app.auth import router as app_auth_router
 from app.api.v1.app.franchise import router as app_franchise_router
 from app.api.v1.app.me import router as app_me_router
 from app.api.v1.app.notifications import router as app_notifications_router
+from app.api.v1.app.orders import router as app_orders_router
+from app.api.v1.app.orders import webhook_router as payment_webhook_router
 from app.api.v1.app.products import router as app_products_router
 from app.api.v1.app.schedules import router as app_schedules_router
 from app.api.v1.app.store_home import router as app_store_home_router
@@ -40,8 +42,10 @@ router.include_router(app_franchise_router, prefix="/app")
 router.include_router(app_appointments_router, prefix="/app")
 router.include_router(app_me_router, prefix="/app")
 router.include_router(app_notifications_router, prefix="/app")
+router.include_router(app_orders_router, prefix="/app")
 router.include_router(app_store_home_router, prefix="/app")
 router.include_router(app_products_router, prefix="/app")
 router.include_router(app_schedules_router, prefix="/app")
 router.include_router(app_stores_router, prefix="/app")
 router.include_router(app_teacher_portal_router, prefix="/app")
+router.include_router(payment_webhook_router)

@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     admin_initial_password: str | None = None
     wechat_app_id: str | None = None
     wechat_app_secret: str | None = None
+    wechat_pay_mch_id: str | None = None
+    wechat_pay_merchant_serial_no: str | None = None
+    wechat_pay_api_v3_key: str | None = None
+    wechat_pay_private_key_path: str | None = None
+    wechat_pay_public_key_id: str | None = None
+    wechat_pay_public_key_path: str | None = None
+    wechat_pay_notify_url: str | None = None
+    wechat_pay_order_expire_minutes: int = 30
     wechat_template_teacher_new_appointment: str | None = None
     wechat_template_teacher_appointment_cancelled: str | None = None
     wechat_template_student_appointment_cancelled: str | None = None
@@ -85,6 +93,20 @@ class Settings(BaseSettings):
                 self.object_storage_bucket,
                 self.object_storage_access_key_id,
                 self.object_storage_secret_access_key,
+            )
+        )
+
+    def has_wechat_pay_credentials(self) -> bool:
+        return all(
+            (
+                self.wechat_app_id,
+                self.wechat_pay_mch_id,
+                self.wechat_pay_merchant_serial_no,
+                self.wechat_pay_api_v3_key,
+                self.wechat_pay_private_key_path,
+                self.wechat_pay_public_key_id,
+                self.wechat_pay_public_key_path,
+                self.wechat_pay_notify_url,
             )
         )
 

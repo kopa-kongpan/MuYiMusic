@@ -20,6 +20,7 @@ from app.core.database import Base
 from app.models.product import ProductType
 
 if TYPE_CHECKING:
+    from app.models.payment import Payment
     from app.models.product import Product
 
 
@@ -173,6 +174,10 @@ class Order(Base):
         back_populates="order",
         cascade="all, delete-orphan",
         lazy="selectin",
+    )
+    payments: Mapped[list["Payment"]] = relationship(
+        back_populates="order",
+        order_by="Payment.attempt_no",
     )
 
 

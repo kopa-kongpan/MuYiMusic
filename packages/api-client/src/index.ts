@@ -54,8 +54,13 @@ export type EntitlementVideoChapterRead =
   components['schemas']['EntitlementVideoChapterRead']
 export type IdentityProvider = components['schemas']['IdentityProvider']
 export type OrderListResponse = components['schemas']['OrderListResponse']
+export type OrderCreate = components['schemas']['OrderCreate']
+export type OrderPaymentStatusResponse =
+  components['schemas']['OrderPaymentStatusResponse']
 export type OrderRead = components['schemas']['OrderRead']
 export type OrderStatus = components['schemas']['OrderStatus']
+export type WechatPaymentParameters =
+  components['schemas']['WechatPaymentParameters']
 export type CategoryCreate = components['schemas']['CategoryCreate']
 export type CategoryOrderUpdate = components['schemas']['CategoryOrderUpdate']
 export type CategoryPublicRead = components['schemas']['CategoryPublicRead']
