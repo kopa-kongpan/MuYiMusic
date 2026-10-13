@@ -50,7 +50,8 @@
 }
 
 .me-store-button,
-.me-logout {
+.me-logout,
+.me-phone-button {
   margin: 0;
   color: #4f5954;
   background: #eef1ef;
@@ -60,6 +61,7 @@
 
 .me-store-button::after,
 .me-logout::after,
+.me-phone-button::after,
 .me-login-button::after {
   border: 0;
 }
@@ -111,15 +113,30 @@
   white-space: nowrap;
 }
 
+.me-profile-meta-row {
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+  gap: 12rpx;
+}
+
 .me-profile-name {
   font-size: 29rpx;
   font-weight: 650;
 }
 
 .me-profile-meta {
-  margin-top: 8rpx;
+  min-width: 0;
   color: #737c77;
   font-size: 22rpx;
+}
+
+.me-phone-button {
+  flex: 0 0 auto;
+  padding: 0 16rpx;
+  color: #176b57;
+  background: #e4f1ec;
+  font-size: 20rpx;
 }
 
 .me-entry-grid {

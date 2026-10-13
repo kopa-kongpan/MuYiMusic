@@ -10,6 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.app.me import get_wechat_phone_provider
 from app.core.config import Settings
 from app.core.database import get_engine, get_session
 from app.core.security import hash_password
@@ -43,6 +44,10 @@ from app.models.user import (
 from app.providers.miniapp_identity import (
     IdentityProviderNotConfiguredError,
     MiniAppIdentityProvider,
+)
+from app.providers.wechat_phone import (
+    InvalidWechatPhoneCodeError,
+    WechatPhoneNumber,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -86,6 +91,132 @@ async def login_h5(
     data = response.json()
     assert isinstance(data, dict)
     return data
+
+
+class FakeWechatPhoneProvider:
+    async def exchange(self, code: str) -> WechatPhoneNumber:
+        if code == "expired-phone-code":
+            raise InvalidWechatPhoneCodeError
+        return WechatPhoneNumber(phone_number="13800009999", country_code="86")
+
+
+async def test_bind_wechat_phone_and_find_user_by_exact_phone() -> None:
+    async with get_engine().connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        async def override_session() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override_session
+        app.dependency_overrides[get_wechat_phone_provider] = (
+            FakeWechatPhoneProvider
+        )
+        try:
+            permission = await session.scalar(
+                select(Permission).where(Permission.code == "users:read")
+            )
+            assert permission is not None
+            store = make_store("手机号绑定测试门店")
+            reader_role = Role(code=f"phone-reader-{uuid4()}", name="手机号查询")
+            reader_role.permissions.append(permission)
+            reader = AdminUser(
+                username=f"phone-reader-{uuid4().hex}",
+                password_hash=hash_password("test-password-2026"),
+            )
+            reader.roles.append(reader_role)
+            reader.stores.append(store)
+            session.add(reader)
+            await session.flush()
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                first_login = await login_h5(
+                    client,
+                    f"phone-owner-{uuid4().hex}",
+                    "手机号学员",
+                )
+                first_headers = {
+                    "Authorization": f"Bearer {first_login['access_token']}"
+                }
+                bind_response = await client.post(
+                    "/api/v1/app/me/phone",
+                    headers=first_headers,
+                    json={"code": "valid-phone-code"},
+                )
+                assert bind_response.status_code == 200
+                assert bind_response.json()["phone"] == "13800009999"
+
+                bound_user = await session.get(User, first_login["user"]["id"])
+                assert bound_user is not None
+                assert bound_user.phone == "13800009999"
+
+                reader_token = await login_admin(
+                    client,
+                    reader.username,
+                    "test-password-2026",
+                )
+                reader_headers = {
+                    "Authorization": f"Bearer {reader_token}"
+                }
+                exact_lookup = await client.get(
+                    f"/api/v1/admin/stores/{store.id}/users",
+                    headers=reader_headers,
+                    params={"keyword": "13800009999"},
+                )
+                assert exact_lookup.status_code == 200
+                assert [item["id"] for item in exact_lookup.json()["items"]] == [
+                    first_login["user"]["id"]
+                ]
+
+                partial_lookup = await client.get(
+                    f"/api/v1/admin/stores/{store.id}/users",
+                    headers=reader_headers,
+                    params={"keyword": "1380000"},
+                )
+                assert partial_lookup.status_code == 200
+                assert first_login["user"]["id"] not in {
+                    item["id"] for item in partial_lookup.json()["items"]
+                }
+
+                second_login = await login_h5(
+                    client,
+                    f"phone-conflict-{uuid4().hex}",
+                    "冲突手机号学员",
+                )
+                second_headers = {
+                    "Authorization": f"Bearer {second_login['access_token']}"
+                }
+                conflict_response = await client.post(
+                    "/api/v1/app/me/phone",
+                    headers=second_headers,
+                    json={"code": "another-valid-code"},
+                )
+                assert conflict_response.status_code == 409
+                assert conflict_response.json()["message"] == (
+                    "该手机号已绑定其他账号，请联系门店处理"
+                )
+
+                invalid_response = await client.post(
+                    "/api/v1/app/me/phone",
+                    headers=second_headers,
+                    json={"code": "expired-phone-code"},
+                )
+                assert invalid_response.status_code == 400
+                assert invalid_response.json()["message"] == (
+                    "手机号授权已失效，请重新授权"
+                )
+        finally:
+            app.dependency_overrides.clear()
+            await session.close()
+            await transaction.rollback()
 
 
 async def test_user_login_read_model_and_store_isolation() -> None:

@@ -1,9 +1,10 @@
 import { Button, Image, Text, View } from '@tarojs/components'
+import type { ButtonProps } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
 import { appIcons } from '../../assets/icons'
-import { loginCurrentUser } from '../../services/user'
+import { bindCurrentUserPhone, loginCurrentUser } from '../../services/user'
 import { listNotifications } from '../../services/notifications'
 import { consumeLoginReturn } from '../../store/login-return'
 import { readCurrentStore } from '../../store/current-store'
@@ -33,6 +34,7 @@ const entries: MeEntry[] = [
 export default function MePage() {
   const [session, setSession] = useState<UserSession | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [isBindingPhone, setIsBindingPhone] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const store = readCurrentStore()
 
@@ -80,6 +82,34 @@ export default function MePage() {
     }
   }
 
+  async function bindPhone(
+    event: Parameters<NonNullable<ButtonProps['onGetPhoneNumber']>>[0],
+  ) {
+    const code = event.detail.code
+    if (!code) {
+      await Taro.showToast({
+        title: event.detail.errMsg.includes('deny')
+          ? '你已取消手机号授权'
+          : '未获得手机号授权凭证',
+        icon: 'none',
+      })
+      return
+    }
+    setIsBindingPhone(true)
+    try {
+      const nextSession = await bindCurrentUserPhone(code)
+      setSession(nextSession)
+      await Taro.showToast({ title: '手机号绑定成功', icon: 'success' })
+    } catch (error) {
+      await Taro.showToast({
+        title: error instanceof Error ? error.message : '手机号绑定失败',
+        icon: 'none',
+      })
+    } finally {
+      setIsBindingPhone(false)
+    }
+  }
+
   return (
     <View className="me-page">
       <View className="me-heading">
@@ -104,9 +134,23 @@ export default function MePage() {
             </View>
             <View className="me-profile-copy">
               <Text className="me-profile-name">{session.user.nickname}</Text>
-              <Text className="me-profile-meta">
-                {session.user.phone ?? '尚未绑定手机号'}
-              </Text>
+              <View className="me-profile-meta-row">
+                <Text className="me-profile-meta">
+                  {session.user.phone ?? '尚未绑定手机号'}
+                </Text>
+                {!session.user.phone && process.env.TARO_ENV === 'weapp' ? (
+                  <Button
+                    className="me-phone-button"
+                    size="mini"
+                    openType="getPhoneNumber"
+                    loading={isBindingPhone}
+                    disabled={isBindingPhone}
+                    onGetPhoneNumber={(event) => void bindPhone(event)}
+                  >
+                    绑定手机号
+                  </Button>
+                ) : null}
+              </View>
             </View>
             <Button className="me-logout" size="mini" onClick={() => void logout()}>
               退出

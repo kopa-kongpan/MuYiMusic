@@ -159,6 +159,8 @@ export type UserProfile = components['schemas']['UserProfile']
 export type UserProfileUpdate = components['schemas']['UserProfileUpdate']
 export type UserStatus = components['schemas']['UserStatus']
 export type UserTokenResponse = components['schemas']['UserTokenResponse']
+export type WechatPhoneBindRequest =
+  components['schemas']['WechatPhoneBindRequest']
 
 interface ApiErrorBody {
   code?: string
@@ -343,6 +345,12 @@ export function createApiClient(options: ApiClientOptions = {}) {
     updateUserProfile(payload: UserProfileUpdate) {
       return request<UserProfile>('/api/v1/app/me', {
         method: 'PATCH',
+        body: JSON.stringify(payload),
+      })
+    },
+    bindWechatPhone(payload: WechatPhoneBindRequest) {
+      return request<UserProfile>('/api/v1/app/me/phone', {
+        method: 'POST',
         body: JSON.stringify(payload),
       })
     },

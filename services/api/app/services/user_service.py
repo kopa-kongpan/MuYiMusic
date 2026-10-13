@@ -25,6 +25,7 @@ from app.models.user import (
 )
 from app.providers.miniapp_identity import MiniAppIdentityProvider
 from app.providers.object_storage import ObjectStorageProvider
+from app.providers.wechat_phone import WechatPhoneProvider
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.store_repository import StoreRepository
@@ -44,6 +45,7 @@ from app.schemas.user import (
     UserProfile,
     UserProfileUpdate,
     UserTokenResponse,
+    WechatPhoneBindRequest,
 )
 from app.services.entitlement_service import sync_entitlement_status
 from app.services.store_service import can_access_store
@@ -58,6 +60,10 @@ class UserResourceNotFoundError(Exception):
 
 
 class InvalidEntitlementAdjustmentError(Exception):
+    pass
+
+
+class PhoneAlreadyBoundError(Exception):
     pass
 
 
@@ -164,6 +170,25 @@ class UserService:
         except Exception:
             await self.session.rollback()
             raise
+        await self.session.refresh(user)
+        return user_profile(user)
+
+    async def bind_wechat_phone(
+        self,
+        user: User,
+        payload: WechatPhoneBindRequest,
+        provider: WechatPhoneProvider,
+    ) -> UserProfile:
+        phone = (await provider.exchange(payload.code)).phone_number
+        existing = await self.repository.get_user_by_phone_for_update(phone)
+        if existing is not None and existing.id != user.id:
+            raise PhoneAlreadyBoundError
+        user.phone = phone
+        try:
+            await self.session.commit()
+        except IntegrityError as error:
+            await self.session.rollback()
+            raise PhoneAlreadyBoundError from error
         await self.session.refresh(user)
         return user_profile(user)
 

@@ -1,4 +1,4 @@
-import type { UserTokenResponse } from '@muyimusic/api-client'
+import type { UserProfile, UserTokenResponse } from '@muyimusic/api-client'
 import Taro from '@tarojs/taro'
 
 const USER_SESSION_KEY = 'muyimusic.user.session'
@@ -34,4 +34,14 @@ export function saveUserSession(response: UserTokenResponse): UserSession {
 
 export function clearUserSession(): void {
   Taro.removeStorageSync(USER_SESSION_KEY)
+}
+
+export function updateUserSessionProfile(user: UserProfile): UserSession {
+  const session = readUserSession()
+  if (!session) {
+    throw new Error('登录状态已失效')
+  }
+  const nextSession = { ...session, user }
+  Taro.setStorageSync(USER_SESSION_KEY, nextSession)
+  return nextSession
 }

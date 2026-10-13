@@ -28,6 +28,14 @@ class UserRepository:
             await self.session.scalar(select(User).where(User.id == user_id)),
         )
 
+    async def get_user_by_phone_for_update(self, phone: str) -> User | None:
+        return cast(
+            User | None,
+            await self.session.scalar(
+                select(User).where(User.phone == phone).with_for_update()
+            ),
+        )
+
     async def get_order_by_create_key(
         self,
         user_id: UUID,
@@ -178,6 +186,8 @@ class UserRepository:
         filters = [store_relation]
         if keyword:
             pattern = f"%{keyword}%"
+            if keyword.isdigit() and 6 <= len(keyword) <= 20:
+                filters[0] = or_(store_relation, User.phone == keyword)
             filters.append(or_(User.nickname.ilike(pattern), User.phone.ilike(pattern)))
         total = int(
             await self.session.scalar(select(func.count(User.id)).where(*filters)) or 0

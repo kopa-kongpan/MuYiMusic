@@ -781,6 +781,23 @@ export interface paths {
         patch: operations["update_profile_api_v1_app_me_patch"];
         trace?: never;
     };
+    "/api/v1/app/me/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bind Wechat Phone */
+        post: operations["bind_wechat_phone_api_v1_app_me_phone_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/me/orders": {
         parameters: {
             query?: never;
@@ -3305,6 +3322,11 @@ export interface components {
             /** Paysign */
             paySign: string;
         };
+        /** WechatPhoneBindRequest */
+        WechatPhoneBindRequest: {
+            /** Code */
+            code: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -5238,6 +5260,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UserProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bind_wechat_phone_api_v1_app_me_phone_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WechatPhoneBindRequest"];
             };
         };
         responses: {

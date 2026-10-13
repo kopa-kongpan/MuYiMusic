@@ -29,6 +29,12 @@ class UserProfileUpdate(BaseModel):
     avatar_url: str | None = Field(default=None, max_length=1024)
 
 
+class WechatPhoneBindRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    code: str = Field(min_length=8, max_length=512)
+
+
 class UserProfile(BaseModel):
     id: UUID
     nickname: str

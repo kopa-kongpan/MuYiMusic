@@ -1,6 +1,7 @@
 import type {
   CourseEntitlementListResponse,
   OrderListResponse,
+  UserProfile,
   UserTokenResponse,
 } from '@muyimusic/api-client'
 import Taro from '@tarojs/taro'
@@ -10,6 +11,7 @@ import {
   clearUserSession,
   readUserSession,
   saveUserSession,
+  updateUserSessionProfile,
   type UserSession,
 } from '../store/user-session'
 
@@ -21,6 +23,16 @@ const localMockLoginCode = 'seed-local-user-0001-abcdefghijklmnop'
 
 interface ApiErrorResponse {
   message?: string
+  detail?: string | Array<{ msg?: string }>
+}
+
+function apiErrorMessage(error: ApiErrorResponse): string | undefined {
+  if (error.message) return error.message
+  if (typeof error.detail === 'string') return error.detail
+  if (Array.isArray(error.detail)) {
+    return error.detail.map((item) => item.msg).filter(Boolean).join('；')
+  }
+  return undefined
 }
 
 function requireSuccess<T>(
@@ -33,9 +45,26 @@ function requireSuccess<T>(
       clearUserSession()
     }
     const error = data as ApiErrorResponse
-    throw new Error(error.message ?? `${fallback}（${statusCode}）`)
+    throw new Error(apiErrorMessage(error) ?? `${fallback}（${statusCode}）`)
   }
   return data as T
+}
+
+export async function bindCurrentUserPhone(code: string): Promise<UserSession> {
+  const session = readUserSession()
+  if (!session) throw new Error('请先登录')
+  const response = await Taro.request<UserProfile | ApiErrorResponse>({
+    url: `${apiBaseUrl}/api/v1/app/me/phone`,
+    method: 'POST',
+    header: { Authorization: `Bearer ${session.accessToken}` },
+    data: { code },
+  })
+  const profile = requireSuccess(
+    response.statusCode,
+    response.data,
+    '手机号绑定失败',
+  )
+  return updateUserSessionProfile(profile)
 }
 
 export async function loginCurrentUser(): Promise<UserSession> {
