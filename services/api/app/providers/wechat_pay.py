@@ -52,10 +52,29 @@ class WechatPayOrder:
 
 
 @dataclass(frozen=True)
+class WechatPayRefund:
+    """退款通知解密后的退款单摘要。
+
+    退款通知的资源体与交易通知结构不同：没有 ``trade_state``，金额里同时带
+    原始总额与本次退款额，因此不能复用订单解析。
+    """
+
+    out_trade_no: str
+    out_refund_no: str
+    refund_id: str | None
+    refund_status: str
+    amount_cents: int
+    refund_cents: int
+    mch_id: str
+    success_time: datetime | None
+
+
+@dataclass(frozen=True)
 class WechatPayNotification:
     notification_id: str
     event_type: str
-    order: WechatPayOrder
+    order: WechatPayOrder | None = None
+    refund: WechatPayRefund | None = None
 
 
 class WechatPayProvider:
@@ -149,6 +168,18 @@ class WechatPayProvider:
         event_type = envelope.get("event_type")
         if not isinstance(notification_id, str) or not isinstance(event_type, str):
             raise WechatPaySignatureError("微信支付通知缺少事件标识")
+        if event_type.startswith("REFUND."):
+            return WechatPayNotification(
+                notification_id=notification_id,
+                event_type=event_type,
+                refund=self._parse_refund(payload),
+            )
+        if not event_type.startswith("TRANSACTION."):
+            # 未识别的事件类型仍要验签、解密并返回成功，否则微信会持续重推。
+            return WechatPayNotification(
+                notification_id=notification_id,
+                event_type=event_type,
+            )
         return WechatPayNotification(
             notification_id=notification_id,
             event_type=event_type,
@@ -176,7 +207,7 @@ class WechatPayProvider:
         if not mch_id or not serial_no:
             raise WechatPayNotConfiguredError
         authorization = (
-            'WECHATPAY2-SHA256-RSA2048 '
+            "WECHATPAY2-SHA256-RSA2048 "
             f'mchid="{mch_id}",nonce_str="{nonce}",'
             f'signature="{self._sign(message)}",timestamp="{timestamp}",'
             f'serial_no="{serial_no}"'
@@ -330,6 +361,31 @@ class WechatPayProvider:
             )
         except (KeyError, TypeError, ValueError) as error:
             raise WechatPayUnavailableError("微信支付订单数据无效") from error
+
+    @staticmethod
+    def _parse_refund(payload: dict[str, Any]) -> WechatPayRefund:
+        try:
+            amount = payload["amount"]
+            success_time_raw = payload.get("success_time")
+            success_time = (
+                datetime.fromisoformat(success_time_raw.replace("Z", "+00:00"))
+                if isinstance(success_time_raw, str)
+                else None
+            )
+            return WechatPayRefund(
+                out_trade_no=str(payload["out_trade_no"]),
+                out_refund_no=str(payload["out_refund_no"]),
+                refund_id=(
+                    str(payload["refund_id"]) if payload.get("refund_id") else None
+                ),
+                refund_status=str(payload["refund_status"]),
+                amount_cents=int(amount["total"]),
+                refund_cents=int(amount["refund"]),
+                mch_id=str(payload["mchid"]),
+                success_time=success_time,
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise WechatPayUnavailableError("微信支付退款数据无效") from error
 
 
 @lru_cache

@@ -32,6 +32,7 @@ from app.providers.wechat_pay import (
     WechatPayNotification,
     WechatPayOrder,
     WechatPayProvider,
+    WechatPayRefund,
     WechatPayUnavailableError,
     get_wechat_pay_provider,
 )
@@ -49,6 +50,8 @@ class FakeWechatPayProvider:
         self.created: list[dict[str, Any]] = []
         self.closed: list[str] = []
         self.remote_order: WechatPayOrder | None = None
+        self.remote_refund: WechatPayRefund | None = None
+        self.unsupported_event: str | None = None
         self.create_error: Exception | None = None
         self.query_error: Exception | None = None
 
@@ -85,6 +88,17 @@ class FakeWechatPayProvider:
     ) -> WechatPayNotification:
         assert headers.get("Wechatpay-Serial") == "TEST_PUBLIC_KEY_ID"
         assert body == b"{}"
+        if self.remote_refund is not None:
+            return WechatPayNotification(
+                notification_id="notification-refund-test",
+                event_type="REFUND.SUCCESS",
+                refund=self.remote_refund,
+            )
+        if self.unsupported_event is not None:
+            return WechatPayNotification(
+                notification_id="notification-unsupported-test",
+                event_type=self.unsupported_event,
+            )
         assert self.remote_order is not None
         return WechatPayNotification(
             notification_id="notification-payment-test",
@@ -506,3 +520,170 @@ async def test_late_success_closes_newer_pending_payment(
         assert second_payment.status == PaymentStatus.CLOSED
         assert order.status == OrderStatus.CONFIRMED
         assert fake.closed == [second_payment.merchant_order_no]
+
+
+def _supported_payment_order(
+    *,
+    order_no: str,
+    amount_cents: int,
+    merchant_suffix: str = "01",
+) -> tuple[Order, Payment]:
+    """构造一张已支付订单与其支付单，供退款通知用例复用。"""
+    order = Order(
+        order_no=order_no,
+        status=OrderStatus.CONFIRMED,
+        total_amount_cents=amount_cents,
+    )
+    payment = Payment(
+        order=order,
+        attempt_no=1,
+        merchant_order_no=f"{order_no}{merchant_suffix}",
+        amount_cents=amount_cents,
+        status=PaymentStatus.SUCCEEDED,
+        transaction_id=f"420000000000000000{uuid4().int % 10**10:010d}",
+        expires_at=datetime.now(UTC) + timedelta(minutes=30),
+    )
+    return order, payment
+
+
+async def test_refund_notification_marks_payment_refunded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """退款成功通知必须落库为 refunded，且不能以 500 回应（否则微信持续重推）。"""
+    settings = Settings(
+        _env_file=None,
+        app_env="local",
+        jwt_secret=JWT_SECRET,
+        wechat_app_id=APP_ID,
+        wechat_pay_mch_id=MCH_ID,
+    )
+    fake = FakeWechatPayProvider()
+    monkeypatch.setattr(api_dependencies, "get_settings", lambda: settings)
+    monkeypatch.setattr(orders_api, "get_settings", lambda: settings)
+
+    async with api_context() as context:
+        app.dependency_overrides[get_wechat_pay_provider] = lambda: fake
+        store = make_store(f"退款门店-{uuid4().hex[:8]}")
+        context.session.add(store)
+        await context.session.flush()
+        product = make_product(store, name="退款课程")
+        sku = ProductSku(
+            product=product,
+            name="4课时",
+            price_cents=6600,
+            lesson_count=4,
+            validity_days=120,
+        )
+        user = User(nickname="退款学员")
+        context.session.add_all((product, sku, user))
+        await context.session.flush()
+
+        order, payment = _supported_payment_order(
+            order_no=f"O{uuid4().hex[:20].upper()}",
+            amount_cents=6600,
+        )
+        order.user_id = user.id
+        order.store_id = store.id
+        context.session.add(payment)
+        await context.session.commit()
+
+        fake.remote_refund = WechatPayRefund(
+            out_trade_no=payment.merchant_order_no,
+            out_refund_no="REFUND-TEST-0001",
+            refund_id="5030000000000000000000000001",
+            refund_status="SUCCESS",
+            amount_cents=6600,
+            refund_cents=6600,
+            mch_id=MCH_ID,
+            success_time=datetime.now(UTC),
+        )
+
+        webhook = await context.client.post(
+            "/api/v1/webhooks/wechat-pay",
+            headers={"Wechatpay-Serial": "TEST_PUBLIC_KEY_ID"},
+            content=b"{}",
+        )
+        assert webhook.status_code == 200, webhook.text
+        await context.session.refresh(payment)
+        assert payment.status == PaymentStatus.REFUNDED
+
+
+async def test_refund_notification_amount_mismatch_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """退款金额与本地支付单不一致时必须拒绝，避免伪造退款单关闭订单。"""
+    settings = Settings(
+        _env_file=None,
+        app_env="local",
+        jwt_secret=JWT_SECRET,
+        wechat_app_id=APP_ID,
+        wechat_pay_mch_id=MCH_ID,
+    )
+    fake = FakeWechatPayProvider()
+    monkeypatch.setattr(api_dependencies, "get_settings", lambda: settings)
+    monkeypatch.setattr(orders_api, "get_settings", lambda: settings)
+
+    async with api_context() as context:
+        app.dependency_overrides[get_wechat_pay_provider] = lambda: fake
+        store = make_store(f"退款金额门店-{uuid4().hex[:8]}")
+        context.session.add(store)
+        await context.session.flush()
+        user = User(nickname="退款金额学员")
+        context.session.add(user)
+        await context.session.flush()
+
+        order, payment = _supported_payment_order(
+            order_no=f"O{uuid4().hex[:20].upper()}",
+            amount_cents=6600,
+        )
+        order.user_id = user.id
+        order.store_id = store.id
+        context.session.add(payment)
+        await context.session.commit()
+
+        fake.remote_refund = WechatPayRefund(
+            out_trade_no=payment.merchant_order_no,
+            out_refund_no="REFUND-TEST-0002",
+            refund_id="5030000000000000000000000002",
+            refund_status="SUCCESS",
+            amount_cents=6600,
+            refund_cents=1,
+            mch_id="9999999999",
+            success_time=datetime.now(UTC),
+        )
+
+        webhook = await context.client.post(
+            "/api/v1/webhooks/wechat-pay",
+            headers={"Wechatpay-Serial": "TEST_PUBLIC_KEY_ID"},
+            content=b"{}",
+        )
+        assert webhook.status_code == 409, webhook.text
+        await context.session.refresh(payment)
+        assert payment.status == PaymentStatus.SUCCEEDED
+
+
+async def test_unsupported_notification_event_is_acknowledged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """未知事件类型应回 200 停止重推，而不是抛未捕获异常变成 500。"""
+    settings = Settings(
+        _env_file=None,
+        app_env="local",
+        jwt_secret=JWT_SECRET,
+        wechat_app_id=APP_ID,
+        wechat_pay_mch_id=MCH_ID,
+    )
+    fake = FakeWechatPayProvider()
+    fake.unsupported_event = "TRANSACTION.SOMETHING_NEW"
+    monkeypatch.setattr(api_dependencies, "get_settings", lambda: settings)
+    monkeypatch.setattr(orders_api, "get_settings", lambda: settings)
+
+    async with api_context() as context:
+        app.dependency_overrides[get_wechat_pay_provider] = lambda: fake
+        webhook = await context.client.post(
+            "/api/v1/webhooks/wechat-pay",
+            headers={"Wechatpay-Serial": "TEST_PUBLIC_KEY_ID"},
+            content=b"{}",
+        )
+        assert webhook.status_code == 200, webhook.text
+        assert webhook.json() == {"code": "SUCCESS", "message": "成功"}

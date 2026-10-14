@@ -23,10 +23,13 @@ services/api/.uv-cache/
 # Local configuration and secrets
 .env
 .env.*
+*.env
 !.env.example
 *.pem
 *.key
 *.p12
+# 微信支付商户证书压缩包：内含 apiclient_key.pem 私钥，绝不能入库。
+*.zip
 
 # IDE and operating system
 .DS_Store

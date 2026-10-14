@@ -24,6 +24,7 @@ from app.providers.wechat_pay import (
     WechatPayNotification,
     WechatPayOrder,
     WechatPayProvider,
+    WechatPayRefund,
     WechatPaySignatureError,
     WechatPayUnavailableError,
 )
@@ -271,10 +272,84 @@ class PaymentService:
         self,
         notification: WechatPayNotification,
     ) -> None:
+        if notification.refund is not None:
+            await self.apply_wechat_refund(
+                notification.refund,
+                notify_id=notification.notification_id,
+            )
+            return
+        if notification.order is None:
+            # 未识别的通知类型：已验签解密，回 200 停止微信重推，仅留日志。
+            logger.warning(
+                "ignored unsupported WeChat pay notification",
+                extra={
+                    "notification_id": notification.notification_id,
+                    "event_type": notification.event_type,
+                },
+            )
+            return
         await self.apply_wechat_order(
             notification.order,
             notify_id=notification.notification_id,
         )
+
+    async def apply_wechat_refund(
+        self,
+        remote: WechatPayRefund,
+        *,
+        notify_id: str | None = None,
+    ) -> None:
+        """处理退款结果通知。
+
+        当前只把退款结果落到支付单状态与退款流水上；已发放课程权益是否回收尚未
+        定义业务规则，因此不做回收，只记录待人工对账。
+        """
+        payment_reference = await self.repository.get_payment_by_merchant_order_no(
+            remote.out_trade_no,
+        )
+        if payment_reference is None:
+            raise PaymentResourceNotFoundError
+        order = await self.repository.get_order_by_id_for_update(
+            payment_reference.order_id
+        )
+        if order is None:
+            raise PaymentResourceNotFoundError
+        payment = await self.repository.get_payment_by_merchant_order_no(
+            remote.out_trade_no,
+            for_update=True,
+        )
+        if payment is None:
+            raise PaymentResourceNotFoundError
+        if (
+            remote.mch_id != self.settings.wechat_pay_mch_id
+            or remote.amount_cents != payment.amount_cents
+        ):
+            raise PaymentConflictError("微信退款单主体或金额校验失败")
+        if remote.refund_status == "SUCCESS":
+            if payment.status != PaymentStatus.REFUNDED:
+                payment.status = PaymentStatus.REFUNDED
+                payment.notify_id = notify_id or payment.notify_id
+            logger.critical(
+                "WeChat refund succeeded; course entitlements require manual review",
+                extra={
+                    "order_id": str(order.id),
+                    "payment_id": str(payment.id),
+                    "out_refund_no": remote.out_refund_no,
+                    "refund_id": remote.refund_id,
+                    "refund_cents": remote.refund_cents,
+                },
+            )
+        elif remote.refund_status in {"CLOSED", "ABNORMAL"}:
+            logger.error(
+                "WeChat refund did not succeed",
+                extra={
+                    "order_id": str(order.id),
+                    "payment_id": str(payment.id),
+                    "out_refund_no": remote.out_refund_no,
+                    "refund_status": remote.refund_status,
+                },
+            )
+        await self.session.commit()
 
     async def apply_wechat_order(
         self,
@@ -331,11 +406,9 @@ class PaymentService:
         order: Order,
         succeeded_payment: Payment,
     ) -> None:
-        pending_payments = (
-            await self.repository.list_other_pending_payments_for_update(
-                order_id=order.id,
-                payment_id=succeeded_payment.id,
-            )
+        pending_payments = await self.repository.list_other_pending_payments_for_update(
+            order_id=order.id,
+            payment_id=succeeded_payment.id,
         )
         for pending in pending_payments:
             try:
