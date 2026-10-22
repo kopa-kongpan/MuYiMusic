@@ -32,6 +32,7 @@ const pageNames: Record<string, string> = {
   stores: '门店管理',
   users: '用户与权益',
   'admin-accounts': '运营账号',
+  guide: '使用指南',
 }
 
 export function AdminShell() {
@@ -50,7 +51,9 @@ export function AdminShell() {
     navigate('/login', { replace: true })
   }
 
-  const selectedMenuKey = location.pathname.startsWith('/video-courses')
+  const selectedMenuKey = location.pathname.startsWith('/guide')
+    ? 'guide'
+    : location.pathname.startsWith('/video-courses')
     ? 'video-courses'
     : location.pathname.startsWith('/store-content')
     ? 'store-content'
@@ -160,6 +163,11 @@ export function AdminShell() {
     ...(platformItems.length
       ? [{ type: 'group' as const, label: '平台设置', children: platformItems }]
       : []),
+    {
+      type: 'group',
+      label: '帮助',
+      children: [{ key: 'guide', icon: <BookOpen size={18} aria-hidden="true" />, label: '使用指南' }],
+    },
   ]
   const currentPageName = pageNames[selectedMenuKey]
 
@@ -202,6 +210,14 @@ export function AdminShell() {
             <strong>{currentPageName}</strong>
           </div>
           <div className="admin-user">
+            <Tooltip title="使用指南">
+              <Button
+                type="text"
+                icon={<BookOpen size={18} aria-hidden="true" />}
+                aria-label="使用指南"
+                onClick={() => navigate('/guide')}
+              />
+            </Tooltip>
             <span className="admin-user-avatar" aria-hidden="true">
               {session.admin.username.slice(0, 1).toUpperCase()}
             </span>

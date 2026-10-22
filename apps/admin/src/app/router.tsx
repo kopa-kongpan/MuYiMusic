@@ -4,6 +4,7 @@ import { AdminShell } from './AdminShell'
 import { AdminAccountsPage } from './AdminAccountsPage'
 import { AppointmentsPage } from './AppointmentsPage'
 import { FranchisePage } from './FranchisePage'
+import { GuidePage } from './GuidePage'
 import { LoginPage } from './LoginPage'
 import { NotificationDeliveriesPage } from './NotificationDeliveriesPage'
 import { ProductsPage } from './ProductsPage'
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'notifications', element: <NotificationDeliveriesPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'admin-accounts', element: <AdminAccountsPage /> },
+      { path: 'guide', element: <GuidePage /> },
     ],
   },
   {
