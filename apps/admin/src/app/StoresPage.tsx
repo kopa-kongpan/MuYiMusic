@@ -96,7 +96,7 @@ export function StoresPage() {
             </span>
             <span>
               <Phone size={15} aria-hidden="true" />
-              {store.phone}
+              {store.phone || '未提供'}
             </span>
           </div>
         ),
@@ -107,7 +107,9 @@ export function StoresPage() {
         width: 170,
         render: (_, store) => (
           <span className="coordinate-text">
-            {Number(store.latitude).toFixed(6)}, {Number(store.longitude).toFixed(6)}
+            {store.latitude != null && store.longitude != null
+              ? `${store.latitude.toFixed(6)}, ${store.longitude.toFixed(6)}`
+              : '未提供'}
           </span>
         ),
       },

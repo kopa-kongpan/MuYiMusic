@@ -174,16 +174,11 @@
 }
 
 .cart-empty-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 76rpx;
   height: 76rpx;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1d8166, #0d4a3b);
-  border-radius: 22rpx;
-  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
-  font-size: 28rpx;
+  background: #ffffff;
+  border-radius: 50%;
 }
 
 .cart-empty-title {

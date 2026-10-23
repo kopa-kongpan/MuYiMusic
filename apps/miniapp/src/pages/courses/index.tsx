@@ -7,6 +7,8 @@ import { Button, Image, Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { appIcons, courseCategoryIcon } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import {
   listCourseCategories,
   listCourseProducts,
@@ -164,7 +166,7 @@ export default function CoursesPage() {
         validatedAt: validation.validated_at,
       })
       setCartCount(items.reduce((total, item) => total + item.quantity, 0))
-      await Taro.showToast({ title: '已加入购物车', icon: 'success' })
+      await Taro.showToast({ title: '已加入购物车', icon: 'success', image: appIcons.check })
     } catch (error) {
       await Taro.showToast({
         title: error instanceof Error ? error.message : '加入购物车失败',
@@ -198,13 +200,16 @@ export default function CoursesPage() {
           size="mini"
           onClick={() => void Taro.navigateTo({ url: '/pages/cart/index' })}
         >
-          <Text>购物车</Text>
-          {cartCount ? <Text className="cart-entry-count">{cartCount}</Text> : null}
+          <View className="cart-entry-content">
+            <AppIcon name="cart" className="app-icon--small" />
+            <Text>购物车</Text>
+            {cartCount ? <Text className="cart-entry-count">{cartCount}</Text> : null}
+          </View>
         </Button>
       </View>
 
       <View className="course-search-row">
-        <View className="course-search-icon" aria-hidden="true" />
+        <AppIcon name="search" className="course-search-icon" />
         <Input
           className="course-search-input"
           value={keywordInput}
@@ -230,12 +235,15 @@ export default function CoursesPage() {
         ))}
         <View
           className={`course-sort-option${sort === 'price_asc' || sort === 'price_desc' ? ' course-sort-option--active' : ''}`}
+          role="button"
+          aria-label={`价格排序：${sort === 'price_asc' ? '从低到高' : sort === 'price_desc' ? '从高到低' : '未选择'}`}
           onClick={togglePriceSort}
         >
           价格
-          <Text className="course-price-direction">
-            {sort === 'price_asc' ? '↑' : sort === 'price_desc' ? '↓' : '↕'}
-          </Text>
+          <AppIcon
+            name={sort === 'price_asc' || sort === 'price_desc' ? 'sortUp' : 'sort'}
+            className={`course-price-direction${sort === 'price_desc' ? ' app-icon--down' : ''}`}
+          />
         </View>
       </View>
 
@@ -248,7 +256,7 @@ export default function CoursesPage() {
               void loadProducts({ nextCategoryId: undefined })
             }}
           >
-            <View className="course-category-mark">全</View>
+            <AppIcon className="course-category-mark" name="courses" />
             <Text>全部课程</Text>
           </View>
           {categories.map((category) => (
@@ -260,9 +268,7 @@ export default function CoursesPage() {
                 void loadProducts({ nextCategoryId: category.id })
               }}
             >
-              <View className="course-category-mark">
-                {category.name.slice(0, 1)}
-              </View>
+              <AppIcon className="course-category-mark" name={courseCategoryIcon(category.name)} />
               <Text>{category.name}</Text>
             </View>
           ))}
@@ -325,7 +331,7 @@ export default function CoursesPage() {
                     />
                   ) : (
                     <View className="course-cover course-cover--empty">
-                      <Text>{product.category_name.slice(0, 1)}</Text>
+                      <AppIcon className="app-icon--cover" name={courseCategoryIcon(product.category_name)} />
                       <Text>MUYI MUSIC</Text>
                     </View>
                   )}
@@ -354,11 +360,7 @@ export default function CoursesPage() {
                         }}
                       >
                         <View className="course-cart-button">
-                          <Image
-                          className="course-cart-button-icon"
-                          src="/assets/icons/cart.png"
-                          mode="aspectFit"
-                        />
+                          <AppIcon className="course-cart-button-icon" name="cart" />
                         </View>
                       </View>
                     </View>

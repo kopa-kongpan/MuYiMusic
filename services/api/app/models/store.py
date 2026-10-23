@@ -27,8 +27,8 @@ class Store(Base):
     district: Mapped[str] = mapped_column(String(64), default="")
     address: Mapped[str] = mapped_column(Text)
     phone: Mapped[str] = mapped_column(String(32))
-    latitude: Mapped[Decimal] = mapped_column(Numeric(9, 6))
-    longitude: Mapped[Decimal] = mapped_column(Numeric(10, 6))
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
     status: Mapped[StoreStatus] = mapped_column(
         Enum(
             StoreStatus,

@@ -2,6 +2,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useState } from 'react'
 
+import AppIcon from '../../components/AppIcon'
 import {
   listNotifications,
   markAllNotificationsRead,
@@ -75,7 +76,7 @@ export default function NotificationsPage() {
     return (
       <View className="record-page">
         <View className="record-state">
-          <View className="record-state-mark">信</View>
+        <AppIcon className="record-state-mark" name="notifications" />
           <Text className="record-state-title">请先登录</Text>
           <Text className="record-state-copy">登录后可查看课程通知</Text>
           <Button
@@ -134,7 +135,7 @@ export default function NotificationsPage() {
 function MessageState({ title, copy = '请稍候' }: { title: string; copy?: string }) {
   return (
     <View className="record-state">
-      <View className="record-state-mark">信</View>
+      <AppIcon className="record-state-mark" name="notifications" />
       <Text className="record-state-title">{title}</Text>
       <Text className="record-state-copy">{copy}</Text>
     </View>

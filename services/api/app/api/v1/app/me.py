@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,12 +20,18 @@ from app.providers.wechat_phone import (
 )
 from app.schemas.user import (
     CourseEntitlementListResponse,
+    OrderDetailRead,
     OrderListResponse,
     UserProfile,
     UserProfileUpdate,
     WechatPhoneBindRequest,
 )
-from app.services.user_service import PhoneAlreadyBoundError, UserService, user_profile
+from app.services.user_service import (
+    PhoneAlreadyBoundError,
+    UserResourceNotFoundError,
+    UserService,
+    user_profile,
+)
 
 router = APIRouter(prefix="/me", tags=["app-me"])
 CurrentUser = Annotated[User, Depends(get_current_user)]
@@ -115,6 +121,20 @@ async def list_orders(
         page=page,
         page_size=page_size,
     )
+
+
+@router.get("/orders/{order_number}", response_model=OrderDetailRead)
+async def get_order_detail(
+    order_number: Annotated[str, Path(min_length=1, max_length=64)],
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> OrderDetailRead:
+    try:
+        return await UserService(
+            session, get_settings(), get_miniapp_identity_provider()
+        ).get_order_detail(user_id=current_user.id, order_number=order_number)
+    except UserResourceNotFoundError as error:
+        raise HTTPException(status_code=404, detail="订单不存在") from error
 
 
 @router.get("/course-entitlements", response_model=CourseEntitlementListResponse)

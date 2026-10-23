@@ -5,6 +5,7 @@ from sqlalchemy import exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.payment import Payment
 from app.models.store import Store
 from app.models.user import (
     CourseEntitlement,
@@ -105,6 +106,26 @@ class UserRepository:
         )
         rows = list((await self.session.execute(statement)).tuples().all())
         return rows, total
+
+    async def get_user_order_by_number(
+        self, *, user_id: UUID, order_number: str
+    ) -> tuple[Order, str, str] | None:
+        # 微信替换商品订单号时使用支付单 out_trade_no，不是业务订单号。
+        payment_matches = exists().where(
+            Payment.order_id == Order.id,
+            Payment.merchant_order_no == order_number,
+        )
+        statement = (
+            select(Order, Store.name, Store.phone)
+            .join(Store, Store.id == Order.store_id)
+            .where(
+                Order.user_id == user_id,
+                or_(Order.order_no == order_number, payment_matches),
+            )
+            .options(selectinload(Order.items), selectinload(Order.payments))
+        )
+        row = (await self.session.execute(statement)).tuples().one_or_none()
+        return (row[0], row[1], row[2]) if row is not None else None
 
     async def list_entitlements(
         self,

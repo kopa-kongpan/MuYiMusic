@@ -2,6 +2,7 @@ import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 
 const outputRoot = `dist/${process.env.TARO_ENV ?? 'weapp'}`
 const apiBaseUrl = process.env.TARO_APP_API_BASE_URL ?? 'http://127.0.0.1:8080'
+const h5PublicPath = process.env.TARO_APP_H5_PUBLIC_PATH ?? '/'
 
 const config: UserConfigExport = {
   projectName: 'MuYiMusic',
@@ -17,10 +18,6 @@ const config: UserConfigExport = {
   copy: {
     patterns: [
       {
-        from: 'src/assets/icons/cart.png',
-        to: `${outputRoot}/assets/icons/cart.png`,
-      },
-      {
         from: 'src/assets/icons/muyi',
         to: `${outputRoot}/assets/icons/muyi`,
       },
@@ -35,6 +32,9 @@ const config: UserConfigExport = {
   compiler: 'webpack5',
   defineConstants: {
     MUYIMUSIC_API_BASE_URL: JSON.stringify(apiBaseUrl),
+    MUYIMUSIC_ASSET_BASE_URL: JSON.stringify(
+      process.env.TARO_ENV === 'h5' ? h5PublicPath : '/',
+    ),
     MUYIMUSIC_WECHAT_TEMPLATE_STUDENT_CANCELLED: JSON.stringify(
       process.env.TARO_APP_WECHAT_TEMPLATE_STUDENT_CANCELLED ?? '',
     ),
@@ -64,7 +64,7 @@ const config: UserConfigExport = {
     },
   },
   h5: {
-    publicPath: '/',
+    publicPath: h5PublicPath,
     staticDirectory: 'static',
   },
 }

@@ -171,25 +171,11 @@
   background: #eef3f1;
 }
 
-.shortcut-image,
-.shortcut-symbol {
+.shortcut-image {
   width: 66rpx;
   height: 66rpx;
-  border-radius: 16rpx;
-}
-
-.shortcut-image {
-  background: #e7ebe9;
-}
-
-.shortcut-symbol {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1d8166, #0d4a3b);
-  font-size: 26rpx;
-  font-weight: 650;
+  background: #ffffff;
+  border-radius: 50%;
 }
 
 .shortcut-item > text {

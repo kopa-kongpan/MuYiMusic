@@ -20,11 +20,12 @@ x-api-environment: &api-environment
   WECHAT_PAY_PUBLIC_KEY_PATH: ${WECHAT_PAY_PUBLIC_KEY_PATH:-}
   WECHAT_PAY_NOTIFY_URL: ${WECHAT_PAY_NOTIFY_URL:-}
   WECHAT_PAY_ORDER_EXPIRE_MINUTES: ${WECHAT_PAY_ORDER_EXPIRE_MINUTES:-30}
+  WECHAT_PAYMENT_JOBS_ENABLED: ${WECHAT_PAYMENT_JOBS_ENABLED:-true}
   WECHAT_TEMPLATE_TEACHER_NEW_APPOINTMENT: ${WECHAT_TEMPLATE_TEACHER_NEW_APPOINTMENT:-}
   WECHAT_TEMPLATE_TEACHER_APPOINTMENT_CANCELLED: ${WECHAT_TEMPLATE_TEACHER_APPOINTMENT_CANCELLED:-}
   WECHAT_TEMPLATE_STUDENT_APPOINTMENT_CANCELLED: ${WECHAT_TEMPLATE_STUDENT_APPOINTMENT_CANCELLED:-}
   WECHAT_TEMPLATE_APPOINTMENT_NEXT_DAY_REMINDER: ${WECHAT_TEMPLATE_APPOINTMENT_NEXT_DAY_REMINDER:-}
-  WECHAT_TEMPLATE_FIELD_MAP_JSON: '${WECHAT_TEMPLATE_FIELD_MAP_JSON:-{}}'
+  WECHAT_TEMPLATE_FIELD_MAP_JSON: "${WECHAT_TEMPLATE_FIELD_MAP_JSON:-{}}"
   DOUYIN_APP_ID: ${DOUYIN_APP_ID:-}
   DOUYIN_APP_SECRET: ${DOUYIN_APP_SECRET:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
@@ -139,20 +140,37 @@ services:
       <<: *api-environment
       TZ: Asia/Shanghai
     command: ["arq", "app.workers.notification_worker.WorkerSettings"]
+    volumes:
+      - ./secrets:/run/secrets:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "arq",
+          "--check",
+          "app.workers.notification_worker.WorkerSettings",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     depends_on:
       bootstrap:
         condition: service_completed_successfully
     restart: unless-stopped
 
   nginx:
-    image: nginx:1.27-alpine
+    build:
+      context: ./nginx
     restart: unless-stopped
     ports:
       - "8080:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       api:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      h5:
         condition: service_healthy
     healthcheck:
       test:

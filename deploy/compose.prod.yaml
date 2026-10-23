@@ -106,7 +106,7 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
-      api:
+      nginx:
         condition: service_healthy
       admin:
         condition: service_healthy

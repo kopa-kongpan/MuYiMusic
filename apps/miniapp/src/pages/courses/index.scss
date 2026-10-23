@@ -85,6 +85,15 @@
   font-size: 16rpx;
 }
 
+.cart-entry-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 9rpx;
+  white-space: nowrap;
+}
+
 .course-search-row {
   position: relative;
   height: 76rpx;
@@ -97,24 +106,10 @@
 
 .course-search-icon {
   position: absolute;
-  top: 23rpx;
-  left: 28rpx;
-  width: 24rpx;
-  height: 24rpx;
-  border: 3rpx solid #9ba39f;
-  border-radius: 50%;
-}
-
-.course-search-icon::after {
-  position: absolute;
-  right: -11rpx;
-  bottom: -7rpx;
-  width: 13rpx;
-  height: 3rpx;
-  background: #9ba39f;
-  border-radius: 2rpx;
-  content: '';
-  transform: rotate(45deg);
+  top: 16rpx;
+  left: 18rpx;
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .course-search-input {
@@ -171,8 +166,11 @@
 }
 
 .course-price-direction {
-  margin-left: 3rpx;
-  font-size: 18rpx;
+  display: inline-block;
+  width: 32rpx;
+  height: 32rpx;
+  margin-left: 5rpx;
+  vertical-align: middle;
 }
 
 .course-catalog {
@@ -214,21 +212,15 @@
 }
 
 .course-category-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 48rpx;
   height: 48rpx;
-  color: #176b57;
-  border: 2rpx solid currentcolor;
-  border-radius: 15rpx;
-  font-size: 22rpx;
+  background: #ffffff;
+  border-radius: 50%;
 }
 
 .course-category-item--active .course-category-mark {
-  color: #ffffff;
-  background: #176b57;
-  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.2);
+  box-shadow: 0 0 0 3rpx rgba(7, 57, 84, 0.15);
 }
 
 .course-catalog-main {
@@ -390,13 +382,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40rpx;
-  height: 40rpx;
-  flex: 0 0 40rpx;
+  width: 48rpx;
+  height: 48rpx;
+  flex: 0 0 48rpx;
   color: #ffffff;
-  background: linear-gradient(145deg, #2b8b71, #176b57);
+  background: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 4rpx 10rpx rgba(23, 107, 87, 0.22);
   line-height: 1;
   transition: transform 120ms ease, opacity 120ms ease;
 }
@@ -408,8 +399,8 @@
 
 .course-cart-button-icon {
   display: block;
-  width: 50%;
-  height: 50%;
+  width: 100%;
+  height: 100%;
   flex: none;
 }
 

@@ -2,6 +2,10 @@
 .env
 .env.*
 !.env.example
+deploy/ssh/
+**/*.pem
+**/*.key
+**/*.p12
 node_modules
 **/node_modules
 **/dist

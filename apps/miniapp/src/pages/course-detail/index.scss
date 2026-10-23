@@ -62,6 +62,9 @@
 }
 
 .detail-share-button {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
   height: 52rpx;
   margin: 0;
   padding: 0 18rpx;
@@ -73,6 +76,21 @@
 
 .detail-share-button::after {
   border: 0;
+}
+
+.detail-share-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 6rpx;
+  white-space: nowrap;
+}
+
+.detail-video-title {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
 }
 
 .detail-name {
@@ -246,6 +264,8 @@
   flex: 0 0 auto;
   color: #46504a;
   background: #eef1ef;
+  flex-direction: column;
+  gap: 2rpx;
 }
 
 .detail-total {

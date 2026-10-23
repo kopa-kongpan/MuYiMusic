@@ -49,17 +49,11 @@
 }
 
 .record-state-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 72rpx;
   height: 72rpx;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1d8166, #0d4a3b);
-  border-radius: 22rpx;
-  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
-  font-size: 26rpx;
-  font-weight: 650;
+  background: #ffffff;
+  border-radius: 50%;
 }
 
 .record-state-title {
@@ -199,7 +193,9 @@
 }
 
 .record-course-chapters-heading {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
   margin-bottom: 12rpx;
   color: #68716c;
   font-size: 21rpx;

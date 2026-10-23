@@ -1,6 +1,7 @@
 import type {
   CourseEntitlementListResponse,
   OrderListResponse,
+  OrderDetailRead,
   UserProfile,
   UserTokenResponse,
 } from '@muyimusic/api-client'
@@ -30,7 +31,10 @@ function apiErrorMessage(error: ApiErrorResponse): string | undefined {
   if (error.message) return error.message
   if (typeof error.detail === 'string') return error.detail
   if (Array.isArray(error.detail)) {
-    return error.detail.map((item) => item.msg).filter(Boolean).join('；')
+    return error.detail
+      .map((item) => item.msg)
+      .filter(Boolean)
+      .join('；')
   }
   return undefined
 }
@@ -109,6 +113,14 @@ export function listMyOrders(storeId?: string): Promise<OrderListResponse> {
   return authenticatedGet(
     '/api/v1/app/me/orders',
     { store_id: storeId, page: 1, page_size: 100 },
+    '订单加载失败',
+  )
+}
+
+export function getMyOrder(orderNumber: string): Promise<OrderDetailRead> {
+  return authenticatedGet(
+    `/api/v1/app/me/orders/${encodeURIComponent(orderNumber)}`,
+    {},
     '订单加载失败',
   )
 }

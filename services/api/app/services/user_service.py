@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings
 from app.core.security import create_access_token
 from app.models.admin import AdminUser
+from app.models.payment import PaymentStatus
 from app.models.product import (
     ProductStatus,
     ProductType,
@@ -36,6 +37,7 @@ from app.schemas.user import (
     EntitlementGrantRequest,
     EntitlementLessonUpdateRequest,
     EntitlementVideoChapterRead,
+    OrderDetailRead,
     OrderItemRead,
     OrderListResponse,
     OrderRead,
@@ -215,6 +217,33 @@ class UserService:
             total=total,
             page=page,
             page_size=page_size,
+        )
+
+    async def get_order_detail(
+        self, *, user_id: UUID, order_number: str
+    ) -> OrderDetailRead:
+        row = await self.repository.get_user_order_by_number(
+            user_id=user_id, order_number=order_number
+        )
+        if row is None:
+            raise UserResourceNotFoundError
+        order, store_name, store_phone = row
+        payments = sorted(
+            order.payments, key=lambda item: item.attempt_no, reverse=True
+        )
+        payment = next(
+            (
+                item
+                for item in payments
+                if item.status in (PaymentStatus.SUCCEEDED, PaymentStatus.REFUNDED)
+            ),
+            payments[0] if payments else None,
+        )
+        return OrderDetailRead(
+            **self._to_order_read(order, store_name).model_dump(),
+            store_phone=store_phone,
+            payment_status=payment.status if payment else None,
+            paid_at=payment.paid_at if payment else None,
         )
 
     async def list_entitlements(

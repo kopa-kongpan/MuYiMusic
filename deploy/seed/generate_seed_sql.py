@@ -28,6 +28,11 @@ def sql_str(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def product_media_key(store_key: str, legacy_key: str) -> str:
+    store_id = uid(f"store:{store_key}")
+    return f"muyimusic/stores/{store_id}/products/{legacy_key}"
+
+
 def sql_ts(value: datetime) -> str:
     return f"TIMESTAMPTZ '{value:%Y-%m-%d %H:%M:%S}+08'"
 
@@ -266,7 +271,7 @@ def build() -> str:
             f"  ({sql_str(uid(pkey))}, {sql_str(uid(f'store:{store_key}'))}, "
             f"{sql_str(uid(f'category:{store_key}:{cat}'))}, {sql_str(name)}, "
             f"{sql_str(summary)}, '教学特色：一对一因材施教，课前课后都有练习反馈。', "
-            f"{sql_str(cover)}, 'published', {sql_ts(ts(days=-14, hour=9))}, {sales}, 10)"
+            f"{sql_str(product_media_key(store_key, cover))}, 'published', {sql_ts(ts(days=-14, hour=9))}, {sales}, 10)"
         )
         for i, (sku_name, price, lessons, validity) in enumerate(skus, start=1):
             sku_rows.append(
@@ -275,7 +280,7 @@ def build() -> str:
             )
             img_rows.append(
                 f"  ({sql_str(uid(f'img:{store_key}:{name}:{i}'))}, {sql_str(uid(pkey))}, "
-                f"{sql_str(f'seed/img-{store_key}-{i}.png')}, {i * 10})"
+                f"{sql_str(product_media_key(store_key, f'seed/img-{store_key}-{i}.png'))}, {i * 10})"
             )
     add("INSERT INTO products (id, store_id, category_id, name, summary, details, cover_object_key, status, published_at, sales_count, sort_order)")
     add("VALUES")

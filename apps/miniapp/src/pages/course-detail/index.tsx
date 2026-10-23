@@ -3,6 +3,8 @@ import { Button, Image, Swiper, SwiperItem, Text, View } from '@tarojs/component
 import Taro, { useLoad, useRouter, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import { getCourseProduct, validateCoursePurchase } from '../../services/courses'
 import { listPublicStores } from '../../services/stores'
 import { addCartItem, cartQuantity } from '../../store/cart'
@@ -96,7 +98,7 @@ export default function CourseDetailPage() {
       if (openCart) {
         await Taro.redirectTo({ url: '/pages/cart/index' })
       } else {
-        await Taro.showToast({ title: '已加入购物车', icon: 'success' })
+        await Taro.showToast({ title: '已加入购物车', icon: 'success', image: appIcons.check })
       }
     } catch (error) {
       await Taro.showToast({
@@ -148,7 +150,7 @@ export default function CourseDetailPage() {
       await Taro.setClipboardData({
         data: `${currentProduct.name}\n/pages/course-detail/index?id=${currentProduct.id}&storeId=${router.params.storeId ?? readCurrentStore()?.id ?? ''}`,
       })
-      await Taro.showToast({ title: '课程信息已复制', icon: 'success' })
+      await Taro.showToast({ title: '课程信息已复制', icon: 'success', image: appIcons.check })
     } catch {
       await Taro.showToast({ title: '分享暂不可用', icon: 'none' })
     }
@@ -188,7 +190,10 @@ export default function CourseDetailPage() {
             openType="share"
             onClick={() => void shareCourse(product)}
           >
-            分享
+            <View className="detail-share-content">
+              <AppIcon name="share" className="app-icon--small" />
+              <Text>分享</Text>
+            </View>
           </Button>
         </View>
         <Text className="detail-name">{product.name}</Text>
@@ -227,7 +232,9 @@ export default function CourseDetailPage() {
               aria-label="减少数量"
               onClick={() => setQuantity((current) => Math.max(1, current - 1))}
             >
-              −
+              <View className="app-icon-button-content">
+                <AppIcon name="minus" className="app-icon--small" />
+              </View>
             </Button>
             <Text>{quantity}</Text>
             <Button
@@ -236,7 +243,9 @@ export default function CourseDetailPage() {
               aria-label="增加数量"
               onClick={() => setQuantity((current) => Math.min(99, current + 1))}
             >
-              +
+              <View className="app-icon-button-content">
+                <AppIcon name="plus" className="app-icon--small" />
+              </View>
             </Button>
           </View>
         </View>
@@ -244,9 +253,10 @@ export default function CourseDetailPage() {
 
       {product.video_chapters.length > 0 ? (
         <View className="detail-section">
-          <Text className="detail-section-title">
-            配套视频课时（{product.video_chapters.length}）
-          </Text>
+          <View className="detail-video-title">
+            <AppIcon name="videoCourses" />
+            <Text className="detail-section-title">配套视频课时（{product.video_chapters.length}）</Text>
+          </View>
           <View className="detail-chapters">
             {product.video_chapters.map((chapter, index) => (
               <View className="detail-chapter" key={chapter.id}>
@@ -285,26 +295,37 @@ export default function CourseDetailPage() {
           size="mini"
           onClick={() => void Taro.switchTab({ url: '/pages/home/index' })}
         >
-          首页
+          <View className="app-icon-button-content app-icon-button-content--vertical">
+            <AppIcon name="home" className="app-icon--small" />
+            <Text>首页</Text>
+          </View>
         </Button>
-        <Button
-          className="detail-contact-shortcut"
-          size="mini"
-          onClick={() => {
-            const currentStore = readCurrentStore()
-            if (currentStore) {
-              void Taro.makePhoneCall({ phoneNumber: currentStore.phone })
-            }
-          }}
-        >
-          联系
-        </Button>
+        {readCurrentStore()?.phone ? (
+          <Button
+            className="detail-contact-shortcut"
+            size="mini"
+            onClick={() => {
+              const currentStore = readCurrentStore()
+              if (currentStore?.phone) {
+                void Taro.makePhoneCall({ phoneNumber: currentStore.phone })
+              }
+            }}
+          >
+            <View className="app-icon-button-content app-icon-button-content--vertical">
+              <AppIcon name="phone" className="app-icon--small" />
+              <Text>联系</Text>
+            </View>
+          </Button>
+        ) : null}
         <Button
           className="detail-cart-shortcut"
           size="mini"
           onClick={() => void Taro.redirectTo({ url: '/pages/cart/index' })}
         >
-          购物车{cartCount ? ` ${cartCount}` : ''}
+          <View className="app-icon-button-content app-icon-button-content--vertical">
+            <AppIcon name="cart" className="app-icon--small" />
+            <Text>购物车{cartCount ? ` ${cartCount}` : ''}</Text>
+          </View>
         </Button>
         <View className="detail-total">
           <Text>合计</Text>

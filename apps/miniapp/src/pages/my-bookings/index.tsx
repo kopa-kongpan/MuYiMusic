@@ -6,6 +6,8 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import {
   cancelMyAppointment,
   listMyAppointments,
@@ -71,7 +73,7 @@ export default function MyBookingsPage() {
     setCancellingId(appointment.id)
     try {
       await cancelMyAppointment(appointment.id)
-      await Taro.showToast({ title: '已取消预约', icon: 'success' })
+      await Taro.showToast({ title: '已取消预约', icon: 'success', image: appIcons.check })
       await load()
     } catch (error) {
       await Taro.showToast({
@@ -94,7 +96,7 @@ export default function MyBookingsPage() {
   let content: React.ReactNode
   if (!session) {
     content = (
-      <RecordState mark="约" title="请先登录" copy="登录后可查看并管理本人预约">
+      <RecordState title="请先登录" copy="登录后可查看并管理本人预约">
         <Button
           className="record-state-button"
           size="mini"
@@ -108,10 +110,10 @@ export default function MyBookingsPage() {
       </RecordState>
     )
   } else if (isLoading) {
-    content = <RecordState mark="约" title="正在加载预约" copy="请稍候" />
+    content = <RecordState title="正在加载预约" copy="请稍候" />
   } else if (errorMessage) {
     content = (
-      <RecordState mark="约" title="预约加载失败" copy={errorMessage}>
+      <RecordState title="预约加载失败" copy={errorMessage}>
         <Button className="record-state-button" size="mini" onClick={() => void load()}>
           重试
         </Button>
@@ -119,7 +121,7 @@ export default function MyBookingsPage() {
     )
   } else if (appointments.length === 0) {
     content = (
-      <RecordState mark="约" title="暂无预约" copy="可在预约页选择合适的课程时段" />
+      <RecordState title="暂无预约" copy="可在预约页选择合适的课程时段" />
     )
   } else {
     content = (
@@ -183,14 +185,13 @@ export default function MyBookingsPage() {
 }
 
 function RecordState(props: {
-  mark: string
   title: string
   copy: string
   children?: React.ReactNode
 }) {
   return (
     <View className="record-state">
-      <View className="record-state-mark">{props.mark}</View>
+      <AppIcon className="record-state-mark" name="bookings" />
       <Text className="record-state-title">{props.title}</Text>
       <Text className="record-state-copy">{props.copy}</Text>
       {props.children}

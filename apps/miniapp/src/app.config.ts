@@ -8,6 +8,7 @@ export default defineAppConfig({
     'pages/booking/index',
     'pages/me/index',
     'pages/my-orders/index',
+    'pages/order-detail/index',
     'pages/my-courses/index',
     'pages/schedule/index',
     'pages/my-bookings/index',
@@ -24,8 +25,8 @@ export default defineAppConfig({
     navigationBarTextStyle: 'black',
   },
   tabBar: {
-    color: '#747c77',
-    selectedColor: '#176b57',
+    color: '#687d89',
+    selectedColor: '#073954',
     backgroundColor: '#ffffff',
     borderStyle: 'white',
     list: [
@@ -50,8 +51,8 @@ export default defineAppConfig({
       {
         pagePath: 'pages/booking/index',
         text: '预约',
-        iconPath: 'assets/icons/muyi/schedule.png',
-        selectedIconPath: 'assets/icons/muyi/schedule.png',
+        iconPath: 'assets/icons/muyi/bookings.png',
+        selectedIconPath: 'assets/icons/muyi/bookings.png',
       },
       {
         pagePath: 'pages/me/index',

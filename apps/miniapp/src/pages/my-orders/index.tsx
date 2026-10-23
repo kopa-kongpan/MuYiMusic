@@ -3,6 +3,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
+import AppIcon from '../../components/AppIcon'
 import { listMyOrders } from '../../services/user'
 import { readCurrentStore } from '../../store/current-store'
 import { readUserSession } from '../../store/user-session'
@@ -61,7 +62,7 @@ export default function MyOrdersPage() {
       </View>
 
       {!session ? (
-        <RecordState mark="单" title="请先登录" copy="登录后可查看本人订单">
+        <RecordState title="请先登录" copy="登录后可查看本人订单">
           <Button
             className="record-state-button"
             size="mini"
@@ -71,15 +72,22 @@ export default function MyOrdersPage() {
           </Button>
         </RecordState>
       ) : isLoading ? (
-        <RecordState mark="单" title="正在加载订单" copy="请稍候" />
+        <RecordState title="正在加载订单" copy="请稍候" />
       ) : errorMessage ? (
-        <RecordState mark="单" title="订单加载失败" copy={errorMessage}>
-          <Button className="record-state-button" size="mini" onClick={() => void load()}>
+        <RecordState title="订单加载失败" copy={errorMessage}>
+          <Button
+            className="record-state-button"
+            size="mini"
+            onClick={() => void load()}
+          >
             重试
           </Button>
         </RecordState>
       ) : orders.length === 0 ? (
-        <RecordState mark="单" title="暂无订单" copy="当前门店还没有可展示的订单" />
+        <RecordState
+          title="暂无订单"
+          copy="当前门店还没有可展示的订单"
+        />
       ) : (
         <View className="record-list">
           {orders.map((order) => (
@@ -98,18 +106,41 @@ export default function MyOrdersPage() {
               <View className="record-lines">
                 {order.items.map((item) => (
                   <View className="record-line" key={item.id}>
-                    <Text className="record-line-title">{item.product_name}</Text>
+                    <Text className="record-line-title">
+                      {item.product_name}
+                    </Text>
                     <Text className="record-line-meta">
-                      {item.sku_name} · {item.lesson_count} 课时 × {item.quantity}
+                      {item.sku_name} · {item.lesson_count} 课时 ×{' '}
+                      {item.quantity}
                     </Text>
                   </View>
                 ))}
               </View>
               <View className="record-card-footer">
-                <Text>共 {order.items.reduce((total, item) => total + item.quantity, 0)} 件</Text>
+                <Text>
+                  共{' '}
+                  {order.items.reduce(
+                    (total, item) => total + item.quantity,
+                    0,
+                  )}{' '}
+                  件
+                </Text>
                 <Text className="record-card-price">
                   {formatMoney(order.total_amount_cents)}
                 </Text>
+              </View>
+              <View className="record-card-actions">
+                <Button
+                  className="record-secondary-button"
+                  size="mini"
+                  onClick={() =>
+                    void Taro.navigateTo({
+                      url: `/pages/order-detail/index?order_no=${encodeURIComponent(order.order_no)}`,
+                    })
+                  }
+                >
+                  查看订单
+                </Button>
               </View>
             </View>
           ))}
@@ -120,14 +151,13 @@ export default function MyOrdersPage() {
 }
 
 function RecordState(props: {
-  mark: string
   title: string
   copy: string
   children?: React.ReactNode
 }) {
   return (
     <View className="record-state">
-      <View className="record-state-mark">{props.mark}</View>
+      <AppIcon className="record-state-mark" name="orders" />
       <Text className="record-state-title">{props.title}</Text>
       <Text className="record-state-copy">{props.copy}</Text>
       {props.children}

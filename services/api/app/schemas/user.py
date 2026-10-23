@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.payment import PaymentStatus
 from app.models.product import ProductType
 from app.models.user import (
     EntitlementStatus,
@@ -82,6 +83,12 @@ class OrderListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class OrderDetailRead(OrderRead):
+    store_phone: str
+    payment_status: PaymentStatus | None
+    paid_at: datetime | None
 
 
 class EntitlementVideoChapterRead(BaseModel):

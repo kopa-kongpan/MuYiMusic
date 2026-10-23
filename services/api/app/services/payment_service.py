@@ -210,6 +210,7 @@ class PaymentService:
             attempt_no=attempt_no,
             merchant_order_no=f"{order.order_no}{attempt_no:02d}",
             amount_cents=order.total_amount_cents,
+            payer_openid=openid,
             expires_at=expires_at,
         )
         self.session.add(payment)
@@ -222,12 +223,13 @@ class PaymentService:
         payment: Payment,
         openid: str,
     ) -> WechatPaymentParameters:
+        payment.payer_openid = payment.payer_openid or openid
         try:
             prepay_id = await self.provider.create_jsapi_payment(
                 out_trade_no=payment.merchant_order_no,
                 description=self._description(order),
                 amount_cents=payment.amount_cents,
-                openid=openid,
+                openid=payment.payer_openid,
                 expires_at=payment.expires_at,
             )
         except WechatPayAPIError as error:
@@ -374,6 +376,16 @@ class PaymentService:
         if payment is None:
             raise PaymentResourceNotFoundError
         self._validate_remote(payment, remote)
+        if payment.status == PaymentStatus.REFUNDED:
+            # 延迟到达的支付通知/查单不能把退款单重新变成已支付。
+            await self.session.commit()
+            return
+        if payment.status == PaymentStatus.SUCCEEDED and remote.trade_state not in {
+            "SUCCESS",
+            "REFUND",
+        }:
+            await self.session.commit()
+            return
         if remote.trade_state == "SUCCESS":
             if not remote.transaction_id:
                 raise PaymentConflictError("微信支付成功数据缺少交易号")
@@ -399,6 +411,10 @@ class PaymentService:
             payment.failure_code = remote.trade_state
         elif remote.trade_state == "REFUND":
             payment.status = PaymentStatus.REFUNDED
+        if payment.status != PaymentStatus.PENDING:
+            payment.next_reconcile_at = None
+            payment.last_reconcile_error = None
+            payment.reconcile_attempts = 0
         await self.session.commit()
 
     async def _close_other_pending_payments(
@@ -557,8 +573,10 @@ class PaymentService:
 
     @staticmethod
     def _description(order: Order) -> str:
-        first = order.items[0].product_name
-        return first if len(order.items) == 1 else f"{first}等{len(order.items)}项课程"
+        return "；".join(
+            f"{item.product_name} {item.sku_name} ×{item.quantity}"
+            for item in order.items
+        )[:127]
 
     @staticmethod
     def _order_no(now: datetime) -> str:

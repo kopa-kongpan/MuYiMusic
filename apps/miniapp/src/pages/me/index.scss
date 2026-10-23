@@ -74,23 +74,12 @@
   gap: 20rpx;
 }
 
-.me-avatar,
-.me-entry-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1d8166, #0d4a3b);
-  font-weight: 650;
-}
-
 .me-avatar {
   flex: 0 0 82rpx;
   width: 82rpx;
   height: 82rpx;
   border-radius: 50%;
-  box-shadow: 0 6rpx 14rpx rgba(23, 107, 87, 0.28);
-  font-size: 31rpx;
+  background: #ffffff;
 }
 
 .me-login-mark,
@@ -179,14 +168,6 @@
 
 .me-entry--pressed {
   background: #f1f4f2;
-}
-
-.me-entry-mark {
-  width: 54rpx;
-  height: 54rpx;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 10rpx rgba(23, 107, 87, 0.22);
-  font-size: 21rpx;
 }
 
 .me-entry-icon {

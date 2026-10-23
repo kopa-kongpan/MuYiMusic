@@ -67,8 +67,8 @@ def store_snapshot(store: Store) -> dict[str, Any]:
         "district": store.district,
         "address": store.address,
         "phone": store.phone,
-        "latitude": float(store.latitude),
-        "longitude": float(store.longitude),
+        "latitude": float(store.latitude) if store.latitude is not None else None,
+        "longitude": float(store.longitude) if store.longitude is not None else None,
         "status": store.status.value,
         "sort_order": store.sort_order,
     }
@@ -114,7 +114,12 @@ class StoreService:
         items = []
         for store in stores:
             item = StorePublicRead.model_validate(store)
-            if latitude is not None and longitude is not None:
+            if (
+                latitude is not None
+                and longitude is not None
+                and store.latitude is not None
+                and store.longitude is not None
+            ):
                 item.distance_km = distance_km(
                     latitude,
                     longitude,

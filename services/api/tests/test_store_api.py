@@ -1,4 +1,6 @@
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -11,8 +13,36 @@ from app.core.security import hash_password
 from app.main import app
 from app.models.admin import AdminUser, Permission, Role
 from app.models.audit import AuditLog
+from app.models.store import Store, StoreStatus
+from app.services.store_service import StoreService, store_snapshot
 
 pytestmark = pytest.mark.asyncio
+
+
+async def test_public_store_without_coordinates_has_no_distance() -> None:
+    store = Store(
+        id=uuid4(),
+        name="待补充定位门店",
+        city="杭州市",
+        district="上城区",
+        address="测试路 1 号",
+        phone="",
+        latitude=None,
+        longitude=None,
+        status=StoreStatus.ACTIVE,
+        sort_order=100,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    service = StoreService(AsyncMock())
+    service.repository.list_public = AsyncMock(return_value=[store])
+
+    result = await service.list_public(keyword=None, latitude=30.0, longitude=120.0)
+
+    assert result.items[0].latitude is None
+    assert result.items[0].longitude is None
+    assert result.items[0].distance_km is None
+    assert store_snapshot(store)["latitude"] is None
 
 
 async def test_admin_store_lifecycle_and_public_visibility() -> None:

@@ -12,3 +12,52 @@ page {
 .weui-tabbar__icon:not([src]) {
   display: none;
 }
+
+.app-icon {
+  display: block;
+  flex: 0 0 auto;
+  width: 48rpx;
+  height: 48rpx;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.app-icon--small {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.app-icon--cover {
+  width: 104rpx;
+  height: 104rpx;
+}
+
+.app-icon--state {
+  width: 76rpx;
+  height: 76rpx;
+  margin-bottom: 18rpx;
+}
+
+.app-icon--down {
+  transform: rotate(180deg);
+}
+
+button[disabled] .app-icon {
+  opacity: 0.4;
+}
+
+.app-icon-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1.2;
+}
+
+.app-icon-button-content--vertical {
+  flex-direction: column;
+  gap: 2rpx;
+  white-space: nowrap;
+}

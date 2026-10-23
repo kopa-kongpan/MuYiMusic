@@ -3,6 +3,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useState } from 'react'
 
+import AppIcon from '../../components/AppIcon'
 import { listMyAppointments } from '../../services/appointments'
 import { readCurrentStore } from '../../store/current-store'
 import { setLoginReturn } from '../../store/login-return'
@@ -72,7 +73,7 @@ export default function SchedulePage() {
   let content: React.ReactNode
   if (!session) {
     content = (
-      <RecordState mark="表" title="请先登录" copy="登录后可查看本人课程安排">
+      <RecordState title="请先登录" copy="登录后可查看本人课程安排">
         <Button
           className="record-state-button"
           size="mini"
@@ -86,10 +87,10 @@ export default function SchedulePage() {
       </RecordState>
     )
   } else if (isLoading) {
-    content = <RecordState mark="表" title="正在加载课表" copy="请稍候" />
+    content = <RecordState title="正在加载课表" copy="请稍候" />
   } else if (errorMessage) {
     content = (
-      <RecordState mark="表" title="课表加载失败" copy={errorMessage}>
+      <RecordState title="课表加载失败" copy={errorMessage}>
         <Button className="record-state-button" size="mini" onClick={() => void load()}>
           重试
         </Button>
@@ -97,7 +98,7 @@ export default function SchedulePage() {
     )
   } else if (appointments.length === 0) {
     content = (
-      <RecordState mark="表" title="暂无课程安排" copy="预约成功的课程会出现在这里" />
+      <RecordState title="暂无课程安排" copy="预约成功的课程会出现在这里" />
     )
   } else {
     content = (
@@ -141,14 +142,13 @@ export default function SchedulePage() {
 }
 
 function RecordState(props: {
-  mark: string
   title: string
   copy: string
   children?: React.ReactNode
 }) {
   return (
     <View className="record-state">
-      <View className="record-state-mark">{props.mark}</View>
+      <AppIcon className="record-state-mark" name="myCourses" />
       <Text className="record-state-title">{props.title}</Text>
       <Text className="record-state-copy">{props.copy}</Text>
       {props.children}

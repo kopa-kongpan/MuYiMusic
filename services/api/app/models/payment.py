@@ -84,8 +84,16 @@ class Payment(Base):
     transaction_id: Mapped[str | None] = mapped_column(String(64), unique=True)
     amount_cents: Mapped[int] = mapped_column(Integer)
     prepay_id: Mapped[str | None] = mapped_column(String(128))
+    payer_openid: Mapped[str | None] = mapped_column(String(128))
     notify_id: Mapped[str | None] = mapped_column(String(64), unique=True)
     failure_code: Mapped[str | None] = mapped_column(String(64))
+    reconcile_attempts: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0"
+    )
+    next_reconcile_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), index=True
+    )
+    last_reconcile_error: Mapped[str | None] = mapped_column(String(128))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(

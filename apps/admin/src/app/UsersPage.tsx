@@ -1,7 +1,7 @@
 import type {
+  AdminOrderRead,
   CourseEntitlementRead,
   EntitlementStatus,
-  OrderRead,
   OrderStatus,
   ProductRead,
   UserAdminRead,
@@ -111,6 +111,15 @@ export function UsersPage() {
   const [adjustingEntitlement, setAdjustingEntitlement] =
     useState<CourseEntitlementRead | null>(null)
   const [isAdjustingLessons, setIsAdjustingLessons] = useState(false)
+  const [fulfillmentOrder, setFulfillmentOrder] =
+    useState<AdminOrderRead | null>(null)
+  const [fulfillmentForm] = Form.useForm<{
+    logistics_type: 3 | 4
+    item_description: string
+    evidence: string
+  }>()
+  const [isConfirmingFulfillment, setIsConfirmingFulfillment] = useState(false)
+  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null)
   const selectedProductId = Form.useWatch('productId', courseBindingForm)
   const session = getAdminSession()
   const canBindCourse =
@@ -137,18 +146,19 @@ export function UsersPage() {
     enabled: Boolean(activeStoreId),
   })
   const ordersQuery = useQuery({
-    queryKey: [
-      'admin-user-orders',
-      activeStoreId,
-      selectedUser?.id,
-      orderPage,
-    ],
+    queryKey: ['admin-user-orders', activeStoreId, selectedUser?.id, orderPage],
     queryFn: () =>
       apiClient.listAdminUserOrders(activeStoreId!, selectedUser!.id, {
         page: orderPage,
         pageSize: 20,
       }),
     enabled: Boolean(activeStoreId && selectedUser),
+    refetchInterval: (query) =>
+      query.state.data?.items.some(
+        (order) => order.fulfillment?.status === 'pending',
+      )
+        ? 5000
+        : false,
   })
   const entitlementsQuery = useQuery({
     queryKey: [
@@ -223,7 +233,9 @@ export function UsersPage() {
       setBindingUser(null)
       courseBindingForm.resetFields()
     } catch (error) {
-      void message.error(error instanceof Error ? error.message : '课程绑定失败')
+      void message.error(
+        error instanceof Error ? error.message : '课程绑定失败',
+      )
     } finally {
       setIsBindingCourse(false)
     }
@@ -265,9 +277,70 @@ export function UsersPage() {
       setAdjustingEntitlement(null)
       lessonAdjustmentForm.resetFields()
     } catch (error) {
-      void message.error(error instanceof Error ? error.message : '课时调整失败')
+      void message.error(
+        error instanceof Error ? error.message : '课时调整失败',
+      )
     } finally {
       setIsAdjustingLessons(false)
+    }
+  }
+
+  function openFulfillment(order: AdminOrderRead) {
+    fulfillmentForm.setFieldsValue({
+      logistics_type: 3,
+      item_description: order.items
+        .map(
+          (item) =>
+            `${item.product_name} · ${item.sku_name} × ${item.quantity}`,
+        )
+        .join('；')
+        .slice(0, 120),
+      evidence: '',
+    })
+    setFulfillmentOrder(order)
+  }
+
+  async function confirmFulfillment(values: {
+    logistics_type: 3 | 4
+    item_description: string
+    evidence: string
+  }) {
+    if (!activeStoreId || !selectedUser || !fulfillmentOrder) return
+    setIsConfirmingFulfillment(true)
+    try {
+      await apiClient.confirmWechatFulfillment(
+        activeStoreId,
+        selectedUser.id,
+        fulfillmentOrder.id,
+        values,
+      )
+      setFulfillmentOrder(null)
+      await ordersQuery.refetch()
+      void message.success('履约已确认，将自动上报微信')
+    } catch (error) {
+      void message.error(
+        error instanceof Error ? error.message : '履约确认失败',
+      )
+    } finally {
+      setIsConfirmingFulfillment(false)
+    }
+  }
+
+  async function retryFulfillment(order: AdminOrderRead) {
+    if (!activeStoreId || !selectedUser) return
+    setRetryingOrderId(order.id)
+    try {
+      await apiClient.retryWechatFulfillment(
+        activeStoreId,
+        selectedUser.id,
+        order.id,
+      )
+      await ordersQuery.refetch()
+      void message.success('已安排重新上报')
+    } catch (error) {
+      void message.error(error instanceof Error ? error.message : '重试失败')
+    } finally {
+      setRetryingOrderId(null)
     }
   }
 
@@ -364,7 +437,7 @@ export function UsersPage() {
     },
   ]
 
-  const orderColumns: NonNullable<TableProps<OrderRead>['columns']> = [
+  const orderColumns: NonNullable<TableProps<AdminOrderRead>['columns']> = [
     {
       title: '订单',
       key: 'order',
@@ -406,6 +479,70 @@ export function UsersPage() {
           {orderStatusLabels[status]}
         </Tag>
       ),
+    },
+    {
+      title: '微信履约',
+      key: 'fulfillment',
+      width: 190,
+      render: (_, order) => {
+        const fulfillment = order.fulfillment
+        if (fulfillment) {
+          const labels = {
+            pending: '等待上报',
+            sent: '已上报',
+            failed: '上报失败',
+            cancelled: '已停止上报',
+          }
+          return (
+            <div className="order-summary-cell">
+              <Tooltip title={fulfillment.last_error ?? undefined}>
+                <Tag
+                  color={
+                    fulfillment.status === 'sent'
+                      ? 'success'
+                      : fulfillment.status === 'failed'
+                        ? 'error'
+                        : 'default'
+                  }
+                >
+                  {labels[fulfillment.status]}
+                </Tag>
+              </Tooltip>
+              {fulfillment.sent_at ? (
+                <span>{formatTime(fulfillment.sent_at)}</span>
+              ) : null}
+              {fulfillment.status === 'pending' ? (
+                <span>
+                  {fulfillment.attempts
+                    ? `已尝试 ${fulfillment.attempts} 次，将自动重试`
+                    : '等待后台任务处理'}
+                </span>
+              ) : null}
+              {fulfillment.status === 'failed' &&
+              canAdjustLessons &&
+              order.wechat_payment_status === 'succeeded' ? (
+                <Button
+                  size="small"
+                  loading={retryingOrderId === order.id}
+                  onClick={() => void retryFulfillment(order)}
+                >
+                  重新上报
+                </Button>
+              ) : null}
+            </div>
+          )
+        }
+        if (order.wechat_payment_status !== 'succeeded') {
+          return <span className="muted-text">—</span>
+        }
+        return canAdjustLessons ? (
+          <Button size="small" onClick={() => openFulfillment(order)}>
+            确认履约
+          </Button>
+        ) : (
+          <span>待确认履约</span>
+        )
+      },
     },
   ]
 
@@ -455,15 +592,15 @@ export function UsersPage() {
             fixed: 'right' as const,
             width: 72,
             render: (_: unknown, entitlement: CourseEntitlementRead) => (
-                <Tooltip title="调整课时">
-                  <Button
-                    type="text"
-                    icon={<Pencil size={16} aria-hidden="true" />}
-                    aria-label={`调整${entitlement.course_name}课时`}
-                    onClick={() => openLessonAdjustment(entitlement)}
-                  />
-                </Tooltip>
-              ),
+              <Tooltip title="调整课时">
+                <Button
+                  type="text"
+                  icon={<Pencil size={16} aria-hidden="true" />}
+                  aria-label={`调整${entitlement.course_name}课时`}
+                  onClick={() => openLessonAdjustment(entitlement)}
+                />
+              </Tooltip>
+            ),
           },
         ]
       : []),
@@ -530,7 +667,9 @@ export function UsersPage() {
           type="error"
           showIcon
           message="用户与权益加载失败"
-          description={loadError instanceof Error ? loadError.message : '请稍后重试'}
+          description={
+            loadError instanceof Error ? loadError.message : '请稍后重试'
+          }
         />
       ) : (
         <div className="table-surface">
@@ -538,7 +677,9 @@ export function UsersPage() {
             rowKey="id"
             size="middle"
             loading={
-              storesQuery.isLoading || usersQuery.isLoading || usersQuery.isFetching
+              storesQuery.isLoading ||
+              usersQuery.isLoading ||
+              usersQuery.isFetching
             }
             columns={userColumns}
             dataSource={usersQuery.data?.items ?? []}
@@ -547,7 +688,9 @@ export function UsersPage() {
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={activeStoreId ? '该门店暂无业务用户' : '请先选择门店'}
+                  description={
+                    activeStoreId ? '该门店暂无业务用户' : '请先选择门店'
+                  }
                 />
               ),
             }}
@@ -569,7 +712,9 @@ export function UsersPage() {
       <Drawer
         open={Boolean(selectedUser)}
         width={920}
-        title={selectedUser ? `${selectedUser.nickname} · 业务详情` : '业务详情'}
+        title={
+          selectedUser ? `${selectedUser.nickname} · 业务详情` : '业务详情'
+        }
         onClose={() => setSelectedUser(null)}
       >
         <div className="user-detail-section">
@@ -580,15 +725,20 @@ export function UsersPage() {
             </div>
             <span>价格与课程名称均为下单时快照</span>
           </div>
-          <Table<OrderRead>
+          <Table<AdminOrderRead>
             rowKey="id"
             size="small"
             loading={ordersQuery.isLoading || ordersQuery.isFetching}
             columns={orderColumns}
             dataSource={ordersQuery.data?.items ?? []}
-            scroll={{ x: 740 }}
+            scroll={{ x: 930 }}
             locale={{
-              emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无订单" />,
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="暂无订单"
+                />
+              ),
             }}
             pagination={{
               current: orderPage,
@@ -611,13 +761,18 @@ export function UsersPage() {
           <Table<CourseEntitlementRead>
             rowKey="id"
             size="small"
-            loading={entitlementsQuery.isLoading || entitlementsQuery.isFetching}
+            loading={
+              entitlementsQuery.isLoading || entitlementsQuery.isFetching
+            }
             columns={entitlementColumns}
             dataSource={entitlementsQuery.data?.items ?? []}
             scroll={{ x: canAdjustLessons ? 830 : 750 }}
             locale={{
               emptyText: (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无课程权益" />
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="暂无课程权益"
+                />
               ),
             }}
             pagination={{
@@ -630,6 +785,69 @@ export function UsersPage() {
           />
         </div>
       </Drawer>
+
+      <Modal
+        title="确认课程履约"
+        open={Boolean(fulfillmentOrder)}
+        okText="确认已履约并上报"
+        cancelText="取消"
+        confirmLoading={isConfirmingFulfillment}
+        onOk={() => fulfillmentForm.submit()}
+        onCancel={() => {
+          if (!isConfirmingFulfillment) setFulfillmentOrder(null)
+        }}
+        destroyOnHidden
+      >
+        <Alert
+          type="info"
+          showIcon
+          className="page-alert"
+          message="请核实服务已按约定交付"
+          description="确认后将向微信提交履约信息，请根据实际交付情况填写。"
+        />
+        <Form
+          form={fulfillmentForm}
+          layout="vertical"
+          requiredMark={false}
+          onFinish={(values) => void confirmFulfillment(values)}
+        >
+          <Form.Item
+            name="logistics_type"
+            label="交付方式"
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={[
+                { value: 3, label: '无物流服务交付' },
+                { value: 4, label: '到店自提 / 核销' },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            name="item_description"
+            label="已交付服务"
+            rules={[
+              { required: true, whitespace: true, message: '请填写已交付服务' },
+            ]}
+          >
+            <Input.TextArea maxLength={120} showCount rows={2} />
+          </Form.Item>
+          <Form.Item
+            name="evidence"
+            label="履约说明"
+            rules={[
+              { required: true, whitespace: true, message: '请填写核实依据' },
+            ]}
+          >
+            <Input.TextArea
+              maxLength={500}
+              showCount
+              rows={3}
+              placeholder="例如：约定的服务内容、完成时间和核实依据"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title={bindingUser ? `为 ${bindingUser.nickname} 绑定课程` : '绑定课程'}
@@ -674,8 +892,12 @@ export function UsersPage() {
                 label: product.name,
                 value: product.id,
               }))}
-              notFoundContent={productsQuery.isLoading ? null : '暂无已发布课程'}
-              onChange={() => courseBindingForm.setFieldValue('skuId', undefined)}
+              notFoundContent={
+                productsQuery.isLoading ? null : '暂无已发布课程'
+              }
+              onChange={() =>
+                courseBindingForm.setFieldValue('skuId', undefined)
+              }
             />
           </Form.Item>
           <Form.Item
@@ -690,7 +912,9 @@ export function UsersPage() {
                 .filter((sku) => sku.is_active)
                 .map((sku) => ({
                   label: `${sku.name} · ${formatMoney(sku.price_cents)} · ${
-                    sku.lesson_count > 0 ? `${sku.lesson_count} 课时` : '视频课程'
+                    sku.lesson_count > 0
+                      ? `${sku.lesson_count} 课时`
+                      : '视频课程'
                   }`,
                   value: sku.id,
                 }))}

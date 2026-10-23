@@ -127,6 +127,7 @@ export default function BookingPage() {
       await Taro.showToast({
         title: notificationSubscriptionFailed ? '预约成功，微信通知未开启' : '预约成功',
         icon: notificationSubscriptionFailed ? 'none' : 'success',
+        image: notificationSubscriptionFailed ? undefined : appIcons.check,
       })
       await loadSchedules()
     } catch (error) {

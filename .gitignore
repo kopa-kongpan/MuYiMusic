@@ -21,6 +21,7 @@ services/api/.venv/
 services/api/.uv-cache/
 
 # Local configuration and secrets
+/deploy/ssh/
 .env
 .env.*
 *.env

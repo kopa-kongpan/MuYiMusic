@@ -2,6 +2,8 @@ import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import { getPlatformAdapter } from '../../platform'
 import { validateCoursePurchase } from '../../services/courses'
 import {
@@ -108,7 +110,7 @@ export default function CartPage() {
           validatedAt: validation.validated_at,
         })
       }
-      await Taro.showToast({ title: '价格已更新', icon: 'success' })
+      await Taro.showToast({ title: '价格已更新', icon: 'success', image: appIcons.check })
     } catch (error) {
       await Taro.showToast({
         title: error instanceof Error ? error.message : '价格更新失败',
@@ -156,7 +158,7 @@ export default function CartPage() {
       if (confirmed) {
         clearCart(store.id)
         setItems([])
-        await Taro.showToast({ title: '支付成功', icon: 'success' })
+        await Taro.showToast({ title: '支付成功', icon: 'success', image: appIcons.check })
         await Taro.navigateTo({ url: '/pages/my-orders/index' })
       } else {
         await Taro.showModal({
@@ -196,7 +198,7 @@ export default function CartPage() {
 
       {!store || items.length === 0 ? (
         <View className="cart-empty">
-          <View className="cart-empty-mark">课</View>
+          <AppIcon className="cart-empty-mark" name="cart" />
           <Text className="cart-empty-title">购物车还是空的</Text>
           <Button
             className="cart-browse-button"
@@ -222,7 +224,9 @@ export default function CartPage() {
                   }
                 />
               ) : (
-                <View className="cart-cover cart-cover--empty">课程</View>
+                <View className="cart-cover cart-cover--empty">
+                  <AppIcon className="app-icon--cover" name="courses" />
+                </View>
               )}
               <View className="cart-item-body">
                 <Text className="cart-item-name">{item.productName}</Text>
@@ -238,7 +242,9 @@ export default function CartPage() {
                       aria-label={`减少${item.productName}数量`}
                       onClick={() => void changeQuantity(item, item.quantity - 1)}
                     >
-                      −
+                      <View className="app-icon-button-content">
+                        <AppIcon className="app-icon--small" name="minus" />
+                      </View>
                     </Button>
                     <Text>{item.quantity}</Text>
                     <Button
@@ -247,7 +253,9 @@ export default function CartPage() {
                       aria-label={`增加${item.productName}数量`}
                       onClick={() => void changeQuantity(item, item.quantity + 1)}
                     >
-                      +
+                      <View className="app-icon-button-content">
+                        <AppIcon className="app-icon--small" name="plus" />
+                      </View>
                     </Button>
                   </View>
                 </View>

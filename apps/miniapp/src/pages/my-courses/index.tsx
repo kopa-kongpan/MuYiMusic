@@ -3,6 +3,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
+import AppIcon from '../../components/AppIcon'
 import { listMyCourseEntitlements } from '../../services/user'
 import { readCurrentStore } from '../../store/current-store'
 import { setLoginReturn } from '../../store/login-return'
@@ -69,7 +70,7 @@ export default function MyCoursesPage() {
   let content: React.ReactNode
   if (!session) {
     content = (
-      <RecordState mark="课" title="请先登录" copy="登录后可查看本人课程权益">
+      <RecordState title="请先登录" copy="登录后可查看本人课程权益">
         <Button
           className="record-state-button"
           size="mini"
@@ -83,10 +84,10 @@ export default function MyCoursesPage() {
       </RecordState>
     )
   } else if (isLoading) {
-    content = <RecordState mark="课" title="正在加载课程" copy="请稍候" />
+    content = <RecordState title="正在加载课程" copy="请稍候" />
   } else if (errorMessage) {
     content = (
-      <RecordState mark="课" title="课程加载失败" copy={errorMessage}>
+      <RecordState title="课程加载失败" copy={errorMessage}>
         <Button className="record-state-button" size="mini" onClick={() => void load()}>
           重试
         </Button>
@@ -94,7 +95,7 @@ export default function MyCoursesPage() {
     )
   } else if (courses.length === 0) {
     content = (
-      <RecordState mark="课" title="暂无课程" copy="当前门店还没有可展示的课程权益" />
+      <RecordState title="暂无课程" copy="当前门店还没有可展示的课程权益" />
     )
   } else {
     content = (
@@ -119,9 +120,10 @@ export default function MyCoursesPage() {
             </View>
             {(course.video_chapters?.length ?? 0) > 0 ? (
               <View className="record-course-chapters">
-                <Text className="record-course-chapters-heading">
-                  配套视频 · 共 {course.video_chapters?.length ?? 0} 个课时
-                </Text>
+                <View className="record-course-chapters-heading">
+                  <AppIcon name="videoCourses" className="app-icon--small" />
+                  <Text>配套视频 · 共 {course.video_chapters?.length ?? 0} 个课时</Text>
+                </View>
                 {(course.video_chapters ?? []).map((chapter, index) => (
                   <View
                     className="record-chapter"
@@ -161,14 +163,13 @@ export default function MyCoursesPage() {
 }
 
 function RecordState(props: {
-  mark: string
   title: string
   copy: string
   children?: React.ReactNode
 }) {
   return (
     <View className="record-state">
-      <View className="record-state-mark">{props.mark}</View>
+      <AppIcon className="record-state-mark" name="headphones" />
       <Text className="record-state-title">{props.title}</Text>
       <Text className="record-state-copy">{props.copy}</Text>
       {props.children}

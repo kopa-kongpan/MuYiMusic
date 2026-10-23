@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     wechat_pay_public_key_path: str | None = None
     wechat_pay_notify_url: str | None = None
     wechat_pay_order_expire_minutes: int = 30
+    wechat_payment_jobs_enabled: bool = True
     wechat_template_teacher_new_appointment: str | None = None
     wechat_template_teacher_appointment_cancelled: str | None = None
     wechat_template_student_appointment_cancelled: str | None = None

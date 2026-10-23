@@ -16,6 +16,7 @@ RUN pnpm build:admin
 
 ARG TARO_APP_API_BASE_URL=""
 ENV TARO_APP_API_BASE_URL=$TARO_APP_API_BASE_URL
+ENV TARO_APP_H5_PUBLIC_PATH="/h5/"
 RUN pnpm --filter @muyimusic/miniapp build:h5
 
 FROM nginx:1.27-alpine AS admin-runtime
@@ -28,6 +29,6 @@ EXPOSE 80
 FROM nginx:1.27-alpine AS h5-runtime
 
 COPY deploy/nginx/h5.conf /etc/nginx/conf.d/default.conf
-COPY --from=web-build /workspace/apps/miniapp/dist/h5 /usr/share/nginx/html
+COPY --from=web-build /workspace/apps/miniapp/dist/h5 /usr/share/nginx/html/h5
 
 EXPOSE 80

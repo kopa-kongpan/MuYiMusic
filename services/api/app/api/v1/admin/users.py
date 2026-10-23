@@ -15,14 +15,23 @@ from app.schemas.user import (
     CourseEntitlementRead,
     EntitlementGrantRequest,
     EntitlementLessonUpdateRequest,
-    OrderListResponse,
     OrderRead,
     UserAdminListResponse,
+)
+from app.schemas.wechat_fulfillment import (
+    AdminOrderListResponse,
+    FulfillmentConfirmRequest,
+    FulfillmentRead,
 )
 from app.services.user_service import (
     InvalidEntitlementAdjustmentError,
     UserResourceNotFoundError,
     UserService,
+)
+from app.services.wechat_fulfillment_service import (
+    FulfillmentConflictError,
+    FulfillmentNotFoundError,
+    WechatFulfillmentService,
 )
 
 router = APIRouter(prefix="/stores/{store_id}/users", tags=["admin-users"])
@@ -66,7 +75,7 @@ async def list_users(
         raise HTTPException(status_code=404, detail="门店不存在") from error
 
 
-@router.get("/{user_id}/orders", response_model=OrderListResponse)
+@router.get("/{user_id}/orders", response_model=AdminOrderListResponse)
 async def list_user_orders(
     store_id: UUID,
     user_id: UUID,
@@ -75,9 +84,9 @@ async def list_user_orders(
     order_status: Annotated[OrderStatus | None, Query(alias="status")] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
-) -> OrderListResponse:
+) -> AdminOrderListResponse:
     try:
-        return await service(session).list_user_orders_admin(
+        response = await service(session).list_user_orders_admin(
             store_id=store_id,
             user_id=user_id,
             admin_user=current_admin,
@@ -85,8 +94,60 @@ async def list_user_orders(
             page=page,
             page_size=page_size,
         )
+        return await WechatFulfillmentService(session, get_settings()).enrich_orders(
+            response
+        )
     except UserResourceNotFoundError as error:
         raise HTTPException(status_code=404, detail="门店不存在") from error
+
+
+@router.post(
+    "/{user_id}/orders/{order_id}/wechat-fulfillment", response_model=FulfillmentRead
+)
+async def confirm_wechat_fulfillment(
+    store_id: UUID,
+    user_id: UUID,
+    order_id: UUID,
+    payload: FulfillmentConfirmRequest,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_admin: LessonManager,
+) -> FulfillmentRead:
+    try:
+        return await WechatFulfillmentService(session, get_settings()).confirm(
+            store_id=store_id,
+            user_id=user_id,
+            order_id=order_id,
+            admin=current_admin,
+            payload=payload,
+        )
+    except FulfillmentNotFoundError as error:
+        raise HTTPException(status_code=404, detail="订单不存在") from error
+    except FulfillmentConflictError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.post(
+    "/{user_id}/orders/{order_id}/wechat-fulfillment/retry",
+    response_model=FulfillmentRead,
+)
+async def retry_wechat_fulfillment(
+    store_id: UUID,
+    user_id: UUID,
+    order_id: UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_admin: LessonManager,
+) -> FulfillmentRead:
+    try:
+        return await WechatFulfillmentService(session, get_settings()).retry(
+            store_id=store_id,
+            user_id=user_id,
+            order_id=order_id,
+            admin=current_admin,
+        )
+    except FulfillmentNotFoundError as error:
+        raise HTTPException(status_code=404, detail="订单或履约记录不存在") from error
+    except FulfillmentConflictError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
 
 
 @router.get(

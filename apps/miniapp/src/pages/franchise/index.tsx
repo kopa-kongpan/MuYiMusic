@@ -4,6 +4,8 @@ import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useState } from 'react'
 
 import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
+import { assetPath } from '../../assets/path'
 import { getFranchisePage } from '../../services/franchise'
 import { readCurrentStore } from '../../store/current-store'
 import './index.scss'
@@ -12,22 +14,22 @@ function lines(value: string): string[] {
   return value.split('\n').map((item) => item.trim()).filter(Boolean)
 }
 
-const assetPath = (fileName: string) => `/assets/franchise/${fileName}`
+const franchiseAssetPath = (fileName: string) => assetPath(`franchise/${fileName}`)
 
 const franchiseVisuals = {
-  hero: assetPath('brand-hero.jpg'),
-  stores: assetPath('store-network.jpg'),
-  introduction: assetPath('brand-introduction.jpg'),
-  teaching: assetPath('teaching-materials.jpg'),
-  benefits: assetPath('cooperation-benefits.jpg'),
-  contact: assetPath('contact-us.jpg'),
+  hero: franchiseAssetPath('brand-hero.jpg'),
+  stores: franchiseAssetPath('store-network.jpg'),
+  introduction: franchiseAssetPath('brand-introduction.jpg'),
+  teaching: franchiseAssetPath('teaching-materials.jpg'),
+  benefits: franchiseAssetPath('cooperation-benefits.jpg'),
+  contact: franchiseAssetPath('contact-us.jpg'),
 }
 
 const operationVisuals = [
-  { src: assetPath('operation-daily.jpg'), label: '单日经营数据' },
-  { src: assetPath('operation-monthly.jpg'), label: '月度经营数据' },
-  { src: assetPath('live-results.jpg'), label: '直播经营成果' },
-  { src: assetPath('industry-ranking.jpg'), label: '行业经营排名' },
+  { src: franchiseAssetPath('operation-daily.jpg'), label: '单日经营数据' },
+  { src: franchiseAssetPath('operation-monthly.jpg'), label: '月度经营数据' },
+  { src: franchiseAssetPath('live-results.jpg'), label: '直播经营成果' },
+  { src: franchiseAssetPath('industry-ranking.jpg'), label: '行业经营排名' },
 ]
 
 function previewImage(current: string, urls: string[] = [current]) {
@@ -153,7 +155,7 @@ export default function FranchisePage() {
         <View className="support-list">
           {lines(page.support_policy).map((item) => (
             <View className="support-item" key={item}>
-              <Text className="support-dot">✓</Text>
+              <AppIcon className="support-dot" name="check" />
               <Text className="list-copy">{item}</Text>
             </View>
           ))}
@@ -192,9 +194,9 @@ export default function FranchisePage() {
           <Text className="section-kicker contact-kicker">START A CONVERSATION</Text>
           <Text className="section-title contact-title">开启合作沟通</Text>
           <Text>联系人：{page.contact_name}</Text>
-          <Text>联系电话：{page.contact_phone}</Text>
+          <Text>联系电话：{page.contact_phone || '未提供'}</Text>
           {page.contact_wechat ? <Text>微信：{page.contact_wechat}</Text> : null}
-          <Button className="contact-button" onClick={() => void Taro.makePhoneCall({ phoneNumber: page.contact_phone })}>立即咨询</Button>
+          {page.contact_phone ? <Button className="contact-button" onClick={() => void Taro.makePhoneCall({ phoneNumber: page.contact_phone })}>立即咨询</Button> : null}
         </View>
       </View>
     </View>

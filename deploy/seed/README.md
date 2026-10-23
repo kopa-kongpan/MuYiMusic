@@ -5,9 +5,9 @@
 
 ## 文件
 
-| 文件 | 说明 |
-|---|---|
-| `seed_demo_data.sql` | 可直接执行的种子 SQL(提交入库,跨环境复用) |
+| 文件                   | 说明                                          |
+| ---------------------- | --------------------------------------------- |
+| `seed_demo_data.sql`   | 可直接执行的种子 SQL(提交入库,跨环境复用)     |
 | `generate_seed_sql.py` | 种子 SQL 生成器(改数据时编辑此文件后重新生成) |
 
 生成器保证确定性:所有主键由 `uuid5(命名空间, 业务名)` 推导,
@@ -41,24 +41,33 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f deploy/seed/seed_demo_data.sql
 
 ## 演示账号
 
-| 端 | 账号 | 密码 / code |
-|---|---|---|
-| 管理后台 | `admin` | `MuYiMusic@2026local`(平台管理员) |
-| 管理后台 | `operator` | `Operator@2026local`(门店运营,仅限徐汇店) |
-| 小程序 H5 | code `seed-local-user-0001-abcdefghijklmnop` | 林晓(13800138000) |
-| 小程序 H5 | code `seed-local-user-0002-abcdefghijklmnop` | 周雨桐(13900139000) |
-| 小程序 H5 | code `seed-local-user-0003-abcdefghijklmnop` | 吴一凡(13700137000) |
+| 端        | 账号                                         | 密码 / code                               |
+| --------- | -------------------------------------------- | ----------------------------------------- |
+| 管理后台  | `admin`                                      | `MuYiMusic@2026local`(平台管理员)         |
+| 管理后台  | `operator`                                   | `Operator@2026local`(门店运营,仅限徐汇店) |
+| 小程序 H5 | code `seed-local-user-0001-abcdefghijklmnop` | 林晓(13800138000)                         |
+| 小程序 H5 | code `seed-local-user-0002-abcdefghijklmnop` | 周雨桐(13900139000)                       |
+| 小程序 H5 | code `seed-local-user-0003-abcdefghijklmnop` | 吴一凡(13700137000)                       |
 
 H5 登录接口: `POST /api/v1/app/auth/login`
+
 ```json
-{"provider": "h5", "code": "seed-local-user-0001-abcdefghijklmnop", "nickname": "林晓"}
+{
+  "provider": "h5",
+  "code": "seed-local-user-0001-abcdefghijklmnop",
+  "nickname": "林晓"
+}
 ```
+
 (仅 `APP_ENV=local` 时可用;H5 用户的 `provider_subject` 为
 `local_` + `sha256(code)` 的十六进制)
 
 ## 注意
 
-- **媒体文件为占位 key**(如 `seed/banner-piano.png`),需在对象存储或
+- **媒体文件为占位 key**，商品封面和图集现在位于
+  `muyimusic/stores/<门店 UUID>/products/seed/`，需在对象存储放置对应图片或通过后台上传。
+  旧演示商品出现图片归属错误时，参见 [商品图片归属修复说明](../../docs/商品图片归属修复说明.md)。
+  首页等其他占位媒体(如 `seed/banner-piano.png`)需在对象存储或
   静态目录放置同名文件,或替换为真实 key 后重新生成
 - 排课时间相对执行当天生成,数据始终是"未来 3 天";如需更多可约日期,
   编辑 `generate_seed_sql.py` 的 `SCHEDULE_PLAN` 后重新生成

@@ -4,6 +4,7 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
 import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import { bindCurrentUserPhone, loginCurrentUser } from '../../services/user'
 import { listNotifications } from '../../services/notifications'
 import { consumeLoginReturn } from '../../store/login-return'
@@ -16,19 +17,18 @@ import {
 import './index.scss'
 
 interface MeEntry {
-  mark: string
   title: string
   url: string
-  icon?: string
+  icon: string
 }
 
 const entries: MeEntry[] = [
-  { mark: '单', title: '我的订单', url: '/pages/my-orders/index' },
-  { mark: '课', title: '我的课程', url: '/pages/my-courses/index', icon: appIcons.headphones },
-  { mark: '表', title: '我的课表', url: '/pages/schedule/index', icon: appIcons.myCourses },
-  { mark: '约', title: '我的预约', url: '/pages/my-bookings/index' },
-  { mark: '信', title: '我的消息', url: '/pages/notifications/index' },
-  { mark: '师', title: '教师工作台', url: '/pages/teacher-portal/index', icon: appIcons.teacher },
+  { title: '我的订单', url: '/pages/my-orders/index', icon: appIcons.orders },
+  { title: '我的课程', url: '/pages/my-courses/index', icon: appIcons.headphones },
+  { title: '我的课表', url: '/pages/schedule/index', icon: appIcons.myCourses },
+  { title: '我的预约', url: '/pages/my-bookings/index', icon: appIcons.bookings },
+  { title: '我的消息', url: '/pages/notifications/index', icon: appIcons.notifications },
+  { title: '教师工作台', url: '/pages/teacher-portal/index', icon: appIcons.teacher },
 ]
 
 export default function MePage() {
@@ -55,7 +55,7 @@ export default function MePage() {
     try {
       const nextSession = await loginCurrentUser()
       setSession(nextSession)
-      await Taro.showToast({ title: '登录成功', icon: 'success' })
+      await Taro.showToast({ title: '登录成功', icon: 'success', image: appIcons.check })
       const returnUrl = consumeLoginReturn()
       if (returnUrl) {
         await Taro.navigateTo({ url: returnUrl })
@@ -99,7 +99,7 @@ export default function MePage() {
     try {
       const nextSession = await bindCurrentUserPhone(code)
       setSession(nextSession)
-      await Taro.showToast({ title: '手机号绑定成功', icon: 'success' })
+      await Taro.showToast({ title: '手机号绑定成功', icon: 'success', image: appIcons.check })
     } catch (error) {
       await Taro.showToast({
         title: error instanceof Error ? error.message : '手机号绑定失败',
@@ -129,9 +129,7 @@ export default function MePage() {
       {session ? (
         <>
           <View className="me-profile-card">
-            <View className="me-avatar" aria-hidden="true">
-              {session.user.nickname.slice(0, 1)}
-            </View>
+            <AppIcon className="me-avatar" name="profile" />
             <View className="me-profile-copy">
               <Text className="me-profile-name">{session.user.nickname}</Text>
               <View className="me-profile-meta-row">
@@ -165,11 +163,7 @@ export default function MePage() {
                 hoverClass="me-entry--pressed"
                 onClick={() => void Taro.navigateTo({ url: entry.url })}
               >
-                {entry.icon ? (
-                  <Image className="me-entry-icon" src={entry.icon} mode="aspectFill" />
-                ) : (
-                  <View className="me-entry-mark">{entry.mark}</View>
-                )}
+                <Image className="me-entry-icon" src={entry.icon} mode="scaleToFill" aria-hidden="true" />
                 <Text>{entry.title}</Text>
                 {entry.url === '/pages/notifications/index' && unreadCount > 0 ? (
                   <Text className="me-entry-badge">

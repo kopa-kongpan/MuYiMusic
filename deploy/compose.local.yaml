@@ -23,7 +23,8 @@ services:
     volumes:
       - minio-local-data:/var/lib/localstack
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.1:4566/_localstack/health"]
+      test:
+        ["CMD", "curl", "--fail", "http://127.0.0.1:4566/_localstack/health"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -50,7 +51,7 @@ services:
         --bucket "$${MINIO_BUCKET}" &&
         aws --endpoint-url=http://minio:4566 s3api put-bucket-cors
         --bucket "$${MINIO_BUCKET}"
-        --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["GET","HEAD","PUT"],"AllowedOrigins":["http://localhost:5173","http://127.0.0.1:5173","http://localhost:10086","http://127.0.0.1:10086"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'
+        --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["GET","HEAD","PUT"],"AllowedOrigins":["http://localhost:8080","http://127.0.0.1:8080","http://localhost:5173","http://127.0.0.1:5173","http://localhost:10086","http://127.0.0.1:10086"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'
     restart: "no"
 
   migrate:

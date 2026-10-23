@@ -113,9 +113,7 @@ async def test_bind_wechat_phone_and_find_user_by_exact_phone() -> None:
             yield session
 
         app.dependency_overrides[get_session] = override_session
-        app.dependency_overrides[get_wechat_phone_provider] = (
-            FakeWechatPhoneProvider
-        )
+        app.dependency_overrides[get_wechat_phone_provider] = FakeWechatPhoneProvider
         try:
             permission = await session.scalar(
                 select(Permission).where(Permission.code == "users:read")
@@ -163,9 +161,7 @@ async def test_bind_wechat_phone_and_find_user_by_exact_phone() -> None:
                     reader.username,
                     "test-password-2026",
                 )
-                reader_headers = {
-                    "Authorization": f"Bearer {reader_token}"
-                }
+                reader_headers = {"Authorization": f"Bearer {reader_token}"}
                 exact_lookup = await client.get(
                     f"/api/v1/admin/stores/{store.id}/users",
                     headers=reader_headers,

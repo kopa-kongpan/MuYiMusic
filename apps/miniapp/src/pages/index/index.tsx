@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 
 import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import { listPublicStores } from '../../services/stores'
 import { readCurrentStore, saveCurrentStore } from '../../store/current-store'
 import './index.scss'
@@ -105,12 +106,8 @@ export default function StoreSelectionPage() {
   async function selectStore(store: StorePublicRead) {
     saveCurrentStore(store)
     setCurrentStore(store)
-    await Taro.showToast({ title: '门店已选择', icon: 'success' })
+    await Taro.showToast({ title: '门店已选择', icon: 'success', image: appIcons.check })
     await Taro.switchTab({ url: '/pages/home/index' })
-  }
-
-  function callStore(store: StorePublicRead) {
-    void Taro.makePhoneCall({ phoneNumber: store.phone })
   }
 
   return (
@@ -225,6 +222,7 @@ export default function StoreSelectionPage() {
               <View className="store-item" key={store.id}>
                 <View className="store-item-topline">
                   <View className="store-name-row">
+                    <AppIcon name="store" className="app-icon--small" />
                     <Text className="store-name">{store.name}</Text>
                     {isNearest ? <Text className="nearest-tag">最近</Text> : null}
                   </View>
@@ -237,13 +235,15 @@ export default function StoreSelectionPage() {
                   {store.district} {store.address}
                 </Text>
                 <View className="store-item-footer">
-                  <Button
-                    className="contact-button"
-                    size="mini"
-                    onClick={() => callStore(store)}
-                  >
-                    联系门店
-                  </Button>
+                  {store.phone ? (
+                    <Button
+                      className="contact-button"
+                      size="mini"
+                      onClick={() => void Taro.makePhoneCall({ phoneNumber: store.phone })}
+                    >
+                      联系门店
+                    </Button>
+                  ) : null}
                   <Button
                     className="select-button"
                     size="mini"

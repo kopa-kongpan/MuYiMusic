@@ -42,12 +42,12 @@ ON CONFLICT (id) DO NOTHING;
 -- 课程商品 / SKU / 商品图 -------------------------------------------------
 INSERT INTO products (id, store_id, category_id, name, summary, details, cover_object_key, status, published_at, sales_count, sort_order)
 VALUES
-  ('d74d5c3e-636a-594d-a1c5-1ba500242987', 'a83966b0-19a4-58a4-a718-ea396d5a04f8', 'a1e97579-9ba0-5534-bf7f-e7da01fab5bd', '钢琴一对一启蒙课', '零基础钢琴启蒙，一对一教学，资深钢琴教师执教，注重基本功与乐感培养。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'seed/cover-piano-a.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 12, 10),
-  ('b3d5a652-7525-545f-ba5e-aef1de57d800', 'a83966b0-19a4-58a4-a718-ea396d5a04f8', '26be0cdf-a546-5aee-a285-92f854bef756', '吉他流行弹唱课', '流行弹唱入门到进阶，和弦、节奏、弹唱技巧全覆盖，轻松学会自弹自唱。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'seed/cover-guitar-a.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 8, 10),
-  ('ab595055-3c07-57d4-829d-a6fb1bf94087', 'a83966b0-19a4-58a4-a718-ea396d5a04f8', 'e9781908-cf1e-54e6-a520-a91e9f3c9636', '少儿声乐启蒙课', '面向 5-12 岁儿童，科学发声、气息训练、舞台表现力培养，寓教于乐。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'seed/cover-vocal-a.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 6, 10),
-  ('41eb0dcb-1624-5c43-9da4-3b8a054b78b5', '802856c7-6f0d-57c4-b4db-307bb5d8110e', '6a3e7d8d-6854-5542-95ed-f3730eb09ae2', '钢琴进阶考级课', '英皇考级专项辅导，演奏技巧与乐理同步提升，多年考级教学经验教师执教。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'seed/cover-piano-b.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 9, 10),
-  ('8d04c7bb-6125-5350-94c7-badd29aeeaa7', '802856c7-6f0d-57c4-b4db-307bb5d8110e', '95d6f777-5d9b-53df-964b-16c9f12bcb1e', '成人吉他速成课', '专为上班族设计的速成体系，4 节课掌握 3 首弹唱，碎片时间高效学习。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'seed/cover-guitar-b.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 15, 10),
-  ('b3e34c7d-9e28-535b-a1c6-c75d35f98c21', '802856c7-6f0d-57c4-b4db-307bb5d8110e', '3e295384-f8d2-543e-8bc9-58c74248a3d1', '声乐一对一精修课', '一对一定制发声方案，流行/美声/民族唱法均可，适合有基础的进阶学员。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'seed/cover-vocal-b.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 5, 10)
+  ('d74d5c3e-636a-594d-a1c5-1ba500242987', 'a83966b0-19a4-58a4-a718-ea396d5a04f8', 'a1e97579-9ba0-5534-bf7f-e7da01fab5bd', '钢琴一对一启蒙课', '零基础钢琴启蒙，一对一教学，资深钢琴教师执教，注重基本功与乐感培养。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/cover-piano-a.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 12, 10),
+  ('b3d5a652-7525-545f-ba5e-aef1de57d800', 'a83966b0-19a4-58a4-a718-ea396d5a04f8', '26be0cdf-a546-5aee-a285-92f854bef756', '吉他流行弹唱课', '流行弹唱入门到进阶，和弦、节奏、弹唱技巧全覆盖，轻松学会自弹自唱。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/cover-guitar-a.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 8, 10),
+  ('ab595055-3c07-57d4-829d-a6fb1bf94087', 'a83966b0-19a4-58a4-a718-ea396d5a04f8', 'e9781908-cf1e-54e6-a520-a91e9f3c9636', '少儿声乐启蒙课', '面向 5-12 岁儿童，科学发声、气息训练、舞台表现力培养，寓教于乐。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/cover-vocal-a.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 6, 10),
+  ('41eb0dcb-1624-5c43-9da4-3b8a054b78b5', '802856c7-6f0d-57c4-b4db-307bb5d8110e', '6a3e7d8d-6854-5542-95ed-f3730eb09ae2', '钢琴进阶考级课', '英皇考级专项辅导，演奏技巧与乐理同步提升，多年考级教学经验教师执教。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/cover-piano-b.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 9, 10),
+  ('8d04c7bb-6125-5350-94c7-badd29aeeaa7', '802856c7-6f0d-57c4-b4db-307bb5d8110e', '95d6f777-5d9b-53df-964b-16c9f12bcb1e', '成人吉他速成课', '专为上班族设计的速成体系，4 节课掌握 3 首弹唱，碎片时间高效学习。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/cover-guitar-b.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 15, 10),
+  ('b3e34c7d-9e28-535b-a1c6-c75d35f98c21', '802856c7-6f0d-57c4-b4db-307bb5d8110e', '3e295384-f8d2-543e-8bc9-58c74248a3d1', '声乐一对一精修课', '一对一定制发声方案，流行/美声/民族唱法均可，适合有基础的进阶学员。', '教学特色：一对一因材施教，课前课后都有练习反馈。', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/cover-vocal-b.png', 'published', TIMESTAMPTZ '2026-07-24 09:00:00+08', 5, 10)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO product_skus (id, product_id, name, price_cents, lesson_count, validity_days, sort_order, is_active)
@@ -68,18 +68,18 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO product_images (id, product_id, object_key, sort_order)
 VALUES
-  ('f3342173-d840-5d58-aeca-bd4d9164864c', 'd74d5c3e-636a-594d-a1c5-1ba500242987', 'seed/img-store-a-1.png', 10),
-  ('82f908ea-4986-57cf-b586-3a2d1cc21e72', 'd74d5c3e-636a-594d-a1c5-1ba500242987', 'seed/img-store-a-2.png', 20),
-  ('d62795d9-9bc4-52e9-a25a-a72588b62615', 'd74d5c3e-636a-594d-a1c5-1ba500242987', 'seed/img-store-a-3.png', 30),
-  ('898cf43b-3402-51a2-9be2-2a9cdf727e67', 'b3d5a652-7525-545f-ba5e-aef1de57d800', 'seed/img-store-a-1.png', 10),
-  ('f5730635-94ef-5384-b818-3e1207c78fd1', 'b3d5a652-7525-545f-ba5e-aef1de57d800', 'seed/img-store-a-2.png', 20),
-  ('740b3513-e210-5d44-a7bd-fcef005121d8', 'ab595055-3c07-57d4-829d-a6fb1bf94087', 'seed/img-store-a-1.png', 10),
-  ('b6d384fe-32f8-5791-8881-3c056eb487c7', 'ab595055-3c07-57d4-829d-a6fb1bf94087', 'seed/img-store-a-2.png', 20),
-  ('f822de2c-ddec-5c66-83b4-fd2df495b463', '41eb0dcb-1624-5c43-9da4-3b8a054b78b5', 'seed/img-store-b-1.png', 10),
-  ('a33714ae-3008-51cd-b609-6d483cfd6882', '41eb0dcb-1624-5c43-9da4-3b8a054b78b5', 'seed/img-store-b-2.png', 20),
-  ('b270636a-e413-570f-a704-5042c39e62fa', '8d04c7bb-6125-5350-94c7-badd29aeeaa7', 'seed/img-store-b-1.png', 10),
-  ('2c1befc8-3dec-538e-8d5d-97fdf05b560c', '8d04c7bb-6125-5350-94c7-badd29aeeaa7', 'seed/img-store-b-2.png', 20),
-  ('0feef202-55fa-5b4b-b125-a7cada11af7e', 'b3e34c7d-9e28-535b-a1c6-c75d35f98c21', 'seed/img-store-b-1.png', 10)
+  ('f3342173-d840-5d58-aeca-bd4d9164864c', 'd74d5c3e-636a-594d-a1c5-1ba500242987', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-1.png', 10),
+  ('82f908ea-4986-57cf-b586-3a2d1cc21e72', 'd74d5c3e-636a-594d-a1c5-1ba500242987', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-2.png', 20),
+  ('d62795d9-9bc4-52e9-a25a-a72588b62615', 'd74d5c3e-636a-594d-a1c5-1ba500242987', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-3.png', 30),
+  ('898cf43b-3402-51a2-9be2-2a9cdf727e67', 'b3d5a652-7525-545f-ba5e-aef1de57d800', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-1.png', 10),
+  ('f5730635-94ef-5384-b818-3e1207c78fd1', 'b3d5a652-7525-545f-ba5e-aef1de57d800', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-2.png', 20),
+  ('740b3513-e210-5d44-a7bd-fcef005121d8', 'ab595055-3c07-57d4-829d-a6fb1bf94087', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-1.png', 10),
+  ('b6d384fe-32f8-5791-8881-3c056eb487c7', 'ab595055-3c07-57d4-829d-a6fb1bf94087', 'muyimusic/stores/a83966b0-19a4-58a4-a718-ea396d5a04f8/products/seed/img-store-a-2.png', 20),
+  ('f822de2c-ddec-5c66-83b4-fd2df495b463', '41eb0dcb-1624-5c43-9da4-3b8a054b78b5', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/img-store-b-1.png', 10),
+  ('a33714ae-3008-51cd-b609-6d483cfd6882', '41eb0dcb-1624-5c43-9da4-3b8a054b78b5', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/img-store-b-2.png', 20),
+  ('b270636a-e413-570f-a704-5042c39e62fa', '8d04c7bb-6125-5350-94c7-badd29aeeaa7', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/img-store-b-1.png', 10),
+  ('2c1befc8-3dec-538e-8d5d-97fdf05b560c', '8d04c7bb-6125-5350-94c7-badd29aeeaa7', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/img-store-b-2.png', 20),
+  ('0feef202-55fa-5b4b-b125-a7cada11af7e', 'b3e34c7d-9e28-535b-a1c6-c75d35f98c21', 'muyimusic/stores/802856c7-6f0d-57c4-b4db-307bb5d8110e/products/seed/img-store-b-1.png', 10)
 ON CONFLICT (id) DO NOTHING;
 
 -- 教师 -------------------------------------------------------------------

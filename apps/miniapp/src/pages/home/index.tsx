@@ -3,7 +3,8 @@ import { Button, Image, Text, Video, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useRef, useState } from 'react'
 
-import { appIcons } from '../../assets/icons'
+import { appIcons, shortcutIcon } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import { getStoreHome } from '../../services/store-home'
 import { readCurrentStore, saveCurrentStore } from '../../store/current-store'
 import './index.scss'
@@ -108,15 +109,17 @@ export default function StoreHomePage() {
             {home.store.city}
             {home.store.district} {home.store.address}
           </Text>
-          <Button
-            className="store-phone-button"
-            size="mini"
-            onClick={() =>
-              void Taro.makePhoneCall({ phoneNumber: home.store.phone })
-            }
-          >
-            联系门店
-          </Button>
+          {home.store.phone ? (
+            <Button
+              className="store-phone-button"
+              size="mini"
+              onClick={() =>
+                void Taro.makePhoneCall({ phoneNumber: home.store.phone })
+              }
+            >
+              联系门店
+            </Button>
+          ) : null}
         </View>
       ) : null}
 
@@ -163,18 +166,10 @@ export default function StoreHomePage() {
                     hoverClass="shortcut-item--pressed"
                     onClick={() => void openTarget(content)}
                   >
-                    {content.media_url && !failedMediaIds.has(content.id) ? (
-                      <Image
-                        className="shortcut-image"
-                        src={content.media_url}
-                        mode="aspectFill"
-                        onError={() => markMediaFailed(content.id)}
-                      />
-                    ) : (
-                      <View className="shortcut-symbol">
-                        {content.title.slice(0, 1)}
-                      </View>
-                    )}
+                    <AppIcon
+                      className="shortcut-image"
+                      name={shortcutIcon(content.title, content.jump_target ?? '')}
+                    />
                     <Text>{content.title}</Text>
                   </View>
                 ))}

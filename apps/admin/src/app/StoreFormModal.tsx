@@ -28,8 +28,8 @@ interface StoreFormValues {
   district: string
   address: string
   phone: string
-  latitude: number
-  longitude: number
+  latitude?: number
+  longitude?: number
   status: StoreStatus
   sort_order: number
 }
@@ -40,8 +40,8 @@ const initialValues: StoreFormValues = {
   district: '',
   address: '',
   phone: '',
-  latitude: 22.543096,
-  longitude: 114.057865,
+  latitude: undefined,
+  longitude: undefined,
   status: 'active',
   sort_order: 0,
 }
@@ -64,8 +64,8 @@ export function StoreFormModal({
       store
         ? {
             ...store,
-            latitude: Number(store.latitude),
-            longitude: Number(store.longitude),
+            latitude: store.latitude ?? undefined,
+            longitude: store.longitude ?? undefined,
           }
         : initialValues,
     )
@@ -75,9 +75,16 @@ export function StoreFormModal({
     setIsSubmitting(true)
     try {
       if (store) {
-        await apiClient.updateStore(store.id, values)
+        await apiClient.updateStore(store.id, {
+          ...values,
+          phone: values.phone || undefined,
+        })
       } else {
-        await apiClient.createStore(values satisfies StoreCreate)
+        await apiClient.createStore({
+          ...values,
+          latitude: values.latitude!,
+          longitude: values.longitude!,
+        } satisfies StoreCreate)
       }
       await onSaved()
       void message.success(store ? '门店信息已更新' : '门店已创建')
@@ -125,7 +132,7 @@ export function StoreFormModal({
           <Form.Item
             name="phone"
             label="联系电话"
-            rules={[{ required: true, message: '请输入联系电话' }]}
+            rules={[{ required: !store, message: '请输入联系电话' }]}
           >
             <Input placeholder="门店联系电话" />
           </Form.Item>
@@ -156,14 +163,14 @@ export function StoreFormModal({
           <Form.Item
             name="latitude"
             label="纬度"
-            rules={[{ required: true, message: '请输入纬度' }]}
+            rules={[{ required: !store, message: '请输入纬度' }]}
           >
             <InputNumber className="field-full" min={-90} max={90} precision={6} />
           </Form.Item>
           <Form.Item
             name="longitude"
             label="经度"
-            rules={[{ required: true, message: '请输入经度' }]}
+            rules={[{ required: !store, message: '请输入经度' }]}
           >
             <InputNumber
               className="field-full"

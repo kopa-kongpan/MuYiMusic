@@ -26,7 +26,9 @@ class PaymentRepository:
             .options(selectinload(Order.items), selectinload(Order.payments))
         )
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(
+                populate_existing=True
+            )
         return cast(Order | None, await self.session.scalar(statement))
 
     async def get_payment_by_merchant_order_no(
@@ -41,17 +43,21 @@ class PaymentRepository:
             .options(selectinload(Payment.order).selectinload(Order.items))
         )
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(
+                populate_existing=True
+            )
         return cast(Payment | None, await self.session.scalar(statement))
 
-    async def get_order_by_id_for_update(self, order_id: UUID) -> Order | None:
+    async def get_order_by_id_for_update(
+        self, order_id: UUID, *, skip_locked: bool = False
+    ) -> Order | None:
         return cast(
             Order | None,
             await self.session.scalar(
                 select(Order)
                 .where(Order.id == order_id)
                 .options(selectinload(Order.items), selectinload(Order.payments))
-                .with_for_update()
+                .with_for_update(skip_locked=skip_locked)
                 .execution_options(populate_existing=True)
             ),
         )

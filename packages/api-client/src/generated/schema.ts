@@ -627,6 +627,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stores/{store_id}/users/{user_id}/orders/{order_id}/wechat-fulfillment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Wechat Fulfillment */
+        post: operations["confirm_wechat_fulfillment_api_v1_admin_stores__store_id__users__user_id__orders__order_id__wechat_fulfillment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stores/{store_id}/users/{user_id}/orders/{order_id}/wechat-fulfillment/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Wechat Fulfillment */
+        post: operations["retry_wechat_fulfillment_api_v1_admin_stores__store_id__users__user_id__orders__order_id__wechat_fulfillment_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/stores/{store_id}/users/{user_id}/course-entitlements": {
         parameters: {
             query?: never;
@@ -807,6 +841,23 @@ export interface paths {
         };
         /** List Orders */
         get: operations["list_orders_api_v1_app_me_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/orders/{order_number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Order Detail */
+        get: operations["get_order_detail_api_v1_app_me_orders__order_number__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1216,6 +1267,56 @@ export interface components {
             username: string;
             /** Password */
             password: string;
+        };
+        /** AdminOrderListResponse */
+        AdminOrderListResponse: {
+            /** Items */
+            items: components["schemas"]["AdminOrderRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** AdminOrderRead */
+        AdminOrderRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order No */
+            order_no: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** Store Name */
+            store_name: string;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Amount Cents */
+            total_amount_cents: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Items */
+            items: components["schemas"]["OrderItemRead"][];
+            wechat_payment_status?: components["schemas"]["PaymentStatus"] | null;
+            fulfillment?: components["schemas"]["FulfillmentRead"] | null;
         };
         /** AdminProfile */
         AdminProfile: {
@@ -1914,6 +2015,59 @@ export interface components {
              */
             is_published: boolean;
         };
+        /** FulfillmentConfirmRequest */
+        FulfillmentConfirmRequest: {
+            /**
+             * Logistics Type
+             * @enum {integer}
+             */
+            logistics_type: 3 | 4;
+            /** Item Description */
+            item_description: string;
+            /** Evidence */
+            evidence: string;
+        };
+        /** FulfillmentRead */
+        FulfillmentRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Payment Id
+             * Format: uuid
+             */
+            payment_id: string;
+            status: components["schemas"]["FulfillmentStatus"];
+            /**
+             * Logistics Type
+             * @enum {integer}
+             */
+            logistics_type: 3 | 4;
+            /** Item Description */
+            item_description: string;
+            /** Evidence */
+            evidence: string;
+            /** Attempts */
+            attempts: number;
+            /** Last Error */
+            last_error: string | null;
+            /**
+             * Confirmed At
+             * Format: date-time
+             */
+            confirmed_at: string;
+            /** Next Attempt At */
+            next_attempt_at: string | null;
+            /** Sent At */
+            sent_at: string | null;
+        };
+        /**
+         * FulfillmentStatus
+         * @enum {string}
+         */
+        FulfillmentStatus: "pending" | "sent" | "failed" | "cancelled";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2035,6 +2189,48 @@ export interface components {
             store_id: string;
             /** Items */
             items: components["schemas"]["OrderItemCreate"][];
+        };
+        /** OrderDetailRead */
+        OrderDetailRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order No */
+            order_no: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Store Id
+             * Format: uuid
+             */
+            store_id: string;
+            /** Store Name */
+            store_name: string;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Amount Cents */
+            total_amount_cents: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Items */
+            items: components["schemas"]["OrderItemRead"][];
+            /** Store Phone */
+            store_phone: string;
+            payment_status: components["schemas"]["PaymentStatus"] | null;
+            /** Paid At */
+            paid_at: string | null;
         };
         /** OrderItemCreate */
         OrderItemCreate: {
@@ -2806,9 +3002,9 @@ export interface components {
             /** Phone */
             phone: string;
             /** Latitude */
-            latitude: number;
+            latitude: number | null;
             /** Longitude */
-            longitude: number;
+            longitude: number | null;
             status: components["schemas"]["StoreStatus"];
             /** Sort Order */
             sort_order: number;
@@ -2843,9 +3039,9 @@ export interface components {
             /** Phone */
             phone: string;
             /** Latitude */
-            latitude: number;
+            latitude: number | null;
             /** Longitude */
-            longitude: number;
+            longitude: number | null;
             status: components["schemas"]["StoreStatus"];
             /** Sort Order */
             sort_order: number;
@@ -4935,7 +5131,77 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrderListResponse"];
+                    "application/json": components["schemas"]["AdminOrderListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_wechat_fulfillment_api_v1_admin_stores__store_id__users__user_id__orders__order_id__wechat_fulfillment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                user_id: string;
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FulfillmentConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FulfillmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_wechat_fulfillment_api_v1_admin_stores__store_id__users__user_id__orders__order_id__wechat_fulfillment_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                store_id: string;
+                user_id: string;
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FulfillmentRead"];
                 };
             };
             /** @description Validation Error */
@@ -5337,6 +5603,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_detail_api_v1_app_me_orders__order_number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetailRead"];
                 };
             };
             /** @description Validation Error */

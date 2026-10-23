@@ -1,0 +1,10 @@
+# 如生产仍加载本地存储 overlay，最后叠加此文件以使用可被浏览器访问的 S3 地址。
+# OBJECT_STORAGE_ENDPOINT 应设置为 HTTPS 公网域名，并将存储桶路径代理至对象存储。
+x-public-storage: &public-storage
+  OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:?OBJECT_STORAGE_ENDPOINT is required}
+
+services:
+  api:
+    environment: *public-storage
+  worker:
+    environment: *public-storage

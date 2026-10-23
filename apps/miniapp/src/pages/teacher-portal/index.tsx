@@ -2,6 +2,8 @@ import { Button, Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useState } from 'react'
 
+import { appIcons } from '../../assets/icons'
+import AppIcon from '../../components/AppIcon'
 import type { AppointmentRead } from '@muyimusic/api-client'
 import type { NotificationRead } from '../../services/notifications'
 import { updateNotificationSubscription } from '../../services/notifications'
@@ -88,7 +90,7 @@ export default function TeacherPortalPage() {
     try {
       const identity = await bindTeacher(bindCode.trim())
       setBindCode('')
-      await Taro.showToast({ title: '教师身份绑定成功', icon: 'success' })
+      await Taro.showToast({ title: '教师身份绑定成功', icon: 'success', image: appIcons.check })
       await load(identity)
     } catch (reason) {
       await Taro.showToast({
@@ -116,7 +118,7 @@ export default function TeacherPortalPage() {
         item.id,
         '教师取消课程',
       )
-      await Taro.showToast({ title: '预约已取消', icon: 'success' })
+      await Taro.showToast({ title: '预约已取消', icon: 'success', image: appIcons.check })
       await load()
     } catch (reason) {
       await Taro.showToast({
@@ -157,7 +159,7 @@ export default function TeacherPortalPage() {
           updateNotificationSubscription('weapp', key!, result[id!]!),
         ),
       )
-      await Taro.showToast({ title: '通知设置已更新', icon: 'success' })
+      await Taro.showToast({ title: '通知设置已更新', icon: 'success', image: appIcons.check })
     } catch (reason) {
       await Taro.showToast({
         title: reason instanceof Error ? reason.message : '通知设置失败',
@@ -297,7 +299,7 @@ function State({ title, copy }: { title: string; copy: string }) {
   return (
     <View className="record-page">
       <View className="record-state">
-        <View className="record-state-mark">师</View>
+        <AppIcon className="record-state-mark" name="teacher" />
         <Text className="record-state-title">{title}</Text>
         <Text className="record-state-copy">{copy}</Text>
       </View>

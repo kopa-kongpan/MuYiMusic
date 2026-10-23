@@ -34,8 +34,7 @@ export type SchedulePublicListResponse =
 export type SchedulePublicRead = components['schemas']['SchedulePublicRead']
 export type ScheduleRead = components['schemas']['ScheduleRead']
 export type ScheduleStatus = components['schemas']['ScheduleStatus']
-export type ScheduleStatusUpdate =
-  components['schemas']['ScheduleStatusUpdate']
+export type ScheduleStatusUpdate = components['schemas']['ScheduleStatusUpdate']
 export type ScheduleUpdate = components['schemas']['ScheduleUpdate']
 export type CourseEntitlementListResponse =
   components['schemas']['CourseEntitlementListResponse']
@@ -58,6 +57,13 @@ export type OrderCreate = components['schemas']['OrderCreate']
 export type OrderPaymentStatusResponse =
   components['schemas']['OrderPaymentStatusResponse']
 export type OrderRead = components['schemas']['OrderRead']
+export type OrderDetailRead = components['schemas']['OrderDetailRead']
+export type AdminOrderRead = components['schemas']['AdminOrderRead']
+export type AdminOrderListResponse =
+  components['schemas']['AdminOrderListResponse']
+export type FulfillmentRead = components['schemas']['FulfillmentRead']
+export type FulfillmentConfirmRequest =
+  components['schemas']['FulfillmentConfirmRequest']
 export type OrderStatus = components['schemas']['OrderStatus']
 export type WechatPaymentParameters =
   components['schemas']['WechatPaymentParameters']
@@ -70,7 +76,8 @@ export type ContentBlockAdminListResponse =
   components['schemas']['ContentBlockAdminListResponse']
 export type ContentBlockCreate = components['schemas']['ContentBlockCreate']
 export type ContentBlockRead = components['schemas']['ContentBlockRead']
-export type ContentBlockPublicRead = components['schemas']['ContentBlockPublicRead']
+export type ContentBlockPublicRead =
+  components['schemas']['ContentBlockPublicRead']
 export type ContentBlockStatus = components['schemas']['ContentBlockStatus']
 export type ContentBlockType = components['schemas']['ContentBlockType']
 export type ContentBlockUpdate = components['schemas']['ContentBlockUpdate']
@@ -129,7 +136,8 @@ export interface TeacherBindCodeRead {
   code: string
   expires_at: string
 }
-export type NotificationDeliveryStatus = 'pending' | 'sent' | 'skipped' | 'failed'
+export type NotificationDeliveryStatus =
+  'pending' | 'sent' | 'skipped' | 'failed'
 export interface NotificationDeliveryRead {
   id: string
   kind: string
@@ -434,7 +442,9 @@ export function createApiClient(options: ApiClientOptions = {}) {
       )
     },
     getAdminUserOptions() {
-      return request<AdminUserOptionsResponse>('/api/v1/admin/admin-users/options')
+      return request<AdminUserOptionsResponse>(
+        '/api/v1/admin/admin-users/options',
+      )
     },
     createAdminUser(payload: AdminUserCreate) {
       return request<AdminUserRead>('/api/v1/admin/admin-users', {
@@ -528,10 +538,13 @@ export function createApiClient(options: ApiClientOptions = {}) {
       )
     },
     createUploadTicket(payload: UploadTicketRequest) {
-      return request<UploadTicketResponse>('/api/v1/admin/media/upload-tickets', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      return request<UploadTicketResponse>(
+        '/api/v1/admin/media/upload-tickets',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+      )
     },
     listAdminCategories(storeId: string) {
       return request<CategoryRead[]>(
@@ -580,10 +593,7 @@ export function createApiClient(options: ApiClientOptions = {}) {
         }),
       )
     },
-    listAdminVideoCourses(
-      storeId: string,
-      query: AdminVideoCourseQuery = {},
-    ) {
+    listAdminVideoCourses(storeId: string, query: AdminVideoCourseQuery = {}) {
       return request<VideoCourseListResponse>(
         appendQuery(`/api/v1/admin/stores/${storeId}/video-courses`, {
           keyword: query.keyword,
@@ -628,16 +638,12 @@ export function createApiClient(options: ApiClientOptions = {}) {
       )
     },
     createTeacher(storeId: string, payload: TeacherCreate) {
-      return request<TeacherRead>(
-        `/api/v1/admin/stores/${storeId}/teachers`,
-        { method: 'POST', body: JSON.stringify(payload) },
-      )
+      return request<TeacherRead>(`/api/v1/admin/stores/${storeId}/teachers`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
     },
-    updateTeacher(
-      storeId: string,
-      teacherId: string,
-      payload: TeacherUpdate,
-    ) {
+    updateTeacher(storeId: string, teacherId: string, payload: TeacherUpdate) {
       return request<TeacherRead>(
         `/api/v1/admin/stores/${storeId}/teachers/${teacherId}`,
         { method: 'PATCH', body: JSON.stringify(payload) },
@@ -792,15 +798,29 @@ export function createApiClient(options: ApiClientOptions = {}) {
       userId: string,
       query: Omit<UserOrderQuery, 'storeId'> = {},
     ) {
-      return request<OrderListResponse>(
-        appendQuery(
-          `/api/v1/admin/stores/${storeId}/users/${userId}/orders`,
-          {
-            status: query.status,
-            page: query.page,
-            page_size: query.pageSize,
-          },
-        ),
+      return request<AdminOrderListResponse>(
+        appendQuery(`/api/v1/admin/stores/${storeId}/users/${userId}/orders`, {
+          status: query.status,
+          page: query.page,
+          page_size: query.pageSize,
+        }),
+      )
+    },
+    confirmWechatFulfillment(
+      storeId: string,
+      userId: string,
+      orderId: string,
+      payload: FulfillmentConfirmRequest,
+    ) {
+      return request<FulfillmentRead>(
+        `/api/v1/admin/stores/${storeId}/users/${userId}/orders/${orderId}/wechat-fulfillment`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      )
+    },
+    retryWechatFulfillment(storeId: string, userId: string, orderId: string) {
+      return request<FulfillmentRead>(
+        `/api/v1/admin/stores/${storeId}/users/${userId}/orders/${orderId}/wechat-fulfillment/retry`,
+        { method: 'POST' },
       )
     },
     listAdminUserCourseEntitlements(
@@ -852,13 +872,10 @@ export function createApiClient(options: ApiClientOptions = {}) {
       )
     },
     createProduct(storeId: string, payload: ProductCreate) {
-      return request<ProductRead>(
-        `/api/v1/admin/stores/${storeId}/products`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        },
-      )
+      return request<ProductRead>(`/api/v1/admin/stores/${storeId}/products`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
     },
     updateProduct(storeId: string, productId: string, payload: ProductUpdate) {
       return request<ProductRead>(

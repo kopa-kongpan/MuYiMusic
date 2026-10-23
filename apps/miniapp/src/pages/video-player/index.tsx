@@ -3,6 +3,7 @@ import { Button, Text, View, Video } from '@tarojs/components'
 import Taro, { useLoad, useRouter } from '@tarojs/taro'
 import { useState } from 'react'
 
+import AppIcon from '../../components/AppIcon'
 import { listMyCourseEntitlements } from '../../services/user'
 import { readCurrentStore } from '../../store/current-store'
 import { setLoginReturn } from '../../store/login-return'
@@ -70,6 +71,7 @@ export default function VideoPlayerPage() {
   if (!session) {
     return (
       <View className="player-state">
+        <AppIcon name="videoCourses" className="app-icon--state" />
         <Text className="player-state-title">请先登录</Text>
         <Text className="player-state-copy">登录后可观看已购课程的配套视频</Text>
         <Button
@@ -89,6 +91,7 @@ export default function VideoPlayerPage() {
   if (isLoading) {
     return (
       <View className="player-state">
+        <AppIcon name="videoCourses" className="app-icon--state" />
         <Text className="player-state-title">正在加载视频课时</Text>
         <Text className="player-state-copy">请稍候</Text>
       </View>
@@ -98,6 +101,7 @@ export default function VideoPlayerPage() {
   if (errorMessage || !chapters.length) {
     return (
       <View className="player-state">
+        <AppIcon name="videoCourses" className="app-icon--state" />
         <Text className="player-state-title">视频暂不可观看</Text>
         <Text className="player-state-copy">{errorMessage ?? '章节不存在'}</Text>
         <Button className="player-state-button" size="mini" onClick={() => void load()}>

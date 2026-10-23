@@ -43,8 +43,8 @@ class StoreRead(BaseModel):
     district: str
     address: str
     phone: str
-    latitude: float
-    longitude: float
+    latitude: float | None
+    longitude: float | None
     status: StoreStatus
     sort_order: int
     created_at: datetime

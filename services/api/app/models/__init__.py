@@ -53,6 +53,7 @@ from app.models.user import (
     User,
     UserStatus,
 )
+from app.models.wechat_fulfillment import FulfillmentStatus, WechatFulfillment
 
 __all__ = [
     "AdminUser",
@@ -67,6 +68,7 @@ __all__ = [
     "ConsumptionStatus",
     "EntitlementStatus",
     "FranchisePage",
+    "FulfillmentStatus",
     "AuditLog",
     "Base",
     "Category",
@@ -105,5 +107,6 @@ __all__ = [
     "UserStatus",
     "VideoCourse",
     "VideoCourseLesson",
+    "WechatFulfillment",
     "admin_user_stores",
 ]
